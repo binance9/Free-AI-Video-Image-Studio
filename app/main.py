@@ -6,7 +6,7 @@ from app.core.api_core import router as core_router
 from app.modules.chinh_sua_video.api_chinh_sua_video import router as video_editor_router
 from app.api.settings_routes import router as settings_router
 from app.modules.cong_cu_van_ban.api_cong_cu_van_ban import router as text_router
-from app.api.ai_image_routes import router as ai_image_router
+from app.modules.tao_anh_ai.api_tao_anh_ai import router as ai_image_router
 from app.modules.am_nhac.api_am_nhac import router as music_router
 from app.modules.phu_de.api_phu_de import router as caption_router
 from app.api.model_3d_routes import router as model_3d_router
@@ -20,7 +20,7 @@ from app.core.config import settings
 from app.modules.director import DirectorAI
 from app.modules.chinh_sua_video import VideoEditor
 from app.modules.chinh_sua_video.workspace import VideoWorkspace
-from app.modules.image_ai_local import AiImageWorkspace, LocalImageService, AiImageJobManager
+from app.modules.tao_anh_ai import AiImageWorkspace, LocalImageService, AiImageJobManager
 from app.modules.am_nhac import LocalMusicLibrary
 from app.modules.phu_de import LocalCaptionService, LocalTranslationService
 from app.modules.model_3d_local import Local3DService, Model3DWorkspace, Model3DJobManager

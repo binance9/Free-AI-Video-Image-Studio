@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from PIL import Image
 
 from app.main import create_app
-from app.modules.image_ai_local.upscale import generation_dimensions, target_dimensions
+from app.modules.tao_anh_ai.upscale import generation_dimensions, target_dimensions
 from app.modules.am_nhac import LocalMusicLibrary
 from app.modules.chinh_sua_video.ffmpeg_tools import run_tool
 from app.modules.chinh_sua_video.probe import probe_video

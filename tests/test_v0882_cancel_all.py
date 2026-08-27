@@ -14,17 +14,17 @@ def test_all_background_managers_have_cancel_all():
         'app/modules/model_3d_local/job_manager.py',
         'app/modules/lam_sach_video/job_manager.py',
         'app/modules/tai_video/job_manager.py',
-        'app/modules/image_ai_local/job_manager.py',
+        'app/modules/tao_anh_ai/job_manager.py',
     ]:
         s=text(rel)
         assert 'def cancel(' in s
         assert 'def cancel_all(' in s
 
 def test_ai_image_uses_cancellable_jobs():
-    js=text('web/js/ai_image.js'); routes=text('app/api/ai_image_routes.py')
+    js=text('web/js/ai_image.js'); routes=text('app/modules/tao_anh_ai/api_tao_anh_ai.py')
     assert '/api/ai-image/jobs/generate' in js
     assert '/api/ai-image/jobs/edit' in js
-    assert 'callback_on_step_end' in text('app/modules/image_ai_local/service.py')
+    assert 'callback_on_step_end' in text('app/modules/tao_anh_ai/service.py')
     assert '@router.post("/ai-image/jobs/generate")' in routes
 
 def test_3d_processes_are_cooperatively_cancelled():
