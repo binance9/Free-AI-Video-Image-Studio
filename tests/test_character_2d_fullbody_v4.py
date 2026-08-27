@@ -2,10 +2,10 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-from app.modules.character_2d_addon.face_refiner import _fallback_head_box
-from app.modules.character_2d_addon.fullbody_quality import inspect_fullbody
-from app.modules.character_2d_addon.prompt_builder import NEGATIVE_PROMPT, build_anchor_prompt
-from app.modules.character_2d_addon.character_profile import CharacterProfile
+from app.modules.nhan_vat_2d.face_refiner import _fallback_head_box
+from app.modules.nhan_vat_2d.fullbody_quality import inspect_fullbody
+from app.modules.nhan_vat_2d.prompt_builder import NEGATIVE_PROMPT, build_anchor_prompt
+from app.modules.nhan_vat_2d.character_profile import CharacterProfile
 
 
 def test_anchor_prompt_locks_full_body():

@@ -2,9 +2,9 @@ from pathlib import Path
 from PIL import Image
 import io
 
-from app.modules.character_2d_addon.from_reference import normalize_reference_bytes
-from app.modules.character_2d_addon.spec_parser import parse_character_spec
-from app.modules.character_2d_addon.prompt_lock import build_locked_prompt
+from app.modules.nhan_vat_2d.from_reference import normalize_reference_bytes
+from app.modules.nhan_vat_2d.spec_parser import parse_character_spec
+from app.modules.nhan_vat_2d.prompt_lock import build_locked_prompt
 
 
 def _png_bytes(size=(400, 800)):

@@ -2,8 +2,8 @@ from pathlib import Path
 
 from PIL import Image
 
-from app.modules.character_2d_addon.preserve_refine import refine_reference_image
-from app.modules.character_2d_addon.service import _is_preserve_request
+from app.modules.nhan_vat_2d.preserve_refine import refine_reference_image
+from app.modules.nhan_vat_2d.service import _is_preserve_request
 
 
 def test_preserve_detector_for_clean_refine():

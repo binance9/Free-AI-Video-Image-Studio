@@ -1,6 +1,6 @@
-from app.modules.character_2d_addon.prompt_builder import build_anchor_prompt, build_repair_prompt
-from app.modules.character_2d_addon.character_profile import CharacterProfile
-from app.modules.character_2d_addon.background_quality import inspect_background
+from app.modules.nhan_vat_2d.prompt_builder import build_anchor_prompt, build_repair_prompt
+from app.modules.nhan_vat_2d.character_profile import CharacterProfile
+from app.modules.nhan_vat_2d.background_quality import inspect_background
 from PIL import Image
 from pathlib import Path
 

@@ -14,7 +14,7 @@ from app.modules.tai_video.api_tai_video import router as facebook_video_router
 from app.modules.lam_sach_video.api_lam_sach_video import router as video_cleanup_router
 from app.api.job_control_routes import router as job_control_router
 from app.api.system_routes import router as system_router
-from app.api.character_2d_routes import router as character_2d_router
+from app.modules.nhan_vat_2d.api_nhan_vat_2d import router as character_2d_router
 from app.api.game_ready_3d_routes import router as game_ready_3d_router
 from app.core.config import settings
 from app.modules.director import DirectorAI
@@ -27,7 +27,7 @@ from app.modules.model_3d_local import Local3DService, Model3DWorkspace, Model3D
 from app.modules.model_3d_local.turntable_video import TurntableVideoExporter
 from app.modules.tai_video import FacebookVideoDownloader, FacebookVideoJobManager
 from app.modules.lam_sach_video import VideoCleanupRuntime, VideoCleanupJobManager
-from app.modules.character_2d_addon import Character2DService
+from app.modules.nhan_vat_2d import Character2DService
 from app.modules.model_3d_game_ready import GameReady3DService, GameReadyJobManager
 from app.storage.database import Database
 from app.storage.project_memory import ProjectMemory

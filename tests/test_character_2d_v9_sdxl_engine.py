@@ -1,4 +1,4 @@
-from app.modules.character_2d_addon.image_runtime import generation_dimensions, StandaloneLocalImageService, BASE_MODEL, LIGHTNING_CKPT
+from app.modules.nhan_vat_2d.image_runtime import generation_dimensions, StandaloneLocalImageService, BASE_MODEL, LIGHTNING_CKPT
 
 
 def test_sdxl_engine_defaults():

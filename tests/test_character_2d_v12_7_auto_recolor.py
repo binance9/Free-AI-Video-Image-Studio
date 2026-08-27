@@ -1,6 +1,6 @@
-from app.modules.character_2d_addon.spec_parser import parse_character_spec
-from app.modules.character_2d_addon.service import _is_recolor_request
-from app.modules.character_2d_addon.prompt_lock import build_locked_prompt
+from app.modules.nhan_vat_2d.spec_parser import parse_character_spec
+from app.modules.nhan_vat_2d.service import _is_recolor_request
+from app.modules.nhan_vat_2d.prompt_lock import build_locked_prompt
 
 
 def test_recolor_prompt_detected():

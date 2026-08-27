@@ -1,5 +1,5 @@
-from app.modules.character_2d_addon.character_profile import CharacterProfile
-from app.modules.character_2d_addon.prompt_builder import NEGATIVE_PROMPT, build_anchor_prompt, build_frame_prompt
+from app.modules.nhan_vat_2d.character_profile import CharacterProfile
+from app.modules.nhan_vat_2d.prompt_builder import NEGATIVE_PROMPT, build_anchor_prompt, build_frame_prompt
 
 
 def _profile():

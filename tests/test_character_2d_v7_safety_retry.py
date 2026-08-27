@@ -1,4 +1,4 @@
-from app.modules.character_2d_addon.image_runtime import image_bytes_are_blank
+from app.modules.nhan_vat_2d.image_runtime import image_bytes_are_blank
 from PIL import Image
 import io
 

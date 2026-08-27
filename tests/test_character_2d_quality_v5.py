@@ -1,8 +1,8 @@
 from PIL import Image
 
-from app.modules.character_2d_addon.character_profile import CharacterProfile
-from app.modules.character_2d_addon.prompt_builder import build_anchor_prompt, compact_user_prompt
-from app.modules.character_2d_addon.quality_gate import evaluate_anchor
+from app.modules.nhan_vat_2d.character_profile import CharacterProfile
+from app.modules.nhan_vat_2d.prompt_builder import build_anchor_prompt, compact_user_prompt
+from app.modules.nhan_vat_2d.quality_gate import evaluate_anchor
 
 
 def test_prompt_compactor_limits_custom_words():

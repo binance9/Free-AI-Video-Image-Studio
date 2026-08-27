@@ -2,8 +2,8 @@ from pathlib import Path
 
 from PIL import Image
 
-from app.modules.character_2d_addon.output_guard import inspect_image, flatten_preview
-from app.modules.character_2d_addon.export_gate import export_if_passed
+from app.modules.nhan_vat_2d.output_guard import inspect_image, flatten_preview
+from app.modules.nhan_vat_2d.export_gate import export_if_passed
 
 
 def test_output_guard_rejects_fully_transparent(tmp_path):

@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from app.modules.character_2d_addon.spec_parser import parse_character_spec
-from app.modules.character_2d_addon.reference_lock import ReferenceLibrary
-from app.modules.character_2d_addon.prompt_lock import build_locked_prompt
-from app.modules.character_2d_addon.export_gate import decide_export
+from app.modules.nhan_vat_2d.spec_parser import parse_character_spec
+from app.modules.nhan_vat_2d.reference_lock import ReferenceLibrary
+from app.modules.nhan_vat_2d.prompt_lock import build_locked_prompt
+from app.modules.nhan_vat_2d.export_gate import decide_export
 
 
 def test_reference_selected_for_compact_male_sword():

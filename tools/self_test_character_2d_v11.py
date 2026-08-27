@@ -1,6 +1,6 @@
 from app.api.character_2d_standalone import Character2DRequest
-from app.modules.character_2d_addon.character_profile import CharacterProfile
-from app.modules.character_2d_addon.prompt_builder import build_anchor_prompt, build_negative_prompt
+from app.modules.nhan_vat_2d.character_profile import CharacterProfile
+from app.modules.nhan_vat_2d.prompt_builder import build_anchor_prompt, build_negative_prompt
 
 prompt = "male fantasy swordsman, long black hair, silver armor, purple robe, dual swords, front idle pose, gray background"
 req = Character2DRequest(prompt=prompt, max_repairs=4, strict_lock=True, candidates=2)

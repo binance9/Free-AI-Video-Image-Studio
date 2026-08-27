@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from app.modules.character_2d_addon.spec_parser import parse_character_spec
-from app.modules.character_2d_addon.prompt_lock import build_locked_prompt
-from app.modules.character_2d_addon.export_gate import decide_export
-from app.modules.character_2d_addon.repair_planner import plan_repairs
+from app.modules.nhan_vat_2d.spec_parser import parse_character_spec
+from app.modules.nhan_vat_2d.prompt_lock import build_locked_prompt
+from app.modules.nhan_vat_2d.export_gate import decide_export
+from app.modules.nhan_vat_2d.repair_planner import plan_repairs
 
 
 def test_spec_parser_extracts_required_attributes():

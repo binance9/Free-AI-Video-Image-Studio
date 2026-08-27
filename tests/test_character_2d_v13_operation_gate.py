@@ -2,8 +2,8 @@ from pathlib import Path
 
 from PIL import Image
 
-from app.modules.character_2d_addon.operation_gate import detect_operation, target_palette_score, build_recolor_gate
-from app.modules.character_2d_addon.spec_parser import parse_character_spec
+from app.modules.nhan_vat_2d.operation_gate import detect_operation, target_palette_score, build_recolor_gate
+from app.modules.nhan_vat_2d.spec_parser import parse_character_spec
 
 
 def _solid_character(path: Path, armor=(150,24,38), accent=(205,150,34)):

@@ -7,7 +7,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 
-from app.modules.character_2d_addon import Character2DService, CharacterProfile
+from app.modules.nhan_vat_2d import Character2DService, CharacterProfile
 
 router = APIRouter(prefix="/api/character-2d", tags=["character-2d"])
 

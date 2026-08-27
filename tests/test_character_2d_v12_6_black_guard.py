@@ -2,8 +2,8 @@ from types import SimpleNamespace
 
 from PIL import Image
 
-from app.modules.character_2d_addon.image_runtime import _result_was_safety_blocked
-from app.modules.character_2d_addon.output_guard import inspect_image
+from app.modules.nhan_vat_2d.image_runtime import _result_was_safety_blocked
+from app.modules.nhan_vat_2d.output_guard import inspect_image
 
 
 def test_safety_flag_detected():

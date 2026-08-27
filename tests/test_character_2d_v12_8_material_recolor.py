@@ -2,8 +2,8 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from app.modules.character_2d_addon.material_recolor import recolor_materials
-from app.modules.character_2d_addon.spec_parser import parse_character_spec
+from app.modules.nhan_vat_2d.material_recolor import recolor_materials
+from app.modules.nhan_vat_2d.spec_parser import parse_character_spec
 
 
 def _make_green_character(path: Path):

@@ -1,7 +1,7 @@
 from pathlib import Path
-from app.modules.character_2d_addon.spec_parser import parse_character_spec
-from app.modules.character_2d_addon.reference_lock import ReferenceLibrary
-from app.modules.character_2d_addon.prompt_lock import build_locked_prompt
+from app.modules.nhan_vat_2d.spec_parser import parse_character_spec
+from app.modules.nhan_vat_2d.reference_lock import ReferenceLibrary
+from app.modules.nhan_vat_2d.prompt_lock import build_locked_prompt
 
 
 def test_exact_reference_match_is_strict():

@@ -1,7 +1,7 @@
 from app.api.character_2d_standalone import Character2DRequest
-from app.modules.character_2d_addon.character_profile import CharacterProfile
-from app.modules.character_2d_addon.command_spec import parse_command_spec
-from app.modules.character_2d_addon.prompt_builder import build_anchor_prompt, build_negative_prompt
+from app.modules.nhan_vat_2d.character_profile import CharacterProfile
+from app.modules.nhan_vat_2d.command_spec import parse_command_spec
+from app.modules.nhan_vat_2d.prompt_builder import build_anchor_prompt, build_negative_prompt
 
 
 def test_parse_exact_dual_sword_colors():
@@ -81,7 +81,7 @@ def test_all_strict_prompt_variants_keep_critical_text_before_clip_limit():
 def test_strict_preview_pipeline_runs_with_fake_engine(tmp_path):
     import io
     from PIL import Image, ImageDraw
-    from app.modules.character_2d_addon.service import Character2DService
+    from app.modules.nhan_vat_2d.service import Character2DService
 
     class FakeEngine:
         def generate(self, prompt, style, size, quality, negative_prompt=None, seed=None):
