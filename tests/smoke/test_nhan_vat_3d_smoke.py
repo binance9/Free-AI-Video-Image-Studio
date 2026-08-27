@@ -42,6 +42,31 @@ def test_frontend_assets_exist():
     assert (ROOT / "app/modules/nhan_vat_3d/README_MODULE.md").is_file()
 
 
+def test_viewer_js_syntax_is_valid_via_node():
+    """Khong co JS test runner trong repo (khong package.json) - it nhat
+    dam bao file khong co loi cu phap bang `node --check` (section 31/37)."""
+    import shutil, subprocess
+    node = shutil.which("node")
+    if not node:
+        return  # moi truong khong co Node - bo qua, khong fail smoke vi thieu tool ngoai
+    viewer = ROOT / "web/modules/nhan_vat_3d/ai_3d_viewer.js"
+    result = subprocess.run([node, "--check", str(viewer)], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+
+
+def test_viewer_has_robust_auto_fit_and_options_contract():
+    """Static assertions (khong co JS runner) cho cac fix bat buoc cua
+    Phase 1.6.2: bbox suy bien khong duoc gay man hinh den, map khong bi
+    auto-upright sai, show() phai nhan duoc ca string (cu) lan options
+    object (moi, section 34), va attack phai co one-shot + auto quay idle."""
+    js = (ROOT / "web/modules/nhan_vat_3d/ai_3d_viewer.js").read_text(encoding="utf-8")
+    assert "Number.isFinite" in js, "boundsOf phai tu bao ve khoi bbox NaN/Infinity"
+    assert "type !== 'map'" in js, "auto-upright phai duoc bo qua cho scene kieu map"
+    assert "typeof arg === 'string'" in js, "show() phai tuong thich nguoc voi show(url, 'label cu')"
+    assert "loop:false" in js or "loop=true" in js, "playAnimation phai ho tro che do one-shot (attack)"
+    assert "_onAnimationDone" in js, "attack one-shot phai co hook tu quay ve idle"
+
+
 def test_no_game_ready_business_logic_leaked_into_3d():
     js = (ROOT / "web/modules/nhan_vat_3d/nhan_vat_3d.js").read_text(encoding="utf-8")
     assert "pollGameReady" not in js

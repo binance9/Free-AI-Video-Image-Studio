@@ -55,3 +55,36 @@ def test_index_html_loads_game_ready_assets_after_nhan_vat_3d():
     assert i3d != -1 and igr != -1
     assert i3d < igr, "nhan_vat_game_ready.js phai load SAU nhan_vat_3d.js (phu thuoc window.AIVF3D)"
     assert "modules/nhan_vat_game_ready/nhan_vat_game_ready.css" in html
+
+
+def test_convert_writes_fixed_final_filename_and_intermediate_stage_names():
+    """Section 2: final file phai luon ten game_ready.glb, khong duoc dung
+    ten ngau nhien - kiem tra bang cach doc code, khong chay Blender that."""
+    src = (ROOT / "app/modules/nhan_vat_game_ready/service.py").read_text(encoding="utf-8")
+    assert 'out_dir / "game_ready.glb"' in src
+    blender_src = (ROOT / "app/modules/nhan_vat_game_ready/blender_game_ready.py").read_text(encoding="utf-8")
+    for name in ('"source.glb"', '"optimized.glb"', '"rigged.glb"'):
+        assert name in blender_src, f"thiếu checkpoint file {name}"
+
+
+def test_validation_module_importable_and_schema_has_required_fields(smoke_tmp_path):
+    from app.modules.nhan_vat_game_ready.validate_game_ready import (
+        REQUIRED_CLIPS,
+        validate_game_ready_glb,
+    )
+    assert set(REQUIRED_CLIPS) == {"idle", "run", "attack_01"}
+    # File khong ton tai van phai tra ve ket qua co cau truc day du, khong crash.
+    result = validate_game_ready_glb(smoke_tmp_path / "does_not_exist.glb")
+    d = result.to_dict()
+    for key in ("ok", "animation_ok", "errors", "skins_count", "has_joints_attr",
+                "has_weights_attr", "weight_coverage", "required_clips_present"):
+        assert key in d
+    assert d["ok"] is False
+
+
+def test_job_manager_status_vocabulary_includes_partial_success():
+    """Section 32: skeleton co nhung animation fail phai la partial_success,
+    khong duoc bao PASS gia - kiem tra code path ton tai."""
+    src = (ROOT / "app/modules/nhan_vat_game_ready/jobs.py").read_text(encoding="utf-8")
+    assert "partial_success" in src
+    assert "animation_ok" in src
