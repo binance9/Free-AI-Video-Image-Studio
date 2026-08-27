@@ -14,6 +14,7 @@ class Settings:
     editor_dir: Path = BASE_DIR / "data" / "editor_sessions"
     ai_image_dir: Path = BASE_DIR / "data" / "ai_images"
     model_3d_dir: Path = BASE_DIR / "data" / "3d_assets"
+    do_vat_3d_dir: Path = BASE_DIR / "data" / "do_vat_3d"
     triposr_dir: Path = BASE_DIR / "tools" / "external" / "TripoSR"
     music_library_dir: Path = BASE_DIR / "data" / "music_library"
     facebook_download_dir: Path = BASE_DIR / "data" / "facebook_downloads"

@@ -60,7 +60,7 @@ def _safe_bbox(im: Image.Image):
     return bbox
 
 
-def prepare_image_for_3d(src_path: str | Path, out_path: str | Path, canvas_size: int = 1024) -> Path:
+def prepare_image_for_3d(src_path: str | Path, out_path: str | Path, canvas_size: int = 1024, vertical_bias: float = 0.54) -> Path:
     src_path = Path(src_path)
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -101,13 +101,15 @@ def prepare_image_for_3d(src_path: str | Path, out_path: str | Path, canvas_size
     crop = rgb.convert("RGBA")
     crop.putalpha(alpha_mask)
 
-    # Square transparent canvas, centered a bit lower so feet have more room.
+    # Square transparent canvas. vertical_bias=0.54 (default, character use) leaves
+    # a bit more room below for feet; do_vat_3d passes 0.5 for plain centering
+    # since props (trees, houses...) have no "feet" composition assumption.
     canvas = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
     scale = min((canvas_size * 0.78) / max(1, crop.width), (canvas_size * 0.86) / max(1, crop.height))
     new_size = (max(1, int(crop.width * scale)), max(1, int(crop.height * scale)))
     crop = crop.resize(new_size, Image.Resampling.LANCZOS)
     x = (canvas_size - crop.width) // 2
-    y = int(canvas_size * 0.54 - crop.height / 2)
+    y = int(canvas_size * vertical_bias - crop.height / 2)
     y = max(0, min(canvas_size - crop.height, y))
     canvas.alpha_composite(crop, (x, y))
 
