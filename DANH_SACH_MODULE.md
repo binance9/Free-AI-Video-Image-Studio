@@ -175,34 +175,54 @@ KHÔNG CẦN GỬI:
 ==================================================
 
 TRẠNG THÁI:
-KHUNG CHƯA TRIỂN KHAI
+ĐANG DÙNG THẬT
 
 BACKEND:
-app/modules/do_vat_3d/ (chỉ có __init__.py + README_MODULE.md + MODULE_STATUS.md)
+app/modules/do_vat_3d/
 
 FRONTEND:
-web/modules/do_vat_3d/ (khung)
+web/modules/do_vat_3d/ (panel #panel-dovat3d + card Home nằm trong web/index.html, bọc comment
+MODULE: do_vat_3d BEGIN/END)
 
 DATA:
-(chưa có)
+data/do_vat_3d/assets/ (asset hoàn thành), data/do_vat_3d/_jobs/ (job), model cache dùng chung
+data/models/3d/ với nhan_vat_3d
 
 FILE CHÍNH:
-(chưa có — xem roadmap trong README_MODULE.md)
+dich_vu_do_vat_3d.py (điều phối, gọi lại Local3DService của nhan_vat_3d — KHÔNG duplicate engine),
+chon_engine.py (tự chọn TripoSR/Character-HD theo độ phức tạp category + quality), cau_hinh_do_vat.py
+(13 category, 3 quality preset, 3 texture preset), kiem_tra_do_vat.py (validate GLB thuần stdlib,
+không cần trimesh/Blender), toi_uu_do_vat.py (chuẩn hoá pivot cho nhánh character_hd), hop_dong_asset.py
+(contract GameAsset3D cho ban_do_3d đọc sau này), quan_ly_job.py (job nền + GPU lock).
 
 API:
-(chưa có)
+GET /api/do-vat-3d/status, GET /api/do-vat-3d/categories, POST /api/do-vat-3d/create,
+POST /api/do-vat-3d/create-from-prompt, GET /api/do-vat-3d/job/{id},
+POST /api/do-vat-3d/job/{id}/cancel, GET /api/do-vat-3d/view/{asset_id},
+GET /api/do-vat-3d/output/{asset_id}, GET /api/do-vat-3d/assets
 
 PHỤ THUỘC:
-Roadmap: có thể tái dùng backend dựng mesh của nhan_vat_3d qua import trực tiếp (không copy code).
+- app.modules.nhan_vat_3d.service.Local3DService (engine TripoSR/Character-HD — tái dùng nguyên,
+  không copy code).
+- app.modules.nhan_vat_3d.image_preprocess (hàm chung, tham số vertical_bias mới thêm — tương
+  thích ngược 100%, không đổi hành vi nhan_vat_3d).
+- app.modules.nhan_vat_3d.mesh_finish (gọi lại qua subprocess để chuẩn hoá pivot cho Character-HD).
+- app.modules.tao_anh_ai (sinh ảnh concept khi tạo từ prompt — KHÔNG dùng nhan_vat_2d).
+- app.core.shared_services.heavy_gpu_job_lock (giới hạn 1 job nặng cùng lúc — mới thêm Phase 1.6).
 
 LỆNH TEST NHANH:
 pytest -q tests/smoke/test_do_vat_3d_smoke.py
+pytest -q tests/test_do_vat_3d_unit.py
 
 KHI LỖI CẦN GỬI:
-(chưa có gì để lỗi)
+- app/modules/do_vat_3d/
+- web/modules/do_vat_3d/
+- data/do_vat_3d/_jobs/<job_id>/job.json và progress.log của job lỗi
 
 KHÔNG CẦN GỬI:
-(N/A)
+- nhan_vat_2d/, nhan_vat_game_ready/, ban_do_3d/
+nếu lỗi không liên quan. Nếu nghi ngờ lỗi ở chính engine TripoSR/Hunyuan3D dùng chung, gửi thêm
+app/modules/nhan_vat_3d/.
 
 ==================================================
 TẠO ẢNH AI

@@ -36,6 +36,11 @@ File GLB (có texture) + video preview turntable.
 - `app.modules.tao_anh_ai` (qua `Local3DService`, tham số `ai_image_service`) — sinh ảnh concept
   từ prompt trước khi dựng 3D nếu không có ảnh đầu vào.
 
+**Bị phụ thuộc bởi**: `app.modules.do_vat_3d` (Phase 1.6) tái dùng nguyên `Local3DService` +
+`image_preprocess.prepare_image_for_3d` + `mesh_finish.py` qua import/subprocess — KHÔNG copy code.
+Nếu sửa các file này, kiểm tra cả `do_vat_3d` (chạy `pytest -q tests/smoke/test_do_vat_3d_smoke.py`
+sau khi sửa).
+
 ## 7. Khi lỗi, gửi thư mục nào
 ```
 app/modules/nhan_vat_3d/
