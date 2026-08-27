@@ -558,6 +558,7 @@ void main(){
     const label = opts.label || 'Model 3D';
     currentUrl=url;
     $('empty').classList.add('hidden');$('videoBox').classList.add('hidden');$('busy').classList.add('hidden');
+    $('mapHdStageViewer')?.classList.add('hidden'); // avoid overlapping with Bản đồ HD's own stage view, if it was open
     $('ai3dStageViewer').classList.remove('hidden');document.querySelector('.transport')?.classList.add('viewer-transport-hidden');
     $('ai3dViewerState').textContent='Đang tải model 3D…';
     const hadModelBefore = ensure().meshes.length > 0;

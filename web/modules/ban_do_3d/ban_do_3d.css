@@ -1,0 +1,30 @@
+/* === Bản đồ HD - sidebar panel (self-contained, không phụ thuộc CSS module khác) === */
+.map-hd-quality { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.map-hd-quality button { background: #112238; border: 1px solid #294762; color: #cfe7ff; border-radius: 9px; padding: 9px 4px; cursor: pointer; font-weight: 700; }
+.map-hd-quality button.active { background: linear-gradient(135deg, #0f766e, #2563eb); border-color: #5eead4; color: white; }
+.map-hd-progress > div:first-child { display: flex; justify-content: space-between; color: #dbe5ff; font-size: 11px; }
+.map-hd-track { height: 7px; margin: 6px 0; border-radius: 999px; background: #272c3e; overflow: hidden; }
+.map-hd-track i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #22c55e, #38bdf8); transition: width .3s ease; }
+.map-hd-progress small { color: #9caac0; }
+.map-hd-grid-toggle { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 12px; color: #cfe0f5; cursor: pointer; }
+.map-hd-grid-toggle input { width: 15px; height: 15px; }
+
+/* === central stage viewer (shared main preview area, NOT a separate frame) === */
+.map-hd-stage-viewer { position: absolute; inset: 0; z-index: 9; display: flex; flex-direction: column; background: radial-gradient(circle at 50% 45%,#18243a 0,#0a101b 55%,#05080d 100%); overflow: hidden; }
+.map-hd-stage-viewer.hidden { display: none; }
+.map-hd-empty { position: absolute; inset: 0; display: grid; place-items: center; color: #7190ae; text-align: center; padding: 40px; font-size: 13px; }
+.map-hd-viewport { flex: 1; min-height: 0; overflow: hidden; cursor: grab; touch-action: none; background: #03070d; }
+.map-hd-viewport:active { cursor: grabbing; }
+.map-hd-canvas { transform-origin: 0 0; width: max-content; }
+.map-hd-canvas.map-hd-canvas-grid { display: grid; gap: 2px; background: #1e3650; }
+.map-hd-tile-cell { position: relative; width: 220px; height: 220px; overflow: hidden; }
+.map-hd-tile-cell img { display: block; width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
+.map-hd-tile-cell.map-hd-tile-grid-on { outline: 2px solid #38bdf8aa; outline-offset: -2px; }
+.map-hd-tile-label { position: absolute; left: 4px; bottom: 4px; font-size: 10px; padding: 2px 6px; border-radius: 6px; background: #071019cc; color: #9fe3ff; pointer-events: none; }
+.map-hd-full-img { display: block; max-width: none; user-select: none; -webkit-user-drag: none; }
+.map-hd-toolbar { position: absolute; left: 14px; top: 14px; display: flex; gap: 8px; }
+.map-hd-toolbar button { border: 1px solid #34445e; background: #101a2aee; color: #e9f1ff; border-radius: 10px; padding: 8px 10px; font-weight: 700; cursor: pointer; backdrop-filter: blur(8px); }
+.map-hd-toolbar button:hover { border-color: #68cfff; background: #17304a; }
+.map-hd-zoom-text { align-self: center; font-size: 11px; color: #9db3c9; padding: 0 4px; }
+.map-hd-hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); padding: 7px 11px; border-radius: 999px; background: #09101acc; border: 1px solid #26354c; color: #aebbd0; font-size: 11px; white-space: nowrap; pointer-events: none; }
+.map-hd-state { position: absolute; right: 14px; top: 14px; max-width: 42%; padding: 7px 10px; border-radius: 9px; background: #09101acc; border: 1px solid #26354c; color: #c9d8ee; font-size: 11px; text-align: right; pointer-events: none; }

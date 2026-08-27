@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="/static/style.css?v=08932"/>
 <link rel="stylesheet" href="/static/modules/nhan_vat_game_ready/nhan_vat_game_ready.css?v=0893"/>
 <link rel="stylesheet" href="/static/modules/do_vat_3d/do_vat_3d.css?v=0161"/>
+  <link rel="stylesheet" href="/static/modules/ban_do_3d/ban_do_3d.css?v=200">
 </head>
 <!-- compatibility history: 0.8.6. Character HD / texture viewer -->
 <body class="home-mode">
@@ -80,11 +81,18 @@
           <span class="studio-feature-copy"><strong>Đồ vật 3D</strong><small>Cây · Đá · Nhà · Props</small><em>Asset cho game, dùng chung engine 3D</em></span>
           <span class="studio-feature-arrow">→</span>
         </button>
-        <button class="studio-feature-card studio-feature-3d" disabled title="Bản đồ 3D chưa triển khai">
+        <button class="studio-feature-card studio-feature-3d" data-tool-open="bandohd">
           <span class="studio-feature-icon" aria-hidden="true">
             <svg viewBox="0 0 64 64"><path d="M8 16 24 8l16 8 16-8v40l-16 8-16-8-16 8Z"/><path d="M24 8v40M40 16v40"/></svg>
           </span>
-          <span class="studio-feature-copy"><strong>Bản đồ 3D</strong><small>Sắp triển khai</small><em>Ghép asset thành scene game</em></span>
+          <span class="studio-feature-copy"><strong>Bản đồ HD</strong><small>Khóa bố cục · chia tile HD · ghép liền mạch</small><em>Tile gốc thật, không upscale</em></span>
+          <span class="studio-feature-arrow">→</span>
+        </button>
+        <button class="studio-feature-card studio-feature-3d" disabled title="Bản đồ 3D (terrain GLB thật) chưa triển khai">
+          <span class="studio-feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><path d="M8 16 24 8l16 8 16-8v40l-16 8-16-8-16 8Z"/><path d="M24 8v40M40 16v40"/></svg>
+          </span>
+          <span class="studio-feature-copy"><strong>Bản đồ 3D</strong><small>Sắp triển khai</small><em>Terrain GLB · đặt prop 3D runtime</em></span>
           <span class="studio-feature-arrow">→</span>
         </button>
       </div>
@@ -133,6 +141,20 @@
           <div class="ai3d-viewer-hint">Chuột trái: xoay · Con lăn: zoom · Chuột phải: pan · Double-click: reset</div>
           <div class="ai3d-viewer-state" id="ai3dViewerState">Viewer 3D local</div>
           <div class="ai3d-viewer-debug hidden" id="ai3dViewerDebug"></div>
+        </div>
+        <div class="map-hd-stage-viewer hidden" id="mapHdStageViewer">
+          <div class="map-hd-empty" id="mapHdEmpty">Tạo Bản đồ HD ở sidebar bên phải - map sẽ hiện ngay tại đây.</div>
+          <div class="map-hd-viewport" id="mapHdViewport">
+            <div class="map-hd-canvas" id="mapHdCanvas"></div>
+          </div>
+          <div class="map-hd-toolbar">
+            <button id="mapHdZoomOut" title="Thu nhỏ">− Thu</button>
+            <button id="mapHdZoomReset" title="Về 100%">100%</button>
+            <button id="mapHdZoomIn" title="Phóng to">＋ Phóng</button>
+            <span class="map-hd-zoom-text" id="mapHdZoomText">100%</span>
+          </div>
+          <div class="map-hd-hint">Kéo chuột: pan · Con lăn: zoom</div>
+          <div class="map-hd-state" id="mapHdState"></div>
         </div>
         <div class="busy hidden" id="busy">
           <div class="spinner"></div>
@@ -463,6 +485,32 @@
       </div>
       <!-- MODULE: do_vat_3d END -->
 
+      <!-- MODULE: ban_do_3d BEGIN (JS/CSS o web/modules/ban_do_3d/) -->
+      <div id="panel-bandohd" class="panel toolpanel hidden">
+        <div class="panel-title">BẢN ĐỒ HD</div>
+        <div class="notice">Khóa bố cục tổng trước, sau đó chia tile HD gốc (không upscale từ ảnh nhỏ). Mỗi tile biết vị trí trong map và có overlap với hàng xóm để ghép liền mạch.</div>
+        <div id="mapHdStatus" class="selected-card"><strong>Đang kiểm tra Bản đồ HD…</strong></div>
+        <label class="dropzone"><strong id="mapHdImageName">＋ Ảnh mẫu (khuyên dùng)</strong><span>Dùng để khóa bố cục tổng - map sẽ bám sát bố cục này</span><input id="mapHdImageFile" type="file" accept="image/png,image/jpeg,image/webp" hidden></label>
+        <div class="field section-gap"><label>Mô tả map</label><textarea id="mapHdPrompt" placeholder="Ví dụ: thành chính ở giữa, rừng phía tây, sông chảy xuyên map, bờ biển phía đông"></textarea></div>
+        <div class="field"><label>Chất lượng</label><div class="segmented map-hd-quality"><button data-q="lite">NHẸ</button><button data-q="standard" class="active">TRUNG BÌNH</button><button data-q="final">ĐẸP</button></div></div>
+        <div class="field"><label>Số tile</label><select id="mapHdTiles"><option value="">Tự tính theo chất lượng</option><option>4</option><option>6</option><option>8</option><option>10</option><option>12</option><option>16</option><option>20</option></select></div>
+        <button class="btn accent wide primary-action" id="mapHdCreate">✦ TẠO MAP HD</button>
+        <div id="mapHdProgress" class="hidden section-gap map-hd-progress">
+          <div><span id="mapHdStage">Chuẩn bị</span><b id="mapHdPct">0%</b></div>
+          <div class="map-hd-track"><i id="mapHdBar"></i></div>
+          <small id="mapHdDetail"></small>
+        </div>
+        <div id="mapHdResult" class="ai-image-result hidden section-gap">
+          <div class="selected-card"><strong id="mapHdResultTitle">Map HD đã tạo</strong><small id="mapHdResultMeta"></small></div>
+          <div class="action-grid">
+            <button class="btn primary" id="mapHdOpenFull">🗺 MỞ MAP FULL</button>
+            <a class="btn" id="mapHdManifest" target="_blank">📄 MANIFEST</a>
+          </div>
+          <label class="map-hd-grid-toggle"><input type="checkbox" id="mapHdGridToggle"> Bật lưới tile</label>
+        </div>
+      </div>
+      <!-- MODULE: ban_do_3d END -->
+
       <div class="panel" id="selectedPanel">
         <div class="panel-title">Đối tượng đang chọn</div>
         <div id="noSelection" class="hint">Chọn một chữ / ảnh / sticker trên preview hoặc Layers.</div>
@@ -499,5 +547,6 @@
 <script src="/static/modules/nhan_vat_game_ready/nhan_vat_game_ready.js?v=0893"></script>
 <script src="/static/modules/do_vat_3d/do_vat_3d.js?v=0161"></script>
 <script src="/static/modules/nhan_vat_2d/nhan_vat_2d.js?v=0132"></script>
+  <script src="/static/modules/ban_do_3d/ban_do_3d.js?v=200"></script>
 </body>
 </html>

@@ -36,6 +36,8 @@ const toolMeta = {
   aiimage: ['AI ẢNH LOCAL','Tạo hoặc sửa ảnh bằng model miễn phí trên máy rồi đưa vào video.'],
   character2d: ['NHÂN VẬT 2D','Tạo, giữ form, đổi màu và làm sạch nhân vật 2D từ prompt hoặc ảnh mẫu.'],
   ai3d: ['AI 3D LOCAL','Tạo model GLB từ ảnh hoặc mô tả bằng backend 3D tách riêng.'],
+  dovat3d: ['ĐỒ VẬT 3D','Cây, đá, nhà, prop cho game - dùng chung engine 3D local.'],
+  bandohd: ['BẢN ĐỒ HD','Khóa bố cục tổng trước, chia tile HD, ghép liền mạch, xuất manifest.'],
 };
 
 const taskProgress = window.AIVFTaskProgress?.create({rootId:'busy',stageId:'busyText',pctId:'busyPct',barId:'busyBar',detailId:'busyDetail',elapsedId:'busyElapsed'});
