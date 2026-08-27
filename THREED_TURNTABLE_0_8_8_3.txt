@@ -1,0 +1,6 @@
+AI Video Factory 0.8.8.3
+- One-click 3D turntable export from the local WebGL viewer.
+- 1:1 1080x1080 or 16:9 1920x1080.
+- 8s or 12s.
+- Browser captures the existing textured GLB locally; backend converts to H.264 MP4 with FFmpeg.
+- No Blender, cloud API or model re-generation required.

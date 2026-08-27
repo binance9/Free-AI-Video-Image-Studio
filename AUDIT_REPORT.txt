@@ -1,0 +1,28 @@
+AI VIDEO FACTORY 0.8 FREE LOCAL + 3D - AUDIT
+
+Architecture
+- video_editor/ unchanged by 3D logic
+- image_ai_local/ separate
+- model_3d_local/ separate
+- TripoSR backend in its own file
+- optional Hunyuan3D adapter in its own file
+- 3D API and 3D frontend JS separate
+- 3D installer separate from the normal local-AI installer
+
+Verified in build environment
+- Python compile: PASS
+- JavaScript syntax: PASS
+- Existing 0.7 regression tests: PASS
+- New 3D tests: PASS
+- Total pytest: 11/11 PASS
+- TripoSR subprocess contract: PASS with isolated fake runner
+- image -> GLB API flow: PASS with isolated fake backend
+- prompt -> local concept image -> 3D orchestration: PASS
+- 3D workspace persistence: PASS
+- UI 3D tab/module separation: PASS
+
+Important live-model note
+- Full TripoSR neural inference/weight download was not executed inside the build sandbox because it requires the external model/dependencies and significant GPU resources.
+- SETUP_FREE_3D.bat installs the official VAST-AI-Research/TripoSR source and dependencies on the user's machine.
+- First real generation downloads the free stabilityai/TripoSR weights.
+- Texture baking is marked experimental because GPU/driver combinations can affect that path.

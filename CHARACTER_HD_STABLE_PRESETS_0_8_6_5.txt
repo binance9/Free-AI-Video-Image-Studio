@@ -1,0 +1,11 @@
+AI VIDEO FACTORY 0.8.6.5 - CHARACTER HD STABLE PRESETS
+
+- Default preset: Nhân vật HD · Shape đẹp.
+- Character HD texture/Paint is OFF by default.
+- Light mesh optimize remains ON by default.
+- Separate preset for Character HD + Hunyuan Paint, clearly marked very heavy.
+- Separate quick TripoSR preset.
+- Added isolated web/js/ai_3d_presets.js.
+- Fixed visible version strings and browser cache-busting.
+- Direct API metadata now reports actual texture application when backend exposes it.
+- CharacterHDBackend default is shape-only unless texture is explicitly requested.

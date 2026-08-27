@@ -1,0 +1,7 @@
+AI Video Factory 0.8.7.2 - Paint ASCII Native Build Fix
+
+- Fix Ninja missing grid_neighbor.cpp when project path contains Vietnamese Unicode (e.g. OneDrive\Máy tính).
+- Build custom_rasterizer and differentiable_renderer from an ASCII-only staging folder (C:\AIVF_NATIVE_BUILD when writable).
+- Install compiled native modules back into the existing Character HD venv.
+- Preserve Character HD models, cache, existing GLB assets and editor data.
+- Full compiler log remains at data\runtime_character_hd\paint_build.log.

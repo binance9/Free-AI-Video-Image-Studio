@@ -1,0 +1,15 @@
+AI 3D LOCAL 0.8
+
+1. Editor/video van chay nhu cu.
+2. Neu muon dung AI 3D: double-click SETUP_FREE_3D.bat mot lan.
+3. Mo START_VIDEO_FACTORY.bat.
+4. Chon tab AI 3D.
+5. Co 2 cach:
+   - Go mo ta -> AI anh local tao concept -> TripoSR tao GLB.
+   - Tai anh PNG/JPG/WebP -> TripoSR tao GLB truc tiep.
+6. Preview xoay duoc tao thanh MP4 khi bat preview.
+7. Tai GLB ve de dua vao game/Blender.
+
+Khuyen nghi: GPU NVIDIA khoang 6GB VRAM tro len cho TripoSR. CPU co the fallback nhung cham.
+Texture bake duoc de experimental vi TripoSR co the phu thuoc driver/CUDA.
+Rig xuong va animation KHONG tron vao 3D module; se lam module rieng neu can.

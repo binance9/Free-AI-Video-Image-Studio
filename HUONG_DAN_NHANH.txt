@@ -1,0 +1,9 @@
+AI VIDEO FACTORY 0.8 - HUONG DAN NHANH
+
+1) Giai nen vao thu muc moi.
+2) Double-click START_VIDEO_FACTORY.bat.
+3) Tai video len va dung Cut/Merge/Text/Image/Sticker ngay.
+4) Neu muon Phu de AI / Dich / AI Anh: bam nut AI LOCAL -> Cai bo AI local mien phi.
+   Neu nut cai trong web loi, dong app va double-click SETUP_FREE_AI.bat.
+5) Lan dau dung tung AI, model co the tai ve may. Khong can OpenAI key va khong co phi theo luot.
+6) Nhac: dung kho local co san hoac tai file nhac cua ban len.

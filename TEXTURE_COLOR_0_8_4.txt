@@ -1,0 +1,5 @@
+0.8.4 TEXTURE COLOR EDITION
+- viewer 3D now reads embedded GLB textures
+- toggle Texture ON/OFF
+- auto-upright heuristic for sideways characters
+- bake texture checkbox on by default

@@ -1,0 +1,9 @@
+{
+  "python_compile_errors": [],
+  "background_job_manager": true,
+  "progress_endpoint": true,
+  "ui_progress_percent": true,
+  "fast_test_no_render": true,
+  "offline_local_cache": true,
+  "streamed_subprocess": true
+}

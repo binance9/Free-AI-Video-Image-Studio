@@ -1,0 +1,5 @@
+AI VIDEO FACTORY 0.8.7.9 - CAPCUT HOME UI
+- Home screen: Video / Photo entry cards
+- Popular tools grid uses existing real modules only
+- Home -> editor routing without changing processing backends
+- Existing editor, timeline, 3D, Paint, cleanup, Facebook and emoji logic preserved

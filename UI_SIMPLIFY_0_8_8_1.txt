@@ -1,0 +1,7 @@
+AI Video Factory 0.8.8.1 - Simplified CapCut-style UI
+- Removes the legacy editor tool rail on the left.
+- Home grid is the only main tool launcher.
+- Editor = preview + current inspector + timeline.
+- Adds preview maximize/restore button.
+- Moves duplicate erase tool out of popular grid and groups cleanup intent under Dọn video AI.
+- Keeps existing backend/model/cache and tool logic unchanged.

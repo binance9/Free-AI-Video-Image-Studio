@@ -1,0 +1,18 @@
+{
+  "version": "0.8.4.3",
+  "python_compile_errors": [],
+  "pytest": "........................                                                 [100%]\n24 passed in 3.07s",
+  "javascript": {
+    "web/app.js": "PASS",
+    "web/js/ai_3d.js": "PASS",
+    "web/js/ai_3d_viewer.js": "PASS"
+  },
+  "fix": {
+    "root_cause": "native xatlas exporter cannot reliably open Windows Unicode absolute path",
+    "module": "app/modules/model_3d_local/windows_path_staging.py",
+    "texture_export_uses_ascii_staging": true,
+    "copies_textured_glb_back_to_project": true,
+    "keeps_cuda_texture_patch": true,
+    "keeps_obj_png_to_glb_converter": true
+  }
+}

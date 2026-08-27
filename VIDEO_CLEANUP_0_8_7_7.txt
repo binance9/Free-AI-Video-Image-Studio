@@ -1,0 +1,10 @@
+AI VIDEO FACTORY 0.8.7.7 - VIDEO CLEANUP
+=========================================
+- Module rieng XOA NEN VIDEO AI: rembg + ONNX Runtime + OpenCV, runtime tach rieng.
+- Ho tro giu nguoi/nhan vat hoac vat the tong quat.
+- Nen trong suot: WebM VP9 alpha. Nen mau: MP4.
+- Module rieng XOA CHU / ICON / LOGO co dinh: ve vung truc tiep tren preview.
+- Hai che do lap nen: FFmpeg delogo (nhanh) va OpenCV inpaint (sach hon).
+- Tat ca job deu co % + stage + detail + elapsed qua Unified Progress.
+- Video goc duoc giu, co the Hoan tac.
+- Cai AI cleanup mot lan bang SETUP_VIDEO_CLEANUP_AI.bat.

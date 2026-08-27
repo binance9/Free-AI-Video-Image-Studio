@@ -1,0 +1,11 @@
+AI VIDEO FACTORY 0.8.4.3 - WINDOWS ASCII TEXTURE EXPORT
+
+Observed error:
+ValueError: Cannot open path ...\OneDrive\Máy tính\...\mesh.obj
+
+0.8.4.3 keeps all earlier fixes, but runs texture export in an ASCII-only
+Windows staging folder outside the OneDrive project path. After OBJ + PNG are
+converted to the final textured GLB, the GLB is copied back to the normal
+project workspace.
+
+No model reinstall. No model re-download. Keep data/models.

@@ -1,0 +1,13 @@
+AI VIDEO FACTORY 0.8.6.8 - FACEBOOK VIDEO IMPORT
+
+- Them tool rieng: TAI VIDEO TU FACEBOOK.
+- Dan link Facebook / fb.watch cong khai -> yt-dlp tai local -> tu dua thang vao editor.
+- Co progress job rieng, khong lam dung UI.
+- Luu mot ban goc trong data/facebook_downloads va co nut tai file goc.
+- Khong dung cookie dang nhap, khong vuot quyen rieng tu, chi ho tro video cong khai.
+- START_VIDEO_FACTORY.bat tu cai yt-dlp neu may chua co.
+- Module tach rieng:
+  app/modules/facebook_video/downloader.py
+  app/modules/facebook_video/job_manager.py
+  app/api/facebook_video_routes.py
+  web/js/facebook_video.js

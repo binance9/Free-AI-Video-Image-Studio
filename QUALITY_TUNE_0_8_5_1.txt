@@ -1,0 +1,4 @@
+AI VIDEO FACTORY 0.8.5.1 - PREPROCESS FIX
+- Giữ alpha/mask sau khi tăng màu và sharpen
+- Không crop khi mask phủ gần kín khung
+- Fallback an toàn để tránh tạo tấm phẳng mang nguyên ảnh

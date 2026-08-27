@@ -1,0 +1,11 @@
+AI VIDEO FACTORY 0.8.5.1 - 3D QUALITY TUNE
+
+Mục tiêu bản này:
+- model đứng gọn hơn
+- mesh bớt nhăn/lồi lõm nhẹ
+- ảnh đầu vào được tối ưu trước khi đưa vào TripoSR
+- prompt -> 3D tạo concept dễ dựng hơn
+
+Lưu ý:
+- texture 1 ảnh luôn có giới hạn, đặc biệt mặt sau và vùng bị che khuất
+- muốn màu đẹp nhất nên dùng ảnh 1 nhân vật / 1 vật thể, nền sạch, đủ sáng, thấy rõ toàn thân

@@ -1,0 +1,7 @@
+AI Video Factory 0.8.7.6 - Paint Moving Progress
+
+- Hunyuan3D-Paint model loading no longer stays frozen at 30%.
+- Heartbeat advances an explicitly estimated percentage from 30 toward 57 while loading.
+- Paint inference advances from 65 toward 89 while running.
+- Real completion markers (58/90/96/100) are still emitted only after each stage truly finishes.
+- Detail shows elapsed time and HF cache size when available.

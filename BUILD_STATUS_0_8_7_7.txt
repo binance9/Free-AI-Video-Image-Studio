@@ -1,0 +1,15 @@
+AI VIDEO FACTORY 0.8.7.7 - VIDEO CLEANUP
+=========================================
+STATUS: PASS
+- Python compile: PASS
+- JavaScript syntax: PASS
+- Pytest: 82/82 PASS
+- Data safety: ZIP excludes data/factory.db and runtime/model caches
+
+NEW
+- Xoa nen video AI local (rembg + ONNX Runtime + OpenCV)
+- Nen trong suot WebM VP9 alpha / nen mau MP4
+- Xoa chu, icon, logo co dinh bang vung ve tren preview
+- FFmpeg delogo nhanh + OpenCV inpaint sach hon
+- Unified progress: % + stage + detail + elapsed
+- Runtime rieng: SETUP_VIDEO_CLEANUP_AI.bat

@@ -1,0 +1,22 @@
+AI VIDEO FACTORY 0.8.6 - CHARACTER HD
+
+Backend 3D:
+- Nhanh: TripoSR, giu nguyen runtime cu
+- Nhan vat HD: Hunyuan3D-2mini, runtime rieng
+
+File rieng:
+- app/modules/model_3d_local/character_hd_backend.py
+- app/modules/model_3d_local/run_character_hd.py
+- tools/install_character_hd.py
+- SETUP_CHARACTER_HD.bat
+
+Viewer:
+- X-90 / X+90
+- Z-90 / Z+90
+- rotate / zoom / pan / texture / wireframe / fullscreen
+
+Luu y:
+- Character HD khong nam san trong ZIP vi model rat lon.
+- Chay SETUP_CHARACTER_HD.bat mot lan. Lan dau tao model, weights se tai ve may.
+- Texture HD can native renderer; installer se thu build rieng. Neu renderer chua build duoc, shape HD van duoc giu.
+- Kiem tra license cua model truoc khi dung cho muc dich thuong mai.

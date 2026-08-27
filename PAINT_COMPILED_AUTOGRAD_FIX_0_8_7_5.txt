@@ -1,0 +1,6 @@
+AI Video Factory 0.8.7.6 - Paint PyTorch compiled_autograd Windows Fix
+
+- Fix loi NVCC/MSVC C2872: std ambiguous symbol trong torch/csrc/dynamo/compiled_autograd.h.
+- Them -DUSE_CUDA qua NVCC_APPEND_FLAGS (khong sua Torch goc).
+- Giu ASCII source staging va Torch include/lib mirror tu 0.8.7.4.
+- Khong cai lai model, CUDA hay Visual Studio.

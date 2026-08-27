@@ -1,0 +1,10 @@
+AI VIDEO FACTORY 0.8.6.7 - SAFE CHARACTER HD COLOR
+
+- Shape va Paint tach thanh 2 job.
+- Nut TO MAU GLB HIEN CO dung GLB vua tao hoac GLB duoc chon tu may.
+- Paint khong chay lai Hunyuan shape model.
+- Low VRAM: dung enable_model_cpu_offload khi runtime ho tro.
+- GLB trang goc khong bi sua; Paint xuat GLB mau moi.
+- Truoc khi Paint, app kiem tra TEXTURE_READY.txt.
+- SETUP_CHARACTER_HD_TEXTURE.bat chi build native texture extensions, khong cai lai model/shape runtime.
+- GLB mau chi duoc bao thanh cong neu co material + texture + image nhung trong file.

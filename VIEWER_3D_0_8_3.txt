@@ -1,0 +1,18 @@
+AI VIDEO FACTORY 0.8.3 - INTERACTIVE 3D VIEWER
+
+Mới:
+- Tạo xong GLB tự mở viewer ngay trong khung xem trước.
+- Chuột trái: xoay model 360 độ.
+- Con lăn: zoom in/out.
+- Chuột phải: pan.
+- Double-click hoặc nút Reset: reset camera.
+- Wireframe.
+- Tự xoay.
+- Fullscreen.
+- Viewer dùng WebGL2 local, không CDN, không API key, không Internet.
+- Viewer nằm riêng tại web/js/ai_3d_viewer.js; không trộn logic vào TripoSR.
+- Download GLB vẫn giữ nguyên.
+
+Cập nhật từ 0.8.2:
+Copy toàn bộ nội dung ai_video_factory trong ZIP đè vào thư mục đang dùng và chọn Replace.
+KHÔNG xóa data/models/3d để giữ weights đã tải. Không cần chạy SETUP_FREE_3D.bat lại.

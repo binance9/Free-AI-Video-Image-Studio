@@ -1,0 +1,18 @@
+AI VIDEO FACTORY 0.8.4.1 - TEXTURE CUDA FIX
+
+Sửa lỗi:
+RuntimeError: Expected all tensors to be on the same device, cuda:0 and cpu
+
+Patch tách riêng:
+app/modules/model_3d_local/texture_cuda_patch.py
+
+Patch sẽ tự áp dụng vào:
+tools/external/TripoSR/tsr/bake_texture.py
+
+Nó:
+- đưa positions_texture lên scene_code.device
+- đồng bộ dtype với scene_code
+- đưa color tensor về CPU trước khi chuyển NumPy
+- giữ backup bake_texture.py.aivf_backup
+- không cần cài lại AI 3D
+- không cần tải lại model

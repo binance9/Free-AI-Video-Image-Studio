@@ -1,0 +1,4 @@
+rembg>=2.0.67
+opencv-python-headless>=4.10
+onnxruntime-gpu>=1.19,<1.27
+Pillow>=10.4

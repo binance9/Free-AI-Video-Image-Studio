@@ -1,0 +1,17 @@
+{
+  "version": "0.8.4.1",
+  "python_compile_errors": [],
+  "pytest": "\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m                                                     [100%]\u001b[0m\n\u001b[32m\u001b[32m\u001b[1m20 passed\u001b[0m\u001b[32m in 3.33s\u001b[0m\u001b[0m\nSpreadsheet runtime warmup failed during python startup\nTraceback (most recent call last):\n  File \"/tmp/tmp.L2TH2Y5coc/artifact_tool_v2-2.8.22/artifact_tool/patches/warm_spreadsheet_runtime_on_startup.py\", line 26, in warm_spreadsheet_runtime_on_startup\n  File \"/tmp/tmp.L2TH2Y5coc/artifact_tool_v2-2.8.22/artifact_tool/spreadsheet_warmup.py\", line 772, in warm_spreadsheet_runtime\n  File \"/tmp/tmp.L2TH2Y5coc/artifact_tool_v2-2.8.22/artifact_tool/rpc/connection.py\", line 37, in get_or_create_client\n  File \"/tmp/tmp.L2TH2Y5coc/artifact_tool_v2-2.8.22/artifact_tool/rpc/daemon.py\", line 124, in start_daemon\nTimeoutError: Timed out waiting for artifact tool daemon socket. Set ARTIFACT_TOOL_RPC_DAEMON_STARTUP_TIMEOUT_S=<seconds> to increase the limit.",
+  "javascript": {
+    "web/app.js": "PASS",
+    "web/js/ai_3d.js": "PASS",
+    "web/js/ai_3d_viewer.js": "PASS"
+  },
+  "texture_cuda_patch": {
+    "separate_file": "app/modules/model_3d_local/texture_cuda_patch.py",
+    "device_fix": true,
+    "dtype_fix": true,
+    "cuda_to_numpy_fix": true,
+    "backup_original": true
+  }
+}

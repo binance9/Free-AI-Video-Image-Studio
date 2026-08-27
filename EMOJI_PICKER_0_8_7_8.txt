@@ -1,0 +1,9 @@
+AI VIDEO FACTORY 0.8.7.8 - CHAT STYLE EMOJI PICKER
+
+- Nhãn dán đổi thành Emoji & Nhãn dán.
+- Emoji là tab mặc định, bố cục giống khung chat.
+- Có tìm kiếm, danh mục, emoji gần đây.
+- Có mặt cười/khóc/tim/tay/phản ứng/động vật/đồ ăn/đồ vật.
+- Khi bấm emoji, trình duyệt rasterize emoji thành PNG nền trong suốt rồi upload vào session editor.
+- Export video dùng pipeline sticker/image sẵn có, không phụ thuộc font emoji của FFmpeg.
+- Sticker local và GIPHY vẫn giữ nguyên ở tab riêng.

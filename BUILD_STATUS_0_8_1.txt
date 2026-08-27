@@ -1,0 +1,7 @@
+{
+  "python_compile_errors": [],
+  "isolated_python_312": true,
+  "uses_pymcubes": true,
+  "no_torchmcubes_install": true,
+  "backend_no_sys_executable": true
+}

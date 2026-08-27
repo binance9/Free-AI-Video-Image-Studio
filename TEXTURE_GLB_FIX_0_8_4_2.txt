@@ -1,0 +1,10 @@
+AI VIDEO FACTORY 0.8.4.2 - TEXTURE GLB EXPORT FIX
+
+Sửa lỗi 97% Exporting mesh and texture:
+- xatlas.export chỉ dùng để xuất OBJ, không dùng để xuất GLB có texture.
+- Khi Bake texture bật: TripoSR xuất mesh.obj + texture.png tạm.
+- Module riêng textured_glb_export.py dùng trimesh trong runtime3d để nhúng texture vào GLB.
+- GLB cuối có image/texture/material nhúng bên trong.
+- Viewer 3D 0.8.4 đọc texture màu trực tiếp từ GLB.
+- Giữ nguyên CUDA texture patch 0.8.4.1.
+- Không cần SETUP_FREE_3D lại, không tải lại model.

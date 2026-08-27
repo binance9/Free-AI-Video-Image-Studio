@@ -1,0 +1,13 @@
+{
+  "prompt": "male fantasy swordsman, long black hair, silver armor, purple robe, dual swords, full body, front idle pose, gray background",
+  "action": "idle",
+  "frames": 1,
+  "directions": ["down"],
+  "size": "1024x1024",
+  "style": "fantasy",
+  "quality": "high",
+  "min_score": 78,
+  "max_repairs": 4,
+  "strict_lock": true,
+  "candidates": 2
+}

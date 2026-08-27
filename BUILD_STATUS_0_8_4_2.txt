@@ -1,0 +1,13 @@
+{
+  "version": "0.8.4.2",
+  "python_compile_errors": [],
+  "pytest": "22 passed",
+  "javascript": {
+    "web/app.js": "PASS",
+    "web/js/ai_3d.js": "PASS",
+    "web/js/ai_3d_viewer.js": "PASS"
+  },
+  "fix": "Bake texture exports OBJ+PNG first, then packs embedded-texture GLB with trimesh",
+  "converter": "app/modules/model_3d_local/textured_glb_export.py",
+  "cuda_patch_preserved": true
+}

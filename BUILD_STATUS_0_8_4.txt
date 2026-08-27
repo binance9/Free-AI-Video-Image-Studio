@@ -1,0 +1,5 @@
+AI VIDEO FACTORY 0.8.4
+PASS: texture viewer JS updated
+PASS: texture checkbox default enabled
+PASS: version badge 0.8.4
+PASS: auto-upright + texture toggle wired

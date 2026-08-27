@@ -1,0 +1,10 @@
+AI VIDEO FACTORY 0.8.6.3 - CHARACTER HD INFERENCE HEARTBEAT FIX
+
+Fix bug seen in 0.8.6.2: the 30-minute cache watchdog could kill a healthy job at 50% because cache naturally stops growing once weights are loaded.
+
+Changes:
+- Watch worker heartbeat/output instead of cache growth.
+- Add 12-second heartbeat while Hunyuan3D-2mini shape inference is running.
+- Add heartbeat while Hunyuan3D-Paint weights are loading.
+- Keep 4-hour hard safety timeout.
+- Existing Character HD cache/runtime are reused; no reinstall or redownload required.

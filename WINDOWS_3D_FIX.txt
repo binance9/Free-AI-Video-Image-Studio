@@ -1,0 +1,17 @@
+AI VIDEO FACTORY 0.8.1 - WINDOWS 3D FIX
+
+Sua loi da thay tren may BAOAN:
+- Python 3.14 + Pillow 10.1.0 build fail.
+- Installer moi tao Python 3.12 rieng cho AI 3D.
+- TripoSR khong con dung requirements.txt goc.
+- Bo torchmcubes kho build tren Windows.
+- Dung PyMCubes cho marching-cubes.
+- Neural inference van dung NVIDIA CUDA neu may co NVIDIA.
+- Backend goi runtime3d/venv, khong goi Python chinh cua app.
+
+Cach dung:
+1. Giai nen 0.8.1 vao thu muc moi.
+2. Double-click SETUP_FREE_3D.bat.
+3. Cho toi khi hien [OK].
+4. Double-click START_VIDEO_FACTORY.bat.
+5. Vao AI 3D va test anh -> 3D.

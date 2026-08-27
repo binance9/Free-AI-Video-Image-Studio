@@ -1,0 +1,7 @@
+AI Video Factory 0.8.7.2 - Paint VS2022 Detection Fix
+
+- Sua loi BAT 0.8.7.0: bien VCVARS duoc gan ben trong block () nen CMD expand sai va bao nham khong co cl.exe.
+- Tu tim VS2022 Build Tools, co fallback vswhere.
+- Uu tien MSVC 14.39 neu da cai de hop CUDA 12.8.
+- Tu tim CUDA 12.8 va nap PATH.
+- Khong xoa model, runtime hay du lieu cu.

@@ -1,0 +1,7 @@
+AI Video Factory 0.8.7.6 - Paint Torch ASCII Mirror Fix
+
+- Bo junction mklink /J vi co the fail voi target OneDrive\Máy tính.
+- Mirror torch/include va torch/lib vao C:\AIVF_NATIVE_BUILD bang NTFS hardlink.
+- Neu hardlink khong dung duoc thi fallback copy2.
+- MSVC/Ninja chi nhan duong ASCII cho torch/extension.h va torch libraries.
+- Khong can cai lai CUDA/MSVC/model.

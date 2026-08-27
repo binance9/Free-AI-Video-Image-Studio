@@ -1,0 +1,7 @@
+AI VIDEO FACTORY 0.8.7.8 - CHAT EMOJI PICKER
+
+- Emoji picker kiểu khung chat
+- Search + categories + recent
+- Emoji -> transparent PNG asset -> existing sticker render pipeline
+- Local stickers + GIPHY preserved
+- Video Cleanup 0.8.7.7 and all Character HD/Paint fixes preserved

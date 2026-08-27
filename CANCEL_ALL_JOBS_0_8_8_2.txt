@@ -1,0 +1,10 @@
+AI Video Factory 0.8.8.2 - STOP / CANCEL ALL JOBS
+
+- Adds a visible STOP button inside the progress overlay.
+- Adds STOP ALL on the editor top bar while a long task is active.
+- AI Image generation/editing now runs as cancellable background jobs.
+- AI 3D Shape / Character HD / Paint can be cancelled and their spawned process tree is stopped.
+- Video Cleanup background removal / object-text removal can be cancelled.
+- Facebook download jobs can be cancelled cooperatively.
+- Completed images/models/videos remain saved; model caches are not deleted.
+- Cancelling does not kill unrelated python.exe processes.

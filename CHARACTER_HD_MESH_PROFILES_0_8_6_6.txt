@@ -1,0 +1,14 @@
+AI VIDEO FACTORY 0.8.6.6 - CHARACTER HD MESH PROFILES
+
+- Character HD giữ mặc định HD ~65-75% tam giác: mức đã test đẹp.
+- Medium ~25-35%: ưu tiên game, nhẹ hơn rõ.
+- Light ~10-18%: ưu tiên hiệu năng / nhiều asset.
+- Có thể tắt Optimize để giữ mesh gốc 100%.
+- Texture Paint vẫn tắt mặc định và không bị ép bật.
+- Không cần cài lại Character HD, không xóa model/cache/runtime.
+
+CALIBRATION tren model test 963,948 tam giac:
+- HD: 685,829 (~71.1%)
+- Medium: 292,614 (~30.4%)
+- Light: 135,956 (~14.1%)
+Bounding box thay doi rat nho; HD la mac dinh de giu form.

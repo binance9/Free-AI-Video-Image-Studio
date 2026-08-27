@@ -1,0 +1,9 @@
+faster-whisper>=1.2
+argostranslate>=1.11
+torch>=2.5
+diffusers>=0.35
+transformers>=4.50
+accelerate>=1.2
+safetensors>=0.5
+huggingface_hub>=0.27
+sentencepiece>=0.2

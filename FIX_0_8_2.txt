@@ -1,0 +1,13 @@
+AI VIDEO FACTORY 0.8.2 - 3D PROGRESS FIX
+
+- Job 3D chạy nền; web không còn treo request dài.
+- Hiện % và bước thật từ log TripoSR.
+- Tạo GLB trước; preview MP4 tạm tắt ở lần test nhanh.
+- Nếu weights TripoSR + DINO đã có trong data/models/3d, dùng snapshot local trực tiếp.
+- Khi dùng local cache, bật Hugging Face offline để không chờ kiểm tra mạng lại.
+- Backend tự patch tokenizer TripoSR để đọc DINO từ snapshot local.
+- Timeout 20 phút sẽ báo bước đang mắc + log cuối, không quay vô hạn.
+- Viewer xoay/zoom sẽ thêm sau khi xác nhận GLB chạy ổn.
+
+QUAN TRỌNG: giữ nguyên data/models/3d đã tải.
+Nếu cập nhật ngay trên thư mục hiện tại, chép đè code 0.8.2 nhưng không xóa thư mục data.

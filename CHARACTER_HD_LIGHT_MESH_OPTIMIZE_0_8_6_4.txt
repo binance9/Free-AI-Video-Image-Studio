@@ -1,0 +1,9 @@
+AI VIDEO FACTORY 0.8.6.4 - CHARACTER HD LIGHT MESH OPTIMIZE
+
+- Them module rieng mesh_optimize_light.py, khong tron vao Hunyuan backend.
+- Character HD co tuy chon "Toi uu mesh nhe" mac dinh bat.
+- Vertex clustering nhe, muc tieu thuong con khoang 65-75% tam giac.
+- Chay truoc texture de khong pha UV/texture.
+- Neu optimizer loi, app giu mesh HD goc thay vi lam mat ket qua.
+- UI hien so tam giac truoc -> sau khi toi uu.
+- Khong can cai package moi, khong can chay lai SETUP_CHARACTER_HD.bat.

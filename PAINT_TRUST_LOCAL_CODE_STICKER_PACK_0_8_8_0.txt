@@ -1,0 +1,6 @@
+AI Video Factory 0.8.8.0
+- Fix Paint HD 30%: Diffusers receives trust_remote_code=True inside the isolated local Hunyuan Paint worker.
+- Permission is scoped to the local Paint worker and is not a global app setting.
+- Adds Gà Con Reaction Pack V1: 24 standalone transparent PNG stickers.
+- Adds Sticker tab: 🐥 BỘ RIÊNG.
+- Uses the existing builtin sticker/render pipeline; no GIPHY or API required.

@@ -1,0 +1,13 @@
+{
+  "version": "0.8.6",
+  "tests": "27 passed",
+  "python_compile": "PASS",
+  "javascript_syntax": "PASS",
+  "character_hd": {
+    "backend": "Hunyuan3D-2mini",
+    "isolated_venv": true,
+    "setup_file": "SETUP_CHARACTER_HD.bat",
+    "actual_cuda_inference_tested_here": false
+  },
+  "viewer_manual_rotation": ["X-90", "X+90", "Z-90", "Z+90"]
+}

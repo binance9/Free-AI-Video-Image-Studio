@@ -1,0 +1,9 @@
+AI VIDEO FACTORY 0.8.6.1 - CHARACTER HD LOAD FIX
+
+- Hunyuan3D-2mini now loads with explicit CUDA device
+- Uses FP16 variant like Tencent official mini example
+- Adds live heartbeat while weights are downloading/loading
+- Shows Character HD cache size while waiting
+- Checks CUDA before model load
+- Gives clear CUDA OOM error instead of silent stall
+- Uses official mini inference settings (50 steps, octree 380, output trimesh)

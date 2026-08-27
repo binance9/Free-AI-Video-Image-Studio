@@ -1,0 +1,12 @@
+AI VIDEO FACTORY 0.8 FREE LOCAL + 3D
+
+CORE VIDEO: inherited from 0.7
+AI IMAGE LOCAL: separate
+AI 3D LOCAL: added as separate module
+DEFAULT 3D BACKEND: TripoSR
+OPTIONAL FUTURE BACKEND: Hunyuan3D adapter isolated
+OUTPUT: GLB + turntable MP4 preview when backend supports render
+PROMPT TO 3D: local image concept -> local 3D
+IMAGE TO 3D: direct
+RIG/ANIMATION: intentionally NOT bundled; future separate module
+PAID API REQUIRED: NO

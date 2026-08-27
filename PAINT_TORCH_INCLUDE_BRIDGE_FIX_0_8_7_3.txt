@@ -1,0 +1,7 @@
+AI Video Factory 0.8.7.6 - Paint Torch Include/Lib Bridge Fix
+
+- Fix loi MSVC C1083: Cannot open include file: torch/extension.h.
+- Nguyen nhan: torch.utils.cpp_extension van sinh /I den venv nam duoi OneDrive\May tinh, du source da stage sang C:\AIVF_NATIVE_BUILD.
+- Tao junction ASCII C:\AIVF_NATIVE_BUILD\torch_include va torch_lib.
+- Prepend INCLUDE/LIB/PATH bang alias ASCII truoc khi build custom_rasterizer.
+- Giu nguyen model/cache/runtime Character HD.

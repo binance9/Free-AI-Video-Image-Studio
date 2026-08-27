@@ -1,0 +1,15 @@
+AI VIDEO FACTORY 0.8.7.0 - UNIFIED PROGRESS
+
+STATUS: PASS
+- Python compile: PASS
+- JavaScript syntax: PASS
+- Pytest: 57/57 PASS
+
+Unified progress UI:
+- percent
+- stage
+- detail
+- elapsed time
+- real progress for 3D/Facebook
+- coarse package progress for local AI install
+- honest estimated progress for synchronous editor/AI actions, capped below 100 until completion

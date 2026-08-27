@@ -1,0 +1,12 @@
+AI Video Factory 0.8.9.0 - Workflow Polish
+
+1. Home remains the only main tool launcher; old editor rail stays removed.
+2. Video Cleanup combines background removal + text/logo/object removal in one panel.
+3. AI 3D simple flow: source + Fast/Balanced/Best + optional automatic Paint + one Create button.
+4. Technical 3D controls are under Advanced.
+5. Save Video is the primary export action; Results opens the work folder.
+6. 3D result has Save GLB, Open Folder, and one-click 360 MP4.
+7. Recent video session is remembered on Home and can be reopened.
+8. Fast 3D really uses TripoSR; Balanced uses Character HD medium mesh; Best uses HD mesh.
+9. Paint is not loaded unless color is requested.
+10. Existing Stop / Stop All progress controls remain intact.

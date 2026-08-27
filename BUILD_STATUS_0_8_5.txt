@@ -1,0 +1,12 @@
+{
+  "version": "0.8.5.1.1",
+  "name": "AI VIDEO FACTORY FREE LOCAL STUDIO",
+  "focus": "3D quality tune",
+  "changes": [
+    "Auto preprocess input image before TripoSR: clean/crop/center subject",
+    "Auto post-process output GLB: mild mesh smoothing + auto upright",
+    "Improved prompt-to-3D concept prompt for centered, full silhouette subjects",
+    "UI/version text updated to 0.8.5.1"
+  ],
+  "note": "Texture quality still depends heavily on source image. One clear front-view image with simple background gives the best result."
+}

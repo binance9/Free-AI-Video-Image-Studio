@@ -1,0 +1,7 @@
+AI VIDEO FACTORY 0.8.6.2 - CHARACTER HD DOWNLOAD TIMEOUT FIX
+
+- Bỏ timeout cứng 60 phút khi Character HD đang tải weights.
+- Hard timeout tăng lên 4 giờ.
+- Chỉ coi là kẹt nếu cache Character HD không tăng trong 30 phút.
+- Cache đã tải từ các lần trước được giữ nguyên và dùng tiếp.
+- Không cần chạy lại SETUP_CHARACTER_HD.bat.

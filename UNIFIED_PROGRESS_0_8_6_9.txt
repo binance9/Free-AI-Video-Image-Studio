@@ -1,0 +1,23 @@
+AI VIDEO FACTORY 0.8.7.0 - UNIFIED TASK PROGRESS
+
+Mọi tác vụ chạy lâu dùng cùng một giao diện tiến trình:
+- %
+- tên giai đoạn
+- chi tiết đang xử lý
+- thời gian đã chạy
+- 100% chỉ khi tác vụ thật sự hoàn tất
+
+Tiến độ REAL:
+- AI 3D / Character HD / Paint
+- tải video Facebook
+- cài AI local theo nhóm thư viện
+
+Tiến độ ƯỚC TÍNH (backend đồng bộ chưa trả progress chi tiết):
+- tải video local vào editor
+- cắt / ghép / undo / render MP4
+- phụ đề Whisper / dịch Argos
+- AI ảnh local
+- nhập / ghép nhạc
+- tải ảnh / sticker / asset
+
+Thanh ước tính dừng dưới 100% cho tới khi backend trả kết quả, để không báo hoàn tất giả.

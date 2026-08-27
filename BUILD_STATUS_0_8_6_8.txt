@@ -1,0 +1,13 @@
+AI VIDEO FACTORY 0.8.6.8 - FACEBOOK VIDEO IMPORT
+
+STATUS: PASS
+- Python compile: PASS
+- JavaScript syntax: PASS
+- pytest: 51/51 PASS
+- Facebook module separated from editor/3D: PASS
+- URL allowlist: facebook.com / fb.watch only
+- Public-only mode: no cookies / no login bypass
+- Background progress job: PASS
+- Auto import into editor after download: PASS
+- Persistent original copy: data/facebook_downloads
+- Existing factory.db is excluded from release ZIP to avoid overwriting user data.

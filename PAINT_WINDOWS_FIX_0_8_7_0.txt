@@ -1,0 +1,10 @@
+AI VIDEO FACTORY 0.8.7.0 - CHARACTER HD PAINT WINDOWS FIX
+
+- SETUP_CHARACTER_HD_TEXTURE.bat tu nap VS2022 x64 neu cl chua co.
+- Tu tim CUDA Toolkit 12.8 va set CUDA_PATH/CUDA_HOME/PATH.
+- Set DISTUTILS_USE_SDK=1, MSSdk=1, MAX_JOBS=2.
+- Tu detect compute capability cua GPU de giam thoi gian compile.
+- Neu source Hunyuan cu, ap dung patch Windows int64_t/narrowing an toan cho custom_rasterizer.
+- Xoa build cache cua extension truoc khi build lai.
+- Luu TOAN BO stdout/stderr compiler vao data/runtime_character_hd/paint_build.log.
+- Khong cai lai shape model, khong xoa weights/cache.

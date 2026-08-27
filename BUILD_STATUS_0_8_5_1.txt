@@ -1,0 +1,9 @@
+{
+  "version": "0.8.5.1",
+  "status": "fixed",
+  "notes": [
+    "Fixed 3D input preprocess alpha preservation",
+    "Avoid flat-rectangle textured-card failure mode",
+    "Updated UI/version text to 0.8.5.1"
+  ]
+}
