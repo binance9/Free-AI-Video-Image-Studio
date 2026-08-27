@@ -46,7 +46,9 @@
     S.updateBusyProgress?.(p, d.stage || 'Đang tạo đồ vật 3D', d.detail || '', 'real');
   }
 
-  function showResult(result) {
+  let lastJobId = null;
+
+  function showResult(result, status) {
     lastResult = result;
     $('dovat3dResult')?.classList.remove('hidden');
     $('dovat3dResultTitle').textContent = result.has_texture ? '✓ Đồ vật 3D (có màu) đã tạo' : '✓ Đồ vật 3D đã tạo';
@@ -59,6 +61,33 @@
     if (result.viewer_url && window.AIVF3DViewer) {
       window.AIVF3DViewer.show(result.viewer_url, 'Đồ vật 3D vừa tạo');
     }
+
+    const isPartial = status === 'partial_success';
+    $('dovat3dPartialNotice')?.classList.toggle('hidden', !isPartial);
+    $('dovat3dRetryTexture')?.classList.toggle('hidden', !isPartial);
+
+    const perf = $('dovat3dPerfInfo');
+    if (perf) {
+      const t = result.timings || {};
+      const poly = result.poly || {};
+      const rows = [];
+      if (result.engine_label) rows.push(`Engine: ${S.esc(result.engine_label)}`);
+      if (result.device) rows.push(`GPU/CPU: ${S.esc(result.device)}`);
+      if (typeof t.shape_seconds === 'number') rows.push(`Shape: ${t.shape_seconds}s`);
+      if (typeof t.optimize_seconds === 'number') rows.push(`Optimize: ${t.optimize_seconds}s`);
+      if (typeof t.texture_seconds === 'number' && t.texture_seconds > 0) rows.push(`Texture: ${t.texture_seconds}s`);
+      if (typeof t.total_seconds === 'number') rows.push(`Total: ${t.total_seconds}s`);
+      if (poly.original_triangle_count) {
+        rows.push(`Poly: ${poly.original_triangle_count.toLocaleString('vi-VN')} → ${(poly.optimized_triangle_count || 0).toLocaleString('vi-VN')}` +
+          (poly.poly_target ? ` (target ${poly.poly_target.toLocaleString('vi-VN')}${poly.poly_target_met ? ' ✓' : ''})` : ''));
+      }
+      if (rows.length) {
+        perf.innerHTML = rows.map(r => `<div>${r}</div>`).join('');
+        perf.classList.remove('hidden');
+      } else {
+        perf.classList.add('hidden');
+      }
+    }
   }
 
   async function pollJob(statusUrl) {
@@ -68,7 +97,13 @@
       if (data.status === 'done') {
         S.setBusy(false);
         S.setStatus('100% · Đồ vật 3D đã tạo xong.');
-        showResult(data.result || {});
+        showResult(data.result || {}, data.status);
+        return;
+      }
+      if (data.status === 'partial_success') {
+        S.setBusy(false);
+        S.setStatus('Shape 3D đã hoàn tất · tô màu chưa hoàn tất.');
+        showResult(data.result || {}, data.status);
         return;
       }
       if (data.status === 'error') {
@@ -113,6 +148,7 @@
         form.append('texture', texture);
         started = await S.jsonRequest('/api/do-vat-3d/create', { method: 'POST', body: form });
       }
+      lastJobId = started.job_id;
       pollJob(started.status_url);
     } catch (e) {
       S.setBusy(false);
@@ -120,8 +156,26 @@
     }
   }
 
+  async function retryTexture() {
+    if (!lastJobId) return;
+    const texture = $('dovat3dTexture').value;
+    S.setBusy(true, 'Đang tô màu lại…', 'Dùng lại shape đã tạo, không dựng lại từ đầu');
+    setProgress({ progress: 1, stage: 'Bắt đầu tô màu lại', detail: '' });
+    try {
+      const started = await S.jsonRequest(`/api/do-vat-3d/job/${lastJobId}/retry-texture`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texture_mode: texture === 'none' ? 'lite' : texture }),
+      });
+      pollJob(started.status_url);
+    } catch (e) {
+      S.setBusy(false);
+      S.setStatus('Không tô màu lại được: ' + e.message, true);
+    }
+  }
+
   $('dovat3dRun')?.addEventListener('click', runCreate);
   $('dovat3dAgain')?.addEventListener('click', runCreate);
+  $('dovat3dRetryTexture')?.addEventListener('click', retryTexture);
 
   window.AIVFDoVat3D = Object.assign(window.AIVFDoVat3D || {}, {
     getLastResult: () => lastResult,
