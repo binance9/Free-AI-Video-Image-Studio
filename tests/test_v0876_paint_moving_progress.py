@@ -8,7 +8,7 @@ def test_version():
     assert 'studio=0.8.9.0' in text('START_VIDEO_FACTORY.py')
 
 def test_paint_heartbeat_moves():
-    s=text('app/modules/model_3d_local/run_character_hd_paint.py')
+    s=text('app/modules/nhan_vat_3d/run_character_hd_paint.py')
     assert 'def progressive_heartbeat' in s
     assert 'math.exp' in s
     assert 'args=(load_stop, 30, 58' in s

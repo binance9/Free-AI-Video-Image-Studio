@@ -1,5 +1,5 @@
 from pathlib import Path
-from app.modules.model_3d_local.windows_path_staging import has_non_ascii
+from app.modules.nhan_vat_3d.windows_path_staging import has_non_ascii
 
 
 def test_detects_unicode_project_path():

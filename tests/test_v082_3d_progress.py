@@ -1,5 +1,5 @@
 from pathlib import Path
-from app.modules.model_3d_local.triposr_backend import TripoSRBackend
+from app.modules.nhan_vat_3d.triposr_backend import TripoSRBackend
 
 
 def test_progress_stage_map(tmp_path):

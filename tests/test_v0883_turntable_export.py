@@ -1,8 +1,8 @@
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 def test_turntable_backend_and_ui():
-    api=(ROOT/'app/api/model_3d_routes.py').read_text(encoding='utf-8')
-    mod=(ROOT/'app/modules/model_3d_local/turntable_video.py').read_text(encoding='utf-8')
+    api=(ROOT/'app/modules/nhan_vat_3d/api_nhan_vat_3d.py').read_text(encoding='utf-8')
+    mod=(ROOT/'app/modules/nhan_vat_3d/turntable_video.py').read_text(encoding='utf-8')
     html=(ROOT/'web/index.html').read_text(encoding='utf-8')
     js=(ROOT/'web/js/ai_3d.js').read_text(encoding='utf-8')
     viewer=(ROOT/'web/js/ai_3d_viewer.js').read_text(encoding='utf-8')

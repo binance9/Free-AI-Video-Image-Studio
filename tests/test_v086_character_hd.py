@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from app.modules.model_3d_local.character_hd_backend import CharacterHDBackend
+from app.modules.nhan_vat_3d.character_hd_backend import CharacterHDBackend
 
 
 def test_character_hd_status_isolated(tmp_path):
@@ -29,7 +29,7 @@ def test_ui_has_backend_selector_and_manual_rotation():
 
 def test_character_hd_files_separated():
     root = Path(__file__).resolve().parents[1]
-    assert (root / "app/modules/model_3d_local/character_hd_backend.py").exists()
-    assert (root / "app/modules/model_3d_local/run_character_hd.py").exists()
+    assert (root / "app/modules/nhan_vat_3d/character_hd_backend.py").exists()
+    assert (root / "app/modules/nhan_vat_3d/run_character_hd.py").exists()
     assert (root / "tools/install_character_hd.py").exists()
     assert (root / "SETUP_CHARACTER_HD.bat").exists()

@@ -28,11 +28,11 @@ def test_presets_are_isolated_and_safe():
 
 
 def test_character_backend_defaults_to_shape_only():
-    src = (ROOT / 'app/modules/model_3d_local/character_hd_backend.py').read_text(encoding='utf-8')
+    src = (ROOT / 'app/modules/nhan_vat_3d/character_hd_backend.py').read_text(encoding='utf-8')
     assert 'texture=False' in src
 
 
 def test_direct_routes_report_actual_texture_when_available():
-    src = (ROOT / 'app/api/model_3d_routes.py').read_text(encoding='utf-8')
+    src = (ROOT / 'app/modules/nhan_vat_3d/api_nhan_vat_3d.py').read_text(encoding='utf-8')
     assert 'bool(result.get("texture_applied", texture))' in src
     assert 'bool(result.get("texture_applied", payload.texture))' in src

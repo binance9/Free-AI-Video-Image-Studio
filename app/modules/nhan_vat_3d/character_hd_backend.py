@@ -17,7 +17,7 @@ class CharacterHDBackend:
         self.model_cache = Path(model_cache).resolve()
         self.runtime_dir = self.root / "data" / "runtime_character_hd"
         self.tool_dir = self.root / "tools" / "external" / "Hunyuan3D-2"
-        self.runner = self.root / "app" / "modules" / "model_3d_local" / "run_character_hd.py"
+        self.runner = self.root / "app" / "modules" / "nhan_vat_3d" / "run_character_hd.py"
 
     @property
     def python(self) -> Path:
@@ -74,7 +74,7 @@ class CharacterHDBackend:
         output_dir = Path(output_dir).resolve()
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = output_dir / "character_hd_colored.glb"
-        paint_runner = self.root / "app" / "modules" / "model_3d_local" / "run_character_hd_paint.py"
+        paint_runner = self.root / "app" / "modules" / "nhan_vat_3d" / "run_character_hd_paint.py"
         cmd = [str(self.python), "-u", str(paint_runner), str(mesh_path), str(image_path), str(output_path)]
 
         env = dict(os.environ)

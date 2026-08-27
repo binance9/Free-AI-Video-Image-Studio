@@ -9,7 +9,7 @@ from app.modules.cong_cu_van_ban.api_cong_cu_van_ban import router as text_route
 from app.modules.tao_anh_ai.api_tao_anh_ai import router as ai_image_router
 from app.modules.am_nhac.api_am_nhac import router as music_router
 from app.modules.phu_de.api_phu_de import router as caption_router
-from app.api.model_3d_routes import router as model_3d_router
+from app.modules.nhan_vat_3d.api_nhan_vat_3d import router as model_3d_router
 from app.modules.tai_video.api_tai_video import router as facebook_video_router
 from app.modules.lam_sach_video.api_lam_sach_video import router as video_cleanup_router
 from app.api.job_control_routes import router as job_control_router
@@ -23,8 +23,8 @@ from app.modules.chinh_sua_video.workspace import VideoWorkspace
 from app.modules.tao_anh_ai import AiImageWorkspace, LocalImageService, AiImageJobManager
 from app.modules.am_nhac import LocalMusicLibrary
 from app.modules.phu_de import LocalCaptionService, LocalTranslationService
-from app.modules.model_3d_local import Local3DService, Model3DWorkspace, Model3DJobManager
-from app.modules.model_3d_local.turntable_video import TurntableVideoExporter
+from app.modules.nhan_vat_3d import Local3DService, Model3DWorkspace, Model3DJobManager
+from app.modules.nhan_vat_3d.turntable_video import TurntableVideoExporter
 from app.modules.tai_video import FacebookVideoDownloader, FacebookVideoJobManager
 from app.modules.lam_sach_video import VideoCleanupRuntime, VideoCleanupJobManager
 from app.modules.nhan_vat_2d import Character2DService

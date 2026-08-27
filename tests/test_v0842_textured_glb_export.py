@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from app.modules.model_3d_local.textured_glb_export import (
+from app.modules.nhan_vat_3d.textured_glb_export import (
     convert_textured_obj_to_glb,
     glb_has_embedded_texture,
 )
@@ -38,7 +38,7 @@ def test_textured_obj_is_packed_as_glb(tmp_path):
 
 def test_backend_uses_obj_for_baked_texture():
     root = Path(__file__).resolve().parents[1]
-    code = (root / "app/modules/model_3d_local/triposr_backend.py").read_text(encoding="utf-8")
+    code = (root / "app/modules/nhan_vat_3d/triposr_backend.py").read_text(encoding="utf-8")
     assert 'save_format = "obj" if texture else "glb"' in code
     assert 'Đóng gói GLB có màu' in code
     assert 'textured_glb_converter' in code

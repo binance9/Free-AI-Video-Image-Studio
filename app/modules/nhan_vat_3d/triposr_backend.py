@@ -56,11 +56,11 @@ class TripoSRBackend:
 
     @property
     def textured_glb_converter(self) -> Path:
-        return self.root / "app" / "modules" / "model_3d_local" / "textured_glb_export.py"
+        return self.root / "app" / "modules" / "nhan_vat_3d" / "textured_glb_export.py"
 
     @property
     def mesh_finisher(self) -> Path:
-        return self.root / "app" / "modules" / "model_3d_local" / "mesh_finish.py"
+        return self.root / "app" / "modules" / "nhan_vat_3d" / "mesh_finish.py"
 
     def _finish_mesh(self, model_path: Path, *, smooth_mesh: bool, report) -> Path:
         if not self.mesh_finisher.exists():

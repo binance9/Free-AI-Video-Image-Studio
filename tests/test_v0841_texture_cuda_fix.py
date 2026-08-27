@@ -1,4 +1,4 @@
-from app.modules.model_3d_local.texture_cuda_patch import (
+from app.modules.nhan_vat_3d.texture_cuda_patch import (
     PATCH_MARKER,
     apply_texture_cuda_patch,
 )

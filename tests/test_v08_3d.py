@@ -11,9 +11,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from app.main import create_app
-from app.modules.model_3d_local.service import Local3DService
-from app.modules.model_3d_local.triposr_backend import TripoSRBackend
-from app.modules.model_3d_local.workspace import Model3DWorkspace
+from app.modules.nhan_vat_3d.service import Local3DService
+from app.modules.nhan_vat_3d.triposr_backend import TripoSRBackend
+from app.modules.nhan_vat_3d.workspace import Model3DWorkspace
 
 
 def _image(path: Path):
@@ -113,6 +113,6 @@ def test_ui_and_modules_are_separate():
     assert '/static/js/ai_3d.js?v=' in html
     assert '/static/js/ai_3d_viewer.js?v=' in html
     assert "ai3d:" in appjs
-    assert (ROOT/'app/modules/model_3d_local/triposr_backend.py').exists()
+    assert (ROOT/'app/modules/nhan_vat_3d/triposr_backend.py').exists()
     assert (ROOT/'app/modules/tao_anh_ai/service.py').exists()
     assert (ROOT/'app/modules/chinh_sua_video/service.py').exists()

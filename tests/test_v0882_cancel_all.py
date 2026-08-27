@@ -11,7 +11,7 @@ def test_cancel_all_ui_and_route_present():
 
 def test_all_background_managers_have_cancel_all():
     for rel in [
-        'app/modules/model_3d_local/job_manager.py',
+        'app/modules/nhan_vat_3d/job_manager.py',
         'app/modules/lam_sach_video/job_manager.py',
         'app/modules/tai_video/job_manager.py',
         'app/modules/tao_anh_ai/job_manager.py',
@@ -28,5 +28,5 @@ def test_ai_image_uses_cancellable_jobs():
     assert '@router.post("/ai-image/jobs/generate")' in routes
 
 def test_3d_processes_are_cooperatively_cancelled():
-    assert 'terminate_process(proc)' in text('app/modules/model_3d_local/character_hd_backend.py')
-    assert 'terminate_process(proc)' in text('app/modules/model_3d_local/triposr_backend.py')
+    assert 'terminate_process(proc)' in text('app/modules/nhan_vat_3d/character_hd_backend.py')
+    assert 'terminate_process(proc)' in text('app/modules/nhan_vat_3d/triposr_backend.py')
