@@ -136,39 +136,60 @@ KHÔNG CẦN GỬI:
 nếu lỗi không liên quan.
 
 ==================================================
-BẢN ĐỒ 3D
+BẢN ĐỒ HD (ban_do_3d)
 ==================================================
 
 TRẠNG THÁI:
-KHUNG CHƯA TRIỂN KHAI
+ĐANG DÙNG THẬT (V1 — HD tile map 2D, xem "Giới hạn" bên dưới)
 
 BACKEND:
-app/modules/ban_do_3d/ (chỉ có __init__.py + README_MODULE.md + MODULE_STATUS.md)
+app/modules/ban_do_3d/
 
 FRONTEND:
-web/modules/ban_do_3d/ (khung)
+web/modules/ban_do_3d/ (ban_do_3d.js/css) — hiển thị trong chính khung preview/viewer lớn ở giữa
+(`#mapHdStageViewer`, sibling của `#ai3dStageViewer`), KHÔNG dùng modal/khung riêng nữa. Sidebar
+là `#panel-bandohd` trong web/index.html (mở qua Home card "Bản đồ HD").
 
 DATA:
-(chưa có)
+data/ban_do_3d/jobs/<job_id>/ — bo_cuc_tong.png (bố cục tổng đã khóa), tiles/*.png (tile gốc),
+ban_do_day_du.png (map full ghép), ban_do_tong_quan.png (overview thumbnail),
+manifest_tiles.json, map_spec.json, validation.json, nhat_ky_job.json.
 
 FILE CHÍNH:
-(chưa có — xem roadmap trong README_MODULE.md)
+dich_vu_ban_do.py (Map3DService, điều phối job), khoa_bo_cuc.py (khóa bố cục tổng TRƯỚC khi chia
+tile — dùng ảnh mẫu nếu có, hoặc sinh 1 ảnh tổng thể bằng AI nếu không), chia_o_ban_do.py (chia
+lưới + neighbors/world_bbox per tile), tao_o_ban_do.py (crop tile từ bố cục tổng + prompt riêng
+tile), ghep_o_ban_do.py (stitch tile CHỒNG LẤN thật + feather-blend overlap, không phải
+cạnh-đối-cạnh), kiem_tra_ban_do.py (đo sharpness + border continuity), dac_ta_ban_do.py
+(MapSpec từ prompt), phan_tich_anh_mau.py (đọc thông tin ảnh mẫu), cau_hinh_ban_do.py (3 mức
+Nhẹ/Trung bình/Đẹp), dat_do_vat.py (chuẩn hóa toạ độ đặt prop 3D — contract cho phase sau).
 
 API:
-(chưa có)
+GET /api/ban-do-3d/status, POST /api/ban-do-3d/tao-tu-anh, POST /api/ban-do-3d/tao-tu-mo-ta,
+GET /api/ban-do-3d/job/{id}, POST /api/ban-do-3d/job/{id}/huy, GET /api/ban-do-3d/job/{id}/overview,
+GET /api/ban-do-3d/job/{id}/full, GET /api/ban-do-3d/job/{id}/manifest,
+GET /api/ban-do-3d/job/{id}/tile/{tile_id}
 
 PHỤ THUỘC:
-Roadmap: sẽ gọi do_vat_3d qua interface/API để lấy asset lẻ, không copy code, không bake chết
-asset vào map generator.
+- app.modules.tao_anh_ai.LocalImageService (generate/edit ảnh — tái sử dụng, không tạo AI riêng).
+- Roadmap: sẽ gọi do_vat_3d qua interface/API để đặt asset 3D lên map (dat_do_vat.py đã có contract
+  toạ độ), không copy code, không bake chết asset vào map generator.
 
 LỆNH TEST NHANH:
 pytest -q tests/smoke/test_ban_do_3d_smoke.py
+pytest -q tests/smoke/test_ban_do_3d_hd_tile_smoke.py
 
 KHI LỖI CẦN GỬI:
-(chưa có gì để lỗi)
+- app/modules/ban_do_3d/
+- web/modules/ban_do_3d/
+- data/ban_do_3d/jobs/<job_id>/map_spec.json, manifest_tiles.json, validation.json, nhat_ky_job.json
 
 KHÔNG CẦN GỬI:
-(N/A)
+- do_vat_3d/, nhan_vat_3d/, nhan_vat_game_ready/ nếu lỗi không liên quan.
+
+GIỚI HẠN ĐÃ BIẾT:
+V1 là map 2D dạng tile HD (ảnh), CHƯA dựng terrain GLB/heightmap 3D thật và chưa đặt prop 3D runtime
+— xem README_MODULE.md. dat_do_vat.py chỉ chuẩn hóa toạ độ (contract), chưa render.
 
 ==================================================
 ĐỒ VẬT 3D
