@@ -1,6 +1,10 @@
 # AI Video Factory 0.8 — Module Map
 
-Các khối tách riêng để sửa không dây chuyền:
+> **LƯU Ý:** File này ghi lại lịch sử trước đợt tái cấu trúc module (đường dẫn `app/api/*`,
+> `app/modules/character_2d_addon`, `web/js/*`...). Các đường dẫn bên dưới **không còn đúng**.
+> Xem **`DANH_SACH_MODULE.md`** ở root để có danh sách module + đường dẫn hiện tại.
+
+Các khối tách riêng để sửa không dây chuyền (LỊCH SỬ, đã đổi tên — xem DANH_SACH_MODULE.md):
 
 - `app/modules/video_editor/` — cắt, ghép, render video, overlay.
 - `app/modules/image_ai_local/` — AI tạo/sửa ảnh local + upscale.
