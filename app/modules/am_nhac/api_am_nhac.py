@@ -9,7 +9,7 @@ from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from app.modules.music_local import mix_music
+from app.modules.am_nhac import mix_music
 
 router = APIRouter(prefix="/api", tags=["music-local"])
 
