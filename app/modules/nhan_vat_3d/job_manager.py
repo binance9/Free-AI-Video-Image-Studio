@@ -7,7 +7,7 @@ import time
 import uuid
 from pathlib import Path
 
-from app.core.shared_services import JobCancelled
+from app.core.shared_services import JobCancelled, heavy_gpu_job_lock
 
 
 class Model3DJobManager:
@@ -71,18 +71,22 @@ class Model3DJobManager:
         def worker():
             self._update(job_id, status="running", progress=3, stage="Chuẩn bị ảnh")
             try:
-                result = self.service.from_image(
-                    saved,
-                    folder / "out",
-                    resolution=resolution,
-                    texture=texture,
-                    render_preview=preview,
-                    progress=self._progress_cb(job_id),
-                    backend=backend,
-                    optimize_mesh=optimize_mesh,
-                    mesh_profile=mesh_profile,
-                    cancel_event=self._cancel_events[job_id],
-                )
+                with heavy_gpu_job_lock(
+                    owner="character_3d", cancel_event=self._cancel_events[job_id],
+                    on_wait=lambda _w: self._update(job_id, stage="Đang chờ GPU", detail="Đồ vật 3D đang dùng GPU…"),
+                ):
+                    result = self.service.from_image(
+                        saved,
+                        folder / "out",
+                        resolution=resolution,
+                        texture=texture,
+                        render_preview=preview,
+                        progress=self._progress_cb(job_id),
+                        backend=backend,
+                        optimize_mesh=optimize_mesh,
+                        mesh_profile=mesh_profile,
+                        cancel_event=self._cancel_events[job_id],
+                    )
                 payload = self.workspace.create_asset(
                     result["model_path"],
                     result.get("preview_path"),
@@ -119,19 +123,23 @@ class Model3DJobManager:
                     self._update(job_id, progress=mapped, stage=stage, detail=detail, log=detail)
 
                 self._update(job_id, progress=7, stage="Tạo concept 2D")
-                result = self.service.from_prompt(
-                    prompt,
-                    folder,
-                    style=style,
-                    resolution=resolution,
-                    texture=texture,
-                    render_preview=preview,
-                    progress=cb,
-                    backend=backend,
-                    optimize_mesh=optimize_mesh,
-                    mesh_profile=mesh_profile,
-                    cancel_event=self._cancel_events[job_id],
-                )
+                with heavy_gpu_job_lock(
+                    owner="character_3d", cancel_event=self._cancel_events[job_id],
+                    on_wait=lambda _w: self._update(job_id, stage="Đang chờ GPU", detail="Đồ vật 3D đang dùng GPU…"),
+                ):
+                    result = self.service.from_prompt(
+                        prompt,
+                        folder,
+                        style=style,
+                        resolution=resolution,
+                        texture=texture,
+                        render_preview=preview,
+                        progress=cb,
+                        backend=backend,
+                        optimize_mesh=optimize_mesh,
+                        mesh_profile=mesh_profile,
+                        cancel_event=self._cancel_events[job_id],
+                    )
                 payload = self.workspace.create_asset(
                     result["model_path"],
                     result.get("preview_path"),
@@ -171,10 +179,14 @@ class Model3DJobManager:
         def worker():
             self._update(job_id, status="running", progress=3, stage="Chuẩn bị tô màu", detail="Giữ nguyên GLB gốc")
             try:
-                result = self.service.colorize_existing(
-                    saved_mesh, saved_image, folder / "paint_out", progress=self._progress_cb(job_id),
-                    cancel_event=self._cancel_events[job_id]
-                )
+                with heavy_gpu_job_lock(
+                    owner="character_3d", cancel_event=self._cancel_events[job_id],
+                    on_wait=lambda _w: self._update(job_id, stage="Đang chờ GPU", detail="Đồ vật 3D đang dùng GPU…"),
+                ):
+                    result = self.service.colorize_existing(
+                        saved_mesh, saved_image, folder / "paint_out", progress=self._progress_cb(job_id),
+                        cancel_event=self._cancel_events[job_id]
+                    )
                 payload = self.workspace.create_asset(
                     result["model_path"], None,
                     {
