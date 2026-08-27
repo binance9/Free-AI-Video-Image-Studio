@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .cau_hinh_do_vat import DANH_MUC, QUALITY_PRESETS
+from .cau_hinh_do_vat import DANH_MUC, POLY_FLOOR_STANDARD, POLY_TOLERANCE, QUALITY_PRESETS
 from .phan_loai_do_vat import validate_category, validate_quality
 
 
@@ -24,7 +24,23 @@ class LuaChonEngine:
     texture_default: str
     poly_target_min: int
     poly_target_max: int
+    poly_target: int
+    poly_tolerance: float
     timeout_seconds: int
+
+
+def poly_target_cho(category: str, quality: str) -> int:
+    """Tinh poly_target thuc te cho 1 category+quality: lay poly_target cua
+    preset, sau do ap dung san toi thieu rieng cua category (chi cho STANDARD,
+    chi khi san CAO HON gia tri preset - khong bao gio ha thap hon)."""
+    cat_key = validate_category(category)
+    quality_key = validate_quality(quality)
+    target = int(QUALITY_PRESETS[quality_key]["poly_target"])
+    if quality_key == "standard":
+        floor = POLY_FLOOR_STANDARD.get(cat_key)
+        if floor and floor > target:
+            target = int(floor)
+    return target
 
 
 def chon_engine_do_vat(category: str, quality: str, *, low_vram: bool = False) -> LuaChonEngine:
@@ -72,5 +88,7 @@ def chon_engine_do_vat(category: str, quality: str, *, low_vram: bool = False) -
         texture_default=texture_default,
         poly_target_min=preset["poly_target_min"],
         poly_target_max=preset["poly_target_max"],
+        poly_target=poly_target_cho(cat_key, quality_key),
+        poly_tolerance=POLY_TOLERANCE,
         timeout_seconds=timeout_seconds,
     )

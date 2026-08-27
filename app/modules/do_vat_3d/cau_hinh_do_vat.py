@@ -46,6 +46,7 @@ QUALITY_PRESETS: dict[str, dict] = {
         "texture_default": "none",
         "poly_target_min": 5_000,
         "poly_target_max": 15_000,
+        "poly_target": 12_000,
         "timeout_seconds": 240,
     },
     "standard": {
@@ -55,6 +56,7 @@ QUALITY_PRESETS: dict[str, dict] = {
         "texture_default": "lite",
         "poly_target_min": 15_000,
         "poly_target_max": 40_000,
+        "poly_target": 32_000,
         "timeout_seconds": 600,
     },
     "final": {
@@ -64,10 +66,34 @@ QUALITY_PRESETS: dict[str, dict] = {
         "texture_default": "hd",
         "poly_target_min": 40_000,
         "poly_target_max": 80_000,
+        "poly_target": 60_000,
         "timeout_seconds": 1200,
     },
 }
 QUALITY_MAC_DINH = "standard"
+
+# Dung sai cho phep khi enforce poly_target (xem toi_uu_do_vat.toi_uu_so_mat).
+POLY_TOLERANCE = 0.15
+
+# San toi thieu tam giac cho STANDARD theo tung category - bao ve silhouette
+# (canh cay, mai nha, chan cot...) khoi bi optimizer nen qua tay. Chi ap dung
+# khi poly_target tinh ra (tu QUALITY_PRESETS) thap hon san nay; khong dung
+# de RAISE muc final/lite. Danh muc khong co trong day dung poly_target mac
+# dinh cua preset, khong co san rieng.
+POLY_FLOOR_STANDARD: dict[str, int] = {
+    "cay": 20_000,      # tree - canh la de gay
+    "nha_nho": 25_000,  # house - mai/chan nha
+    "da": 10_000,       # rock - khoi don gian, san thap hon
+    "ruong": 8_000,     # chest - hop don gian
+    "cong": 20_000,     # cong - silhouette phuc tap nhu nha
+}
+
+# Timeout rieng cho stage texture (giay) - vuot qua thi huy texture, GIU
+# nguyen shape/optimized mesh da co (xem dich_vu_do_vat_3d.py section TEXTURE).
+TEXTURE_TIMEOUT_SECONDS: dict[str, int] = {
+    "lite": 600,   # 10 phut
+    "hd": 1800,    # 30 phut
+}
 
 # texture preset -> co to mau hay khong + backend paint dung
 TEXTURE_PRESETS: dict[str, dict] = {
