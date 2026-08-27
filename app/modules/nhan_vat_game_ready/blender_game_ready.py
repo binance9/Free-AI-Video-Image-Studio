@@ -3,11 +3,24 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import shutil
 import sys
 from pathlib import Path
 
 import bpy
 from mathutils import Vector
+
+# Fraction of mesh vertices that must carry a non-trivial total bone weight
+# for a skin to be considered usable. Blender's "Automatic Weights" (bone
+# heat) can fail to solve for one or more bones on the kind of disconnected/
+# non-manifold geometry TripoSR/Hunyuan tend to output - when that happens
+# bpy.ops.object.parent_set(type="ARMATURE_AUTO") does NOT raise a Python
+# exception, it just prints a warning and leaves some/most vertices with
+# zero weight. Blender's own glTF exporter then silently drops the whole
+# skin ("has no skin, skipping") - so JOINTS_0/WEIGHTS_0 end up in the file
+# but bound to nothing, and the character never visibly moves. This
+# threshold is what makes that failure mode detectable instead of silent.
+MIN_WEIGHT_COVERAGE = 0.85
 
 
 def args_after_dash():
@@ -129,37 +142,80 @@ def create_rig(mesh):
     return rig
 
 
+def _weight_coverage(mesh) -> float:
+    """Fraction of vertices whose total weight across all vertex groups is
+    non-trivial. This is what actually reveals a silent bone-heat failure -
+    the operator itself reports success either way."""
+    verts = mesh.data.vertices
+    if not verts:
+        return 0.0
+    weighted = sum(1 for v in verts if sum(g.weight for g in v.groups) > 0.01)
+    return weighted / len(verts)
+
+
+def _clear_skinning(mesh, rig):
+    """Undo whatever a failed/partial automatic-weights attempt left behind
+    so the deterministic fallback starts from a clean slate."""
+    for mod in list(mesh.modifiers):
+        if mod.type == "ARMATURE":
+            mesh.modifiers.remove(mod)
+    for vg in list(mesh.vertex_groups):
+        mesh.vertex_groups.remove(vg)
+    if mesh.parent == rig:
+        mesh.parent = None
+
+
+def _zone_fallback_weights(mesh, rig):
+    """Deterministic body-zone weights - pure vertex position math, so it
+    cannot fail the way geometry-dependent bone-heat solving can. Always
+    produces a fully-weighted, genuinely skinned mesh."""
+    bpy.ops.object.select_all(action="DESELECT")
+    mesh.select_set(True)
+    bpy.context.view_layer.objects.active = mesh
+    mod = mesh.modifiers.get("AIVF_Armature") or mesh.modifiers.new("AIVF_Armature", "ARMATURE")
+    mod.object = rig
+    mesh.parent = rig
+    mn, mx = world_bbox(mesh); h = max(mx.z-mn.z, .001); cx=(mn.x+mx.x)*.5
+    groups = {b.name: mesh.vertex_groups.new(name=b.name) for b in rig.data.bones}
+    for v in mesh.data.vertices:
+        co = mesh.matrix_world @ v.co
+        t = (co.z-mn.z)/h
+        x = co.x-cx
+        name = "hips"
+        if t > .82: name = "head"
+        elif t > .68:
+            name = "upper_arm.L" if x > h*.16 else ("upper_arm.R" if x < -h*.16 else "chest")
+        elif t > .48:
+            name = "forearm.L" if x > h*.28 else ("forearm.R" if x < -h*.28 else "spine")
+        elif t > .25: name = "thigh.L" if x >= 0 else "thigh.R"
+        else: name = "shin.L" if x >= 0 else "shin.R"
+        groups[name].add([v.index], 1.0, "REPLACE")
+
+
 def auto_skin(mesh, rig):
     bpy.ops.object.select_all(action="DESELECT")
     mesh.select_set(True); rig.select_set(True)
     bpy.context.view_layer.objects.active = rig
+    automatic_ran = False
     try:
         bpy.ops.object.parent_set(type="ARMATURE_AUTO")
-        return "automatic"
+        automatic_ran = True
     except Exception:
-        # Fallback: deterministic body-zone weights so the GLB is still genuinely skinned.
-        bpy.ops.object.select_all(action="DESELECT")
-        mesh.select_set(True)
-        bpy.context.view_layer.objects.active = mesh
-        mod = mesh.modifiers.get("AIVF_Armature") or mesh.modifiers.new("AIVF_Armature", "ARMATURE")
-        mod.object = rig
-        mesh.parent = rig
-        mn, mx = world_bbox(mesh); h = max(mx.z-mn.z, .001); cx=(mn.x+mx.x)*.5
-        groups = {b.name: mesh.vertex_groups.new(name=b.name) for b in rig.data.bones}
-        for v in mesh.data.vertices:
-            co = mesh.matrix_world @ v.co
-            t = (co.z-mn.z)/h
-            x = co.x-cx
-            name = "hips"
-            if t > .82: name = "head"
-            elif t > .68:
-                name = "upper_arm.L" if x > h*.16 else ("upper_arm.R" if x < -h*.16 else "chest")
-            elif t > .48:
-                name = "forearm.L" if x > h*.28 else ("forearm.R" if x < -h*.28 else "spine")
-            elif t > .25: name = "thigh.L" if x >= 0 else "thigh.R"
-            else: name = "shin.L" if x >= 0 else "shin.R"
-            groups[name].add([v.index], 1.0, "REPLACE")
-        return "zone_fallback"
+        automatic_ran = False
+
+    if automatic_ran and _weight_coverage(mesh) >= MIN_WEIGHT_COVERAGE:
+        return "automatic"
+
+    # Automatic weights either raised OR (much more common on AI-generated
+    # meshes) silently solved for almost no vertices - either way, do NOT
+    # trust it. Clear any partial state and use the deterministic fallback
+    # so we never export a mesh with an unusable/empty skin (section 12).
+    _clear_skinning(mesh, rig)
+    _zone_fallback_weights(mesh, rig)
+    coverage = _weight_coverage(mesh)
+    if coverage < MIN_WEIGHT_COVERAGE:
+        raise RuntimeError(f"Skinning thất bại cả automatic và fallback (coverage={coverage:.2f})")
+    return "zone_fallback"
 
 
 def set_pose_rotation(rig, bone, values, frame):
@@ -242,11 +298,31 @@ def export_glb(path: Path):
 
 def main():
     a=args_after_dash(); src=Path(a.input); out=Path(a.output); report=Path(a.report)
+    out_dir = out.parent
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # section 2: every intermediate stage saved under a fixed, predictable
+    # name so a failed job still leaves inspectable checkpoints behind.
+    source_glb = out_dir / "source.glb"
+    optimized_glb = out_dir / "optimized.glb"
+    rigged_glb = out_dir / "rigged.glb"
+    shutil.copy2(src, source_glb)
+
     clear_scene(); meshes=import_glb(src); mesh=join_meshes(meshes)
     before, after=optimize_mesh(mesh,a.target_faces)
-    rig=create_rig(mesh); skin_method=auto_skin(mesh,rig); animations=bake_starter_actions(rig)
+    export_glb(optimized_glb)
+
+    rig=create_rig(mesh); skin_method=auto_skin(mesh,rig)
+    export_glb(rigged_glb)  # bind pose only, no baked animation yet - isolates skin issues from animation issues
+
+    animations=bake_starter_actions(rig)
     export_glb(out)
-    data={"ok":True,"rigged":True,"skin_method":skin_method,"animations":animations,"bones":len(rig.data.bones),"faces_before":before,"faces_after":after,"output":str(out)}
+    data={
+        "ok": True, "rigged": True, "skin_method": skin_method, "animations": animations,
+        "bones": len(rig.data.bones), "faces_before": before, "faces_after": after,
+        "output": str(out), "source_glb": str(source_glb), "optimized_glb": str(optimized_glb),
+        "rigged_glb": str(rigged_glb),
+    }
     report.parent.mkdir(parents=True,exist_ok=True); report.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding="utf-8")
     print("AIVF_GAME_READY_REPORT="+json.dumps(data,ensure_ascii=False))
 

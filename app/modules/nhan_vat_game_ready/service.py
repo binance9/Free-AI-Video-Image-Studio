@@ -7,6 +7,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from .validate_game_ready import validate_game_ready_glb
+
 
 class GameReady3DService:
     """Turn a static GLB into a lighter skinned/animated GLB using Blender headless."""
@@ -82,4 +84,19 @@ class GameReady3DService:
             except Exception:
                 data = {}
         data.update({"model_path": str(out_glb), "target_faces": target_faces})
+
+        # Independent verification (section 3/32) - do NOT trust the
+        # self-reported "ok"/"rigged" flags from the Blender subprocess
+        # alone; parse the actual exported GLB and confirm skin/joints/
+        # weights/animation keyframes are real, not just present by name.
+        validation = validate_game_ready_glb(out_glb)
+        validation_path = out_dir / "validation.json"
+        validation_path.write_text(
+            json.dumps(validation.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        data["validation"] = validation.to_dict()
+        if not validation.ok:
+            raise RuntimeError(
+                "Game Ready xuất ra GLB nhưng skin/mesh không hợp lệ: " + "; ".join(validation.errors)
+            )
         return data
