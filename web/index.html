@@ -132,6 +132,7 @@
           </div>
           <div class="ai3d-viewer-hint">Chuột trái: xoay · Con lăn: zoom · Chuột phải: pan · Double-click: reset</div>
           <div class="ai3d-viewer-state" id="ai3dViewerState">Viewer 3D local</div>
+          <div class="ai3d-viewer-debug hidden" id="ai3dViewerDebug"></div>
         </div>
         <div class="busy hidden" id="busy">
           <div class="spinner"></div>
@@ -404,7 +405,12 @@
             <div class="game-ready-status" id="ai3dGameReadyStatus">Đang kiểm tra Blender local…</div><button class="btn wide game-ready-setup" id="ai3dGameReadySetup">CÀI BLENDER GAME READY · 1 LẦN</button>
             <div class="game-ready-row"><label>Poly mục tiêu<select id="ai3dGameReadyFaces"><option value="30000">30K · nhẹ</option><option value="45000" selected>45K · cân bằng</option><option value="60000">60K · đẹp</option></select></label><button class="btn game-ready-btn" id="ai3dMakeGameReady">🦴 TẠO GAME-READY GLB</button></div>
             <div class="game-ready-progress hidden" id="ai3dGameReadyProgress"><div><span id="ai3dGameReadyStage">Chuẩn bị</span><b id="ai3dGameReadyPct">0%</b></div><div class="game-ready-track"><i id="ai3dGameReadyBar"></i></div><small id="ai3dGameReadyDetail">Đang chuẩn bị…</small></div>
-            <a class="btn primary wide center-link hidden" id="ai3dGameReadyDownload" download>💾 LƯU GAME-READY GLB</a>
+            <div class="game-ready-filename hidden" id="ai3dGameReadyFilename">File cuối: <b id="ai3dGameReadyFilenameValue">game_ready.glb</b></div>
+            <div class="game-ready-actions">
+              <a class="btn primary wide center-link hidden" id="ai3dGameReadyDownload" download>💾 LƯU GAME-READY GLB</a>
+              <button class="btn wide hidden" id="ai3dGameReadyOpenViewer">👁 MỞ TRONG VIEWER</button>
+            </div>
+            <div class="game-ready-debug hidden" id="ai3dGameReadyDebug"></div>
           </div>
           <!-- MODULE: nhan_vat_game_ready END -->
         </div>

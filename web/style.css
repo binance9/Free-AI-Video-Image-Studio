@@ -28,6 +28,7 @@
 .ai3d-viewer-toolbar button:hover,.ai3d-viewer-toolbar button.active{border-color:#68cfff;background:#17304a}
 .ai3d-viewer-hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);padding:7px 11px;border-radius:999px;background:#09101acc;border:1px solid #26354c;color:#aebbd0;font-size:11px;white-space:nowrap;pointer-events:none}
 .ai3d-viewer-state{position:absolute;right:14px;top:14px;max-width:42%;padding:7px 10px;border-radius:9px;background:#09101acc;border:1px solid #26354c;color:#c9d8ee;font-size:11px;text-align:right;pointer-events:none}
+.ai3d-viewer-debug{position:absolute;left:14px;top:14px;max-width:52%;padding:6px 9px;border-radius:9px;background:#09101acc;border:1px solid #26354c;color:#8fa2bd;font-size:10px;font-family:monospace;line-height:1.5;pointer-events:none;white-space:pre-wrap}
 .viewer-transport-hidden{visibility:hidden}
 .ai3d-stage-viewer:fullscreen{background:#05080d}
 .ai3d-stage-viewer:fullscreen canvas{width:100vw;height:100vh}

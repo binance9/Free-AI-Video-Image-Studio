@@ -6,3 +6,6 @@
 .game-ready-progress{margin-top:10px}.game-ready-progress>div:first-child{display:flex;justify-content:space-between;color:#dbe5ff;font-size:11px}.game-ready-track{height:7px;margin:6px 0;border-radius:999px;background:#272c3e;overflow:hidden}.game-ready-track i{display:block;height:100%;width:0;background:linear-gradient(90deg,#a56bff,#5791ff);transition:width .3s ease}.game-ready-progress small{color:#9caac0}
 @media(max-width:900px){.game-ready-row{grid-template-columns:1fr}}
 .game-ready-setup{margin:-3px 0 9px;font-size:10px!important;min-height:31px!important;background:#151b2b!important;border-color:#35415a!important;color:#aebbd0!important}
+.game-ready-filename{margin-top:9px;padding:7px 10px;border-radius:9px;background:#0d1220;border:1px solid #29324a;color:#aebbd0;font-size:11px}.game-ready-filename b{color:#eaf0ff;font-family:monospace}
+.game-ready-actions{margin-top:9px;display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.game-ready-debug{margin-top:9px;padding:7px 10px;border-radius:9px;background:#0d1220;border:1px solid #29324a;color:#8fa2bd;font-size:10px;font-family:monospace;line-height:1.6}
