@@ -17,7 +17,7 @@ def test_version_and_two_step_paint_ui():
 
 
 def test_paint_runner_is_separate_and_low_vram():
-    src = (ROOT / "app/modules/model_3d_local/run_character_hd_paint.py").read_text(encoding="utf-8")
+    src = (ROOT / "app/modules/nhan_vat_3d/run_character_hd_paint.py").read_text(encoding="utf-8")
     assert 'Hunyuan3DPaintPipeline.from_pretrained' in src
     assert 'enable_model_cpu_offload' in src
     assert 'validate_textured_glb' in src
@@ -26,8 +26,8 @@ def test_paint_runner_is_separate_and_low_vram():
 
 
 def test_backend_preserves_white_mesh_on_paint_failure():
-    backend = (ROOT / "app/modules/model_3d_local/character_hd_backend.py").read_text(encoding="utf-8")
-    jobs = (ROOT / "app/modules/model_3d_local/job_manager.py").read_text(encoding="utf-8")
+    backend = (ROOT / "app/modules/nhan_vat_3d/character_hd_backend.py").read_text(encoding="utf-8")
+    jobs = (ROOT / "app/modules/nhan_vat_3d/job_manager.py").read_text(encoding="utf-8")
     assert 'def paint_existing' in backend
     assert 'TEXTURE_READY.txt' in backend
     assert 'def start_colorize' in jobs

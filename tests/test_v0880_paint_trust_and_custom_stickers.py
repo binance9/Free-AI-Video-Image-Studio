@@ -3,7 +3,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 def test_paint_trust_local_custom_pipeline_patch():
-    text = (ROOT / "app/modules/model_3d_local/run_character_hd_paint.py").read_text(encoding="utf-8")
+    text = (ROOT / "app/modules/nhan_vat_3d/run_character_hd_paint.py").read_text(encoding="utf-8")
     assert "_enable_local_hunyuan_custom_pipeline" in text
     assert 'kwargs.setdefault("trust_remote_code", True)' in text
     assert 'local_custom' in text and 'Path(str(custom_pipeline)).exists()' in text

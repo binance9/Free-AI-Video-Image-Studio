@@ -3,8 +3,8 @@ from pathlib import Path
 
 def test_inference_has_heartbeat_and_cache_is_not_used_as_inference_watchdog():
     root = Path(__file__).resolve().parents[1]
-    runner = (root / "app/modules/model_3d_local/run_character_hd.py").read_text(encoding="utf-8")
-    backend = (root / "app/modules/model_3d_local/character_hd_backend.py").read_text(encoding="utf-8")
+    runner = (root / "app/modules/nhan_vat_3d/run_character_hd.py").read_text(encoding="utf-8")
+    backend = (root / "app/modules/nhan_vat_3d/character_hd_backend.py").read_text(encoding="utf-8")
     assert "_inference_heartbeat" in runner
     assert "đang suy luận CUDA" in runner
     assert "infer_heartbeat.start()" in runner
@@ -16,7 +16,7 @@ def test_inference_has_heartbeat_and_cache_is_not_used_as_inference_watchdog():
 
 def test_texture_load_has_heartbeat():
     root = Path(__file__).resolve().parents[1]
-    runner = (root / "app/modules/model_3d_local/run_character_hd.py").read_text(encoding="utf-8")
+    runner = (root / "app/modules/nhan_vat_3d/run_character_hd.py").read_text(encoding="utf-8")
     assert "_texture_load_heartbeat" in runner
     assert "texture_heartbeat.start()" in runner
 

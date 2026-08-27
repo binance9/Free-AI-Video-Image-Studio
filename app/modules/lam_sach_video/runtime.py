@@ -23,11 +23,11 @@ class VideoCleanupRuntime:
 
     @property
     def background_worker(self) -> Path:
-        return self.base_dir / "app" / "modules" / "video_cleanup" / "background_worker.py"
+        return self.base_dir / "app" / "modules" / "lam_sach_video" / "background_worker.py"
 
     @property
     def inpaint_worker(self) -> Path:
-        return self.base_dir / "app" / "modules" / "video_cleanup" / "inpaint_worker.py"
+        return self.base_dir / "app" / "modules" / "lam_sach_video" / "inpaint_worker.py"
 
     def status(self) -> dict:
         payload = {

@@ -18,6 +18,6 @@ def test_viewer_ui_hooked():
     assert '/static/js/ai_3d_viewer.js?v=' in html
 
 def test_view_route_present():
-    routes = (ROOT / "app" / "api" / "model_3d_routes.py").read_text(encoding="utf-8")
+    routes = (ROOT / "app" / "modules" / "nhan_vat_3d" / "api_nhan_vat_3d.py").read_text(encoding="utf-8")
     assert '@router.get("/view/{asset_id}")' in routes
     assert 'media_type="model/gltf-binary"' in routes

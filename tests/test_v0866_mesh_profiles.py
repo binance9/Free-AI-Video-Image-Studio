@@ -17,7 +17,7 @@ def test_version_and_mesh_profile_ui():
 
 
 def test_mesh_profiles_are_isolated_and_calibrated():
-    src = (ROOT / "app/modules/model_3d_local/mesh_optimize_profiles.py").read_text(encoding="utf-8")
+    src = (ROOT / "app/modules/nhan_vat_3d/mesh_optimize_profiles.py").read_text(encoding="utf-8")
     assert '"hd"' in src and '0.0020' in src
     assert '"medium"' in src and '0.0042' in src
     assert '"light"' in src and '0.0065' in src
@@ -25,10 +25,10 @@ def test_mesh_profiles_are_isolated_and_calibrated():
 
 
 def test_backend_route_and_jobs_carry_mesh_profile():
-    backend = (ROOT / "app/modules/model_3d_local/character_hd_backend.py").read_text(encoding="utf-8")
-    runner = (ROOT / "app/modules/model_3d_local/run_character_hd.py").read_text(encoding="utf-8")
-    routes = (ROOT / "app/api/model_3d_routes.py").read_text(encoding="utf-8")
-    jobs = (ROOT / "app/modules/model_3d_local/job_manager.py").read_text(encoding="utf-8")
+    backend = (ROOT / "app/modules/nhan_vat_3d/character_hd_backend.py").read_text(encoding="utf-8")
+    runner = (ROOT / "app/modules/nhan_vat_3d/run_character_hd.py").read_text(encoding="utf-8")
+    routes = (ROOT / "app/modules/nhan_vat_3d/api_nhan_vat_3d.py").read_text(encoding="utf-8")
+    jobs = (ROOT / "app/modules/nhan_vat_3d/job_manager.py").read_text(encoding="utf-8")
     assert '"--mesh-profile"' in backend
     assert 'choices=("hd", "medium", "light")' in runner
     assert routes.count("mesh_profile") >= 8
