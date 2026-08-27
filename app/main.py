@@ -35,6 +35,8 @@ from app.storage.database import Database
 from app.storage.project_memory import ProjectMemory
 
 
+from app.modules.ban_do_3d.api_ban_do_3d import router as ban_do_3d_router
+
 def create_app(db_path=None, editor_dir=None) -> FastAPI:
     app = FastAPI(title=settings.app_name, version=settings.version)
     db = Database(db_path or settings.db_path)
@@ -87,6 +89,7 @@ def create_app(db_path=None, editor_dir=None) -> FastAPI:
     for router in (core_router, video_editor_router, settings_router, text_router, ai_image_router, character_2d_router, music_router, caption_router, model_3d_router, game_ready_3d_router, do_vat_3d_router, facebook_video_router, video_cleanup_router, job_control_router, system_router):
         app.include_router(router)
 
+    app.include_router(ban_do_3d_router)
     app.mount("/static", StaticFiles(directory=settings.web_dir), name="static")
 
     @app.get("/")
