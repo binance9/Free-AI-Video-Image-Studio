@@ -54,12 +54,18 @@ class Local3DService:
         result["mesh_profile"] = "original"
         return result
 
-    def colorize_existing(self, mesh_path: str | Path, image_path: str | Path, work_dir: str | Path, *, progress=None, cancel_event=None) -> dict:
+    def colorize_existing(self, mesh_path: str | Path, image_path: str | Path, work_dir: str | Path, *, progress=None,
+                          cancel_event=None, timeout_seconds: int | None = None, idle_timeout_seconds: int | None = None) -> dict:
         self._validate_image(image_path)
         mesh_path = Path(mesh_path)
         if not mesh_path.exists() or mesh_path.suffix.lower() != ".glb":
             raise ValueError("Model để tô màu phải là file GLB hợp lệ")
-        return self.character_hd.paint_existing(mesh_path, image_path, work_dir, progress=progress, cancel_event=cancel_event)
+        kwargs = {}
+        if timeout_seconds is not None:
+            kwargs["timeout_seconds"] = timeout_seconds
+        if idle_timeout_seconds is not None:
+            kwargs["idle_timeout_seconds"] = idle_timeout_seconds
+        return self.character_hd.paint_existing(mesh_path, image_path, work_dir, progress=progress, cancel_event=cancel_event, **kwargs)
 
     def from_prompt(self, prompt: str, work_dir: str | Path, *, style: str = "cartoon3d",
                     resolution: int = 256, texture: bool = False,

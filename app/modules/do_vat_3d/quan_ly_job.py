@@ -86,6 +86,8 @@ class DoVat3DJobManager:
                     cancel_event=self._cancel_events[job_id],
                 )
                 ten = sanitize_ten_asset(display_name or result["category_label"])
+                apply_texture_requested = bool(texture_preset and texture_preset != "none")
+                is_partial = bool(result["texture_error"]) and apply_texture_requested and not result["has_texture"]
                 meta = {
                     "category": result["category"],
                     "name": display_name or result["category_label"],
@@ -102,9 +104,12 @@ class DoVat3DJobManager:
                     "prompt": prompt,
                     "texture_preset": result["texture_preset"],
                     "texture_error": result["texture_error"],
+                    "texture_timed_out": result.get("texture_timed_out", False),
                     "engine_reason": result["engine_reason"],
                     "device": result.get("device"),
                     "timings": result["timings"],
+                    "poly": result["poly"],
+                    "best_output_path": str(result["best_output_path"]),
                     "suggested_filename": f"{ten}.glb",
                 }
                 payload = self.workspace.create_asset(result["model_path"], None, meta)
@@ -123,7 +128,21 @@ class DoVat3DJobManager:
                     json.dumps({"job_id": job_id, **meta, "asset_id": payload["asset_id"]}, ensure_ascii=False, indent=2),
                     encoding="utf-8",
                 )
-                self._update(job_id, status="done", progress=100, stage="Hoàn tất", detail="Đồ vật 3D đã tạo xong", result=payload)
+                # Luu lai de retry-texture dung lai dung mesh/anh nay, KHONG
+                # dung lai shape (section 25-26).
+                retry_info = {
+                    "work_dir": str(folder / "work"),
+                    "mesh_for_texture": str(result.get("optimized_path") or result["shape_path"]),
+                    "image_for_texture": str(saved_image) if saved_image else str((folder / "work" / "concept.png")),
+                    "category": category, "quality": quality, "display_name": display_name,
+                }
+                if is_partial:
+                    self._update(job_id, status="partial_success", progress=100,
+                                 stage="Hoàn tất một phần", detail="Shape 3D xong, tô màu chưa hoàn tất",
+                                 result=payload, retry_info=retry_info)
+                else:
+                    self._update(job_id, status="done", progress=100, stage="Hoàn tất",
+                                 detail="Đồ vật 3D đã tạo xong", result=payload, retry_info=retry_info)
             except JobCancelled as exc:
                 self._update(job_id, status="cancelled", stage="Đã dừng", detail=str(exc), error=None)
             except Exception as exc:  # noqa: BLE001
@@ -131,6 +150,65 @@ class DoVat3DJobManager:
 
         threading.Thread(target=worker, daemon=True, name=f"aivf-dovat3d-{job_id[:8]}").start()
         return job_id
+
+    def retry_texture(self, job_id: str, texture_mode: str) -> None:
+        """Chi chay lai stage texture tren mesh da co cua job_id (shape hoac
+        optimized.glb) - KHONG dung lai preprocess/shape (section 25)."""
+        with self._lock:
+            job = self._jobs.get(job_id)
+            if not job:
+                raise ValueError("Không tìm thấy job đồ vật 3D")
+            retry_info = job.get("retry_info")
+            if not retry_info:
+                raise ValueError("Job này chưa có dữ liệu để tô màu lại")
+            if job.get("status") in {"queued", "running", "cancelling"}:
+                raise ValueError("Job đang chạy, không thể tô màu lại lúc này")
+            self._cancel_events[job_id] = threading.Event()
+
+        mesh_for_texture = Path(retry_info["mesh_for_texture"])
+        image_for_texture = Path(retry_info["image_for_texture"])
+        if not mesh_for_texture.exists():
+            raise ValueError("Không còn mesh đã tạo trước đó để tô màu lại")
+        if not image_for_texture.exists():
+            raise ValueError("Không còn ảnh tham chiếu trước đó để tô màu lại")
+
+        self._update(job_id, status="running", progress=2, stage="Bắt đầu tô màu lại", detail="")
+
+        def worker():
+            try:
+                result = self.service.to_mau_lai(
+                    mesh_glb=mesh_for_texture, image_path=image_for_texture,
+                    work_dir=Path(retry_info["work_dir"]) / f"retry_{uuid.uuid4().hex[:8]}",
+                    texture_preset=texture_mode, progress=self._progress_cb(job_id),
+                    cancel_event=self._cancel_events[job_id],
+                )
+                cat = retry_info["category"]
+                display_name = retry_info.get("display_name")
+                ten = sanitize_ten_asset(display_name or cat)
+                meta = {
+                    "category": cat, "name": display_name or cat, "quality": retry_info["quality"],
+                    "has_texture": result["has_texture"], "poly_count": result["triangle_count"],
+                    "vertices": result["vertex_count"], "dimensions": result["dimensions"],
+                    "game_ready": False, "source": "retry_texture",
+                    "texture_preset": result["texture_preset"], "texture_error": result["texture_error"],
+                    "texture_timed_out": result.get("texture_timed_out", False),
+                    "timings": result["timings"], "best_output_path": str(result["model_path"]),
+                    "suggested_filename": f"{ten}.glb",
+                }
+                payload = self.workspace.create_asset(result["model_path"], None, meta)
+                is_partial = bool(result["texture_error"]) and not result["has_texture"]
+                if is_partial:
+                    self._update(job_id, status="partial_success", progress=100,
+                                 stage="Tô màu lại chưa xong", detail=result["texture_error"] or "", result=payload)
+                else:
+                    self._update(job_id, status="done", progress=100, stage="Hoàn tất tô màu lại",
+                                 detail="Đã tô màu lại thành công", result=payload)
+            except JobCancelled as exc:
+                self._update(job_id, status="cancelled", stage="Đã dừng", detail=str(exc), error=None)
+            except Exception as exc:  # noqa: BLE001
+                self._update(job_id, status="error", stage="Lỗi", detail=str(exc), error=str(exc))
+
+        threading.Thread(target=worker, daemon=True, name=f"aivf-dovat3d-retry-{job_id[:8]}").start()
 
     def cancel(self, job_id: str) -> bool:
         with self._lock:

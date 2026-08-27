@@ -10,6 +10,8 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
+from app.core.shared_services import heavy_gpu_job_status
+
 from .cau_hinh_do_vat import QUALITY_MAC_DINH, TEXTURE_MAC_DINH, danh_sach_danh_muc
 from .hop_dong_asset import liet_ke_thu_vien
 from .phan_loai_do_vat import validate_category, validate_quality, validate_texture
@@ -26,9 +28,15 @@ class PromptDoVat3DRequest(BaseModel):
     low_vram: bool = False
 
 
+class RetryTextureRequest(BaseModel):
+    texture_mode: str = TEXTURE_MAC_DINH
+
+
 @router.get("/status")
 def status(request: Request):
-    return request.app.state.do_vat_3d_service.status()
+    data = request.app.state.do_vat_3d_service.status()
+    data["gpu_queue"] = heavy_gpu_job_status()
+    return data
 
 
 @router.get("/categories")
@@ -104,6 +112,16 @@ def job_status(job_id: str, request: Request):
 @router.post("/job/{job_id}/cancel")
 def cancel_job(job_id: str, request: Request):
     return {"cancelled": request.app.state.do_vat_3d_jobs.cancel(job_id)}
+
+
+@router.post("/job/{job_id}/retry-texture")
+def retry_texture(job_id: str, payload: RetryTextureRequest, request: Request):
+    try:
+        validate_texture(payload.texture_mode)
+        request.app.state.do_vat_3d_jobs.retry_texture(job_id, payload.texture_mode)
+        return {"job_id": job_id, "status_url": f"/api/do-vat-3d/job/{job_id}"}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.get("/view/{asset_id}")

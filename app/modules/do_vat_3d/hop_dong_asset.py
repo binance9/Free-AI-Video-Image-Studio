@@ -30,6 +30,15 @@ class GameAsset3D:
     engine: str
     quality: str
     game_ready: bool = False
+    # Poly enforcement metadata (Phase 1.6.1) - tat ca deu la so lieu that,
+    # khong fake; xem toi_uu_do_vat.toi_uu_so_mat.
+    original_triangle_count: int = 0
+    optimized_triangle_count: int = 0
+    poly_target: int = 0
+    poly_target_met: bool = False
+    optimization_ratio: float = 1.0
+    optimizer: str = "none"
+    best_output_path: str | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -53,6 +62,13 @@ def game_asset_from_metadata(meta: dict, *, glb_path: str | Path, thumbnail_path
         engine=meta.get("engine", "unknown"),
         quality=meta.get("quality", "standard"),
         game_ready=bool(meta.get("game_ready", False)),
+        original_triangle_count=int((meta.get("poly") or {}).get("original_triangle_count") or 0),
+        optimized_triangle_count=int((meta.get("poly") or {}).get("optimized_triangle_count") or 0),
+        poly_target=int((meta.get("poly") or {}).get("poly_target") or 0),
+        poly_target_met=bool((meta.get("poly") or {}).get("poly_target_met") or False),
+        optimization_ratio=float((meta.get("poly") or {}).get("optimization_ratio") or 1.0),
+        optimizer=str((meta.get("poly") or {}).get("optimizer") or "none"),
+        best_output_path=meta.get("best_output_path"),
     )
 
 
