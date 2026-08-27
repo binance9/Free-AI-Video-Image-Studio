@@ -114,6 +114,11 @@
         max[0]=Math.max(max[0],a[i]); max[1]=Math.max(max[1],a[i+1]); max[2]=Math.max(max[2],a[i+2]);
       }
     }
+    // Degenerate geometry (empty/zero-size/NaN positions) must never produce
+    // a black/broken frame - fall back to a unit cube around the origin so
+    // downstream centering/scaling always has finite numbers to work with.
+    const finite = min.every(Number.isFinite) && max.every(Number.isFinite);
+    if (!finite) { min=[-0.5,-0.5,-0.5]; max=[0.5,0.5,0.5]; }
     return {min,max,size:[max[0]-min[0],max[1]-min[1],max[2]-min[2]]};
   }
 
@@ -329,7 +334,7 @@
       if(!this.gl) throw new Error('Trình duyệt không hỗ trợ WebGL2');
       this.meshes=[];this.yaw=-0.45;this.pitch=-0.18;this.roll=0;this.distance=3.3;this.pan=[0,0];
       this.wire=false;this.auto=false;this.showTexture=true;this.drag=null;this.last=[0,0];this.url='';this.meta={};this.captureSize=null;
-      this.animRuntime=null;this.animDoc=null;this.animClip=null;this.animPlaying=false;this.animStart=0;this.animTime=0;
+      this.animRuntime=null;this.animDoc=null;this.animClip=null;this.animPlaying=false;this.animStart=0;this.animTime=0;this.animLoop=true;this.animDone=false;this._onAnimationDone=null;
       this._initGL();this._events();this._frame=this._frame.bind(this);requestAnimationFrame(this._frame);
     }
     _initGL(){
@@ -401,37 +406,61 @@ void main(){
       this.auto=old.auto;this.yaw=old.yaw;this.pitch=old.pitch;this.roll=old.roll;this.distance=old.distance;this.pan=old.pan;this.captureSize=old.captureSize;
       return new Blob(chunks,{type:mime});
     }
-    async load(url){
+    async load(url, opts={}){
+      const type = opts.type || 'auto';
       this.url=url;this._clearMeshes();this.stopAnimation();
       const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`Không tải được GLB (${r.status})`);
       const {json,bin}=parseGLB(await r.arrayBuffer());
       const prims=await extractPrimitives(json,bin);
       const hasSkin=prims.some(p=>p.skinIndex!=null&&p.joints&&p.weights);
+      // Auto-upright uses a single-bbox-aspect-ratio heuristic that assumes
+      // "1 ambiguous-orientation object" (typical of a marching-cubes
+      // character/prop). A map/large scene is already Y-up by construction
+      // and can legitimately be very wide/flat, which would otherwise be
+      // mis-detected as "sideways" and rotated wrong - skip it for maps.
+      const allowUpright = type !== 'map';
       let uprightMode='native';
       if(hasSkin){
         const b=boundsOf(prims),c=[(b.min[0]+b.max[0])/2,(b.min[1]+b.max[1])/2,(b.min[2]+b.max[2])/2],radius=Math.max(b.max[0]-b.min[0],b.max[1]-b.min[1],b.max[2]-b.min[2])/2||1;
         for(const p of prims){p.normCenter=c;p.normScale=1/radius;}
         this.animRuntime=animationRuntime(json,bin);this.animDoc=json;
       }else{
-        this.animRuntime=null;this.animDoc=null;uprightMode=autoUpright(prims);fitPrimitives(prims);for(const p of prims){p.normCenter=[0,0,0];p.normScale=1;}
+        this.animRuntime=null;this.animDoc=null;if(allowUpright)uprightMode=autoUpright(prims);fitPrimitives(prims);for(const p of prims){p.normCenter=[0,0,0];p.normScale=1;}
       }
       this._upload(prims);this.reset();
       const textured=prims.filter(p=>p.hasTexture).length,animations=this.animRuntime?.clips?.map(c=>c.name)||[];
-      this.meta={parts:prims.length,triangles:prims.reduce((sum,p)=>sum+Math.floor(p.indices.length/3),0),texturedParts:textured,uprightMode,skinned:hasSkin,animations};
+      this.meta={parts:prims.length,triangles:prims.reduce((sum,p)=>sum+Math.floor(p.indices.length/3),0),texturedParts:textured,uprightMode,skinned:hasSkin,animations,type};
       this.showTexture=textured>0;
       if(animations.length)this.playAnimation(animations.find(n=>n.toLowerCase()==='idle')||animations[0]);
       return this.meta;
     }
-    playAnimation(name){
+    playAnimation(name, {loop=true}={}){
       const clip=this.animRuntime?.clips?.find(c=>c.name===name)||this.animRuntime?.clips?.find(c=>c.name.toLowerCase()===String(name||'').toLowerCase());
-      if(!clip)return false;this.animClip=clip;this.animPlaying=true;this.animStart=performance.now()-this.animTime*1000;return true;
+      if(!clip)return false;
+      this.animClip=clip;this.animPlaying=true;this.animLoop=loop;this.animDone=false;this.animStart=performance.now()-this.animTime*1000;
+      return true;
     }
-    stopAnimation(){this.animPlaying=false;this.animClip=null;this.animTime=0;}
+    stopAnimation(){this.animPlaying=false;this.animClip=null;this.animTime=0;this.animLoop=true;this.animDone=false;}
     getAnimations(){return this.animRuntime?.clips?.map(c=>c.name)||[];}
+    getCurrentAnimation(){return this.animClip?.name||null;}
     _boneMatrices(mesh,now){
       if(!this.animRuntime||mesh.skinIndex==null)return null;
       const skin=this.animRuntime.skins?.[mesh.skinIndex];if(!skin||skin.joints.length>64)return null;
-      let t=0;if(this.animClip){if(this.animPlaying)this.animTime=((now-this.animStart)/1000)%this.animClip.duration;t=this.animTime;}
+      let t=0;
+      if(this.animClip){
+        if(this.animPlaying){
+          const elapsed=(now-this.animStart)/1000;
+          if(this.animLoop){
+            this.animTime=elapsed%this.animClip.duration;
+          }else if(elapsed>=this.animClip.duration){
+            this.animTime=this.animClip.duration;
+            if(!this.animDone){this.animDone=true;this._onAnimationDone?.(this.animClip.name);}
+          }else{
+            this.animTime=elapsed;
+          }
+        }
+        t=this.animTime;
+      }
       const globals=globalsFor(this.animRuntime,this.animClip,t,this.animDoc),meshGlobal=mesh.nodeIndex!=null?globals[mesh.nodeIndex]:mat4Identity(),invMesh=mat4Inverse(meshGlobal),flat=new Float32Array(64*16);
       for(let i=0;i<64;i++)flat.set(mat4Identity(),i*16);
       skin.joints.forEach((joint,i)=>flat.set(mat4Mul(mat4Mul(invMesh,globals[joint]),skin.ibm[i]),i*16));
@@ -508,13 +537,34 @@ void main(){
     else { $('videoBox').classList.add('hidden'); $('empty').classList.remove('hidden'); }
     document.querySelector('.transport')?.classList.remove('viewer-transport-hidden');
   }
-  async function show(url,label='Model 3D'){
+  function updateDebugPanel(){
+    const el=$('ai3dViewerDebug'); if(!el) return;
+    if(!meta || !meta.parts){ el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    const v=ensure();
+    el.textContent =
+      `Mesh: ${meta.parts} phần · ${(meta.triangles||0).toLocaleString('vi-VN')} tam giác  |  ` +
+      `Skin: ${meta.skinned ? 'YES' : 'NO'}  |  ` +
+      `Animations: ${(meta.animations||[]).join(', ') || '(không có)'}  |  ` +
+      `Current: ${v.getCurrentAnimation() || '(dừng)'}`;
+  }
+
+  async function show(url, arg='Model 3D'){
+    // Backward-compatible options: show(url, "Label text") - legacy string
+    // form - or show(url, {label, type, autoFit, autoRotate}) - section 34
+    // contract. type: "character" | "prop" | "map" (default: auto-detect
+    // via skin presence, same heuristic as before).
+    const opts = (typeof arg === 'string') ? {label: arg} : (arg || {});
+    const label = opts.label || 'Model 3D';
     currentUrl=url;
     $('empty').classList.add('hidden');$('videoBox').classList.add('hidden');$('busy').classList.add('hidden');
     $('ai3dStageViewer').classList.remove('hidden');document.querySelector('.transport')?.classList.add('viewer-transport-hidden');
-    $('ai3dViewerState').textContent='Đang nạp GLB vào viewer…';
+    $('ai3dViewerState').textContent='Đang tải model 3D…';
+    const hadModelBefore = ensure().meshes.length > 0;
     try{
-      meta=await ensure().load(url);
+      const v=ensure();
+      v.setAuto(!!opts.autoRotate);
+      meta=await v.load(url, {type: opts.type});
       const textureText = meta.texturedParts ? ` · texture màu ${meta.texturedParts}/${meta.parts} phần` : ' · chưa có texture, đang dùng shading';
       const uprightText = meta.uprightMode !== 'native' ? ' · auto dựng đứng' : '';
       const animText=meta.animations?.length?` · animation: ${meta.animations.join(' / ')}`:'';
@@ -523,23 +573,46 @@ void main(){
       animIds.forEach(id=>$(id)?.classList.toggle('hidden',!(meta.animations?.length)));
       const btn = $('ai3dViewerMode');
       if (btn){
-        btn.classList.toggle('active', ensure().showTexture);
-        btn.textContent = ensure().showTexture ? '🎨 Texture ON' : '🎨 Texture OFF';
+        btn.classList.toggle('active', v.showTexture);
+        btn.textContent = v.showTexture ? '🎨 Texture ON' : '🎨 Texture OFF';
         btn.disabled = !meta.texturedParts;
       }
+      updateDebugPanel();
     }
-    catch(e){$('ai3dViewerState').textContent='Viewer lỗi: '+e.message;window.Studio?.setStatus('Viewer 3D lỗi: '+e.message,true);}
+    catch(e){
+      $('ai3dViewerState').textContent='Không thể hiển thị GLB: '+e.message;
+      window.Studio?.setStatus('Viewer 3D lỗi: '+e.message,true);
+      $('ai3dViewerDebug')?.classList.add('hidden');
+      // Section 20: never leave a blank/broken canvas - if this viewer never
+      // had a model loaded before, fall back to whatever the module's own
+      // empty/source state is instead of showing a stuck black canvas.
+      if(!hadModelBefore) restoreStage();
+    }
   }
 
   function playNamedAnimation(preferred){
     const v=ensure(),names=v.getAnimations();if(!names.length)return;
     const wanted=names.find(n=>n.toLowerCase()===preferred)||names.find(n=>n.toLowerCase().includes(preferred))||names[0];
-    if(v.playAnimation(wanted)) $('ai3dViewerState').textContent=`Animation đang phát: ${wanted} · ${meta.triangles?.toLocaleString('vi-VN')||0} tam giác`;
+    const isOneShot = preferred.includes('attack');
+    if(isOneShot){
+      v._onAnimationDone = () => {
+        const idleName = names.find(n=>n.toLowerCase()==='idle');
+        if(idleName) v.playAnimation(idleName);
+        updateDebugPanel();
+      };
+      if(v.playAnimation(wanted, {loop:false})){
+        $('ai3dViewerState').textContent=`Animation đang phát: ${wanted} (1 lần) · ${meta.triangles?.toLocaleString('vi-VN')||0} tam giác`;
+      }
+    } else {
+      v._onAnimationDone = null;
+      if(v.playAnimation(wanted)) $('ai3dViewerState').textContent=`Animation đang phát: ${wanted} · ${meta.triangles?.toLocaleString('vi-VN')||0} tam giác`;
+    }
+    updateDebugPanel();
   }
   $('ai3dViewerAnimIdle')?.addEventListener('click',()=>playNamedAnimation('idle'));
   $('ai3dViewerAnimRun')?.addEventListener('click',()=>playNamedAnimation('run'));
   $('ai3dViewerAnimAttack')?.addEventListener('click',()=>playNamedAnimation('attack_01'));
-  $('ai3dViewerAnimStop')?.addEventListener('click',()=>{ensure().stopAnimation();$('ai3dViewerState').textContent='Animation đã dừng';});
+  $('ai3dViewerAnimStop')?.addEventListener('click',()=>{ensure().stopAnimation();$('ai3dViewerState').textContent='Animation đã dừng';updateDebugPanel();});
 
   $('ai3dViewerReset')?.addEventListener('click',()=>ensure().reset());
   $('ai3dViewerWire')?.addEventListener('click',e=>{const on=e.currentTarget.classList.toggle('active');ensure().setWire(on);e.currentTarget.textContent=on?'▦ Wireframe ON':'▦ Wireframe';});
