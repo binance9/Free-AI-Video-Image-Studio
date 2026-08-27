@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router as core_router
 from app.api.settings_routes import router as settings_router
-from app.api.text_routes import router as text_router
+from app.modules.cong_cu_van_ban.api_cong_cu_van_ban import router as text_router
 from app.api.ai_image_routes import router as ai_image_router
 from app.modules.am_nhac.api_am_nhac import router as music_router
 from app.api.caption_routes import router as caption_router

@@ -1,6 +1,6 @@
 """Text-template catalog endpoints."""
 from fastapi import APIRouter
-from app.modules.text_templates import list_presets
+from app.modules.cong_cu_van_ban import list_presets
 
 router = APIRouter(prefix="/api/text", tags=["text"])
 
