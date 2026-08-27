@@ -15,6 +15,41 @@ Khi triển khai, `ban_do_3d` sẽ **gọi** `app.modules.do_vat_3d` (qua interf
 code) để sinh từng vật thể lẻ (cây, đá, nhà nhỏ...) rồi rải vào bản đồ. Không được nhét logic dựng
 mesh của `do_vat_3d` hay `nhan_vat_3d` trực tiếp vào module này.
 
+## Roadmap (kiến trúc dự kiến — CHƯA viết code thật)
+
+**Cấu trúc con dự kiến**:
+```
+ban_do_3d/
+├── dia_hinh        (terrain)
+├── duong_di        (road/path)
+├── khu_rung        (forest zone)
+├── khu_lang        (village zone)
+├── dungeon
+├── spawn           (vị trí spawn nhân vật/quái)
+├── collision       (dữ liệu va chạm)
+├── scene_composer  (ghép các phần trên thành 1 scene)
+└── export          (xuất scene manifest)
+```
+
+**Nguyên tắc bắt buộc — Map phải modular, không được bake chết asset**:
+```
+MAP
+├── TERRAIN
+├── ROAD
+├── ZONES
+├── PROPS
+├── SPAWN
+├── COLLISION
+└── EXPORT
+```
+Map Composer tương lai phải **dùng asset đã chuẩn hoá từ `do_vat_3d`** (mỗi asset 1 file GLB có
+`asset_id` riêng) — **KHÔNG regenerate lại toàn bộ cây/nhà/đá mỗi lần map thay đổi**. Ví dụ:
+`tree_oak_01.glb`, `rock_01.glb`, `house_wood_01.glb` — bản đồ chỉ lưu:
+```
+asset_id, position, rotation, scale
+```
+Nhờ vậy sửa 1 cây không phải tạo lại cả map.
+
 ## 3. Khi lỗi, gửi thư mục nào
 ```
 app/modules/ban_do_3d/

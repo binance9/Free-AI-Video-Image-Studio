@@ -39,8 +39,20 @@ File GLB (có texture) + video preview turntable.
 ## 7. Khi lỗi, gửi thư mục nào
 ```
 app/modules/nhan_vat_3d/
-web/modules/nhan_vat_3d/   (khi đã tách frontend)
+web/modules/nhan_vat_3d/
 ```
+
+## 0. Ranh giới với nhan_vat_game_ready (Phase 1.5)
+Module này CHỈ chịu trách nhiệm: ảnh/prompt → shape 3D → texture/paint → GLB chuẩn → viewer cơ
+bản. **KHÔNG chịu trách nhiệm** rig/skeleton/skinning/animation/Game Ready export — phần đó thuộc
+`app/modules/nhan_vat_game_ready/` + `web/modules/nhan_vat_game_ready/` (đã tách hoàn toàn khỏi
+`nhan_vat_3d.js` ở Phase 1.5, xem `app/modules/nhan_vat_game_ready/README_MODULE.md`).
+
+Ngoại lệ có chủ đích: `web/modules/nhan_vat_3d/ai_3d_viewer.js` vẫn chứa nút điều khiển animation
+(Idle/Run/Attack/Stop) — đây KHÔNG phải logic Game Ready, mà là tính năng viewer dùng chung cho
+**mọi** GLB có animation (tự hiện/ẩn theo `meta.animations`, không quan tâm GLB đến từ đâu). Game
+Ready chỉ gọi `window.AIVF3DViewer.show(url, label)` để mở kết quả, không tự vẽ animation — nên
+phần này ở lại viewer, không di chuyển.
 
 ## 8. Không được sửa file ngoài module này nếu chưa thật sự cần
 Đúng. **Lưu ý đặc biệt**: `character_hd_backend.py` và `triposr_backend.py` tự dựng đường dẫn tới
@@ -52,6 +64,24 @@ thường sẽ bỏ sót).
 ## 9. Model AI / engine sử dụng
 TripoSR, Hunyuan3D-2 (Character-HD = Hunyuan3D-2mini), chạy trong venv riêng (`data/runtime3d/`,
 `data/runtime_character_hd/`) — không chạy chung tiến trình FastAPI để tránh xung đột GPU/torch.
+
+## Roadmap kiến trúc (CHỈ ghi chú — KHÔNG thay engine hiện tại ở phase này)
+
+Mục tiêu tương lai: tách rõ 2 giai đoạn Shape và Texture thành 2 bước độc lập, có thể cache riêng:
+
+```
+IMAGE → PREPROCESS → SHAPE → SAVE SHAPE → TEXTURE → SAVE TEXTURED GLB
+```
+
+Lợi ích dự kiến:
+- Cache shape đã dựng — đổi texture/màu sắc không cần dựng lại mesh.
+- Cache model AI đang chạy trong process (không reload model mỗi job).
+- 3 preset chất lượng: `LITE`, `STANDARD`, `FINAL`.
+- Cấu hình theo VRAM (VRAM-aware): máy VRAM thấp tự giảm resolution / steps / texture quality
+  **trước khi** bật CPU offload (bật CPU offload là phương án cuối, chậm nhất).
+
+Đây là kiến trúc dự kiến cho refactor sau này, hiện tại pipeline `service.py` → backend (TripoSR/
+Hunyuan/Character-HD) → `mesh_finish.py`/`textured_glb_export.py` vẫn giữ nguyên như đang chạy.
 
 ## 10. Thư mục data/output
 `data/3d_assets/` (workspace GLB/preview), `data/models/3d/` (model cache), `data/runtime3d/`,

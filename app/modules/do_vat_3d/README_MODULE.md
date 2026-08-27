@@ -14,6 +14,23 @@ trang trí, weapon/object 3D nếu phù hợp.
 đồ. Có thể tái dùng chung backend dựng mesh với `app.modules.nhan_vat_3d` (TripoSR/Hunyuan) qua
 import trực tiếp thay vì copy code, nếu khi triển khai thấy hợp lý.
 
+## Roadmap (kiến trúc dự kiến — CHƯA viết code thật)
+
+**Input dự kiến**: ảnh tham chiếu, hoặc prompt mô tả vật thể.
+
+**Output dự kiến**: file GLB đơn lẻ mỗi loại vật thể, ví dụ `tree.glb`, `rock.glb`, `chest.glb`,
+`house.glb`, `fence.glb`...
+
+**Nhóm asset dự kiến**:
+```
+cay, da, co_bui, ruong, thung, hang_rao, cot, den, nha_nho, cong, tuong, props_trang_tri
+```
+
+**Nguyên tắc quan trọng cho `ban_do_3d` khi dùng asset từ module này**: mỗi asset là 1 file GLB
+độc lập, có `asset_id` riêng — `ban_do_3d` KHÔNG được bake chết asset vào map generator, chỉ lưu
+tham chiếu (`asset_id` + `position` + `rotation` + `scale`). Nhờ vậy sửa 1 loại cây không phải
+tạo lại toàn bộ map.
+
 ## 3. Khi lỗi, gửi thư mục nào
 ```
 app/modules/do_vat_3d/
