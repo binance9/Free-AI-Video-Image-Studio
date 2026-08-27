@@ -9,7 +9,7 @@ from app.api.ai_image_routes import router as ai_image_router
 from app.modules.am_nhac.api_am_nhac import router as music_router
 from app.modules.phu_de.api_phu_de import router as caption_router
 from app.api.model_3d_routes import router as model_3d_router
-from app.api.facebook_video_routes import router as facebook_video_router
+from app.modules.tai_video.api_tai_video import router as facebook_video_router
 from app.api.video_cleanup_routes import router as video_cleanup_router
 from app.api.job_control_routes import router as job_control_router
 from app.api.system_routes import router as system_router
@@ -24,7 +24,7 @@ from app.modules.am_nhac import LocalMusicLibrary
 from app.modules.phu_de import LocalCaptionService, LocalTranslationService
 from app.modules.model_3d_local import Local3DService, Model3DWorkspace, Model3DJobManager
 from app.modules.model_3d_local.turntable_video import TurntableVideoExporter
-from app.modules.facebook_video import FacebookVideoDownloader, FacebookVideoJobManager
+from app.modules.tai_video import FacebookVideoDownloader, FacebookVideoJobManager
 from app.modules.video_cleanup import VideoCleanupRuntime, VideoCleanupJobManager
 from app.modules.character_2d_addon import Character2DService
 from app.modules.model_3d_game_ready import GameReady3DService, GameReadyJobManager

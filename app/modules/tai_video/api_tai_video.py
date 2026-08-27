@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from app.modules.facebook_video import FacebookVideoDownloadError
+from app.modules.tai_video import FacebookVideoDownloadError
 
 router = APIRouter(prefix="/api/facebook-video")
 

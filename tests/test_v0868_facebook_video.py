@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from app.modules.facebook_video.downloader import FacebookVideoDownloader, FacebookVideoDownloadError
-from app.modules.facebook_video.job_manager import FacebookVideoJobManager
+from app.modules.tai_video.downloader import FacebookVideoDownloader, FacebookVideoDownloadError
+from app.modules.tai_video.job_manager import FacebookVideoJobManager
 
 ROOT = Path(__file__).resolve().parents[1]
 
