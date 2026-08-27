@@ -169,6 +169,63 @@ target_faces=45000), Blender 5.2.1 LTS thật, không mock:
 - Thời gian chạy: 11.11s (import + optimize 634K→45K tam giác + rig + skin fallback + bake 3
   animation + export 4 file GLB).
 
+## 12. Phase 1.6.2.1 — sửa riêng RUN cycle (không đụng rig/skin/viewer)
+
+Run cũ chỉ có 5 keyframe rời rạc, biên độ/knee-bend không được kiểm chứng số liệu, và
+`validate_game_ready.py` chỉ kiểm tra "có motion" chung chung (không phân biệt được "chạy thật"
+với "nhún lên xuống"). `bake_run_cycle()` (trong `blender_game_ready.py`) viết lại bằng 1 công
+thức pha liên tục (`phase_l = t`, `phase_r = t+0.5 mod 1`) thay vì pose tay:
+- `thigh.{L,R} = RUN_THIGH_AMP * cos(2π·phase)` → 2 chân LUÔN ngược pha chính xác (không phải "na
+  ná khác nhau"), vì cùng 1 công thức lệch pha 0.5 chu kỳ.
+- `shin.{L,R}` (gối) chỉ bend trong nửa chu kỳ "swing" (chân rời đất) của chính chân đó, bằng 0
+  trong nửa "stance" (chân chạm đất) — tại mọi thời điểm đúng 1 chân bend, chân kia thẳng.
+- `foot.{L,R}` xoay cổ chân theo pha chân đó (nhấc/đặt chân).
+- `hips` hạ nhẹ (dip) đúng 2 lần/chu kỳ tại 25%/75% (lúc 2 chân đi qua vị trí giữa) + xoay rất nhẹ;
+  `chest` nghiêng nhẹ cố định; `head` gần như đứng yên.
+- Cycle 24 frame @ 24fps = 1.0s (đúng biên trên "0.7-1.0s" yêu cầu), frame cuối = frame đầu (loop
+  liền mạch, đã verify bằng số liệu thật, xem dưới).
+
+`validate_game_ready.py::_validate_run_gait()` (mới) đọc TRỰC TIẾP quaternion/translation thật
+của clip "run" từ GLB đã export (không tin animation curve tự khai) và kiểm tra đúng yêu cầu:
+- Range xoay `thigh.L`/`thigh.R` (unwrap góc quanh trục X cục bộ để tránh lỗi wrap ±180°, xem
+  comment trong code — quaternion export ra có offset rest-pose lớn, phải đo RANGE chứ không đọc
+  giá trị tuyệt đối).
+- **Anti-phase**: hệ số tương quan Pearson giữa chuỗi góc `thigh.L(t)` và `thigh.R(t)` phải
+  `<= -0.5` — nếu 2 chân cùng pha (bug y hệt điều user mô tả), correlation sẽ dương → FAIL rõ ràng,
+  không chỉ "im lặng cho qua".
+- Range bend gối (`shin.L`/`shin.R`), range dịch chuyển hips theo trục có biên độ lớn nhất (không
+  giả định cứng trục nào là "trục thẳng đứng" sau khi glTF export đổi Z-up→Y-up).
+- `run` trong `required_clips_animated` giờ **PHẢI qua được `_validate_run_gait`**, không chỉ "có
+  motion nào đó" như trước — animation_ok/Game Ready PASS đầy đủ phụ thuộc đúng vào việc chạy có
+  thật hay không.
+
+### Kết quả test thật (đã chạy, không phải mô phỏng)
+Cùng model Character HD thật đã dùng ở Phase 1.6.2 (`data/3d_assets/8d8b1343c6f24efdabd713c1f341cdc1/model.glb`,
+634,051 tam giác), Blender 5.2.1 LTS thật, target_faces=45000, `skin_method=zone_fallback` (như
+Phase 1.6.2):
+- **Run duration**: 1.0s (24 frame / 24fps, frame 1→25).
+- **Samples/keyframes** trong file export: 25 (per-frame, không phải chỉ 5 keyframe tác giả).
+- **Rotation range thigh.L**: 1.100 rad (≈63.0°) — **Rotation range thigh.R**: 1.100 rad (≈63.0°,
+  khớp thigh.L, đúng biên độ đối xứng).
+- **Knee bend range** `shin.L`/`shin.R`: 0.850 rad (≈48.7°) mỗi bên.
+- **Hips vertical range** (trục có biên độ lớn nhất sau export): 0.020.
+- **Xác nhận left/right anti-phase**: `leg_phase_correlation = -1.0` (ngược pha hoàn hảo,
+  `legs_anti_phase = true`).
+- **Xác nhận loop seam**: frame 25 (t=1.0) trùng khớp frame 1 (t=0.0) tại mọi bone (do công thức
+  cos/sin tuần hoàn đúng chu kỳ 1.0) — không giật ở điểm nối.
+- `_validate_run_gait().ok = true`, `validation.animation_ok = true` toàn bộ — **Game Ready PASS
+  thật**, không phải chỉ "có tên clip idle/run/attack_01".
+
+Không sửa: Character 3D generator, texture, rig structure (vẫn 18 bone như cũ), `ai_3d_viewer.js`
+(playback đã hoạt động từ Phase 1.6.2, không đụng vào).
+
+**Chưa làm**: clip `walk` (mục 15 trong yêu cầu, đánh dấu optional, "ưu tiên sửa RUN chuẩn
+trước") — để lại cho lần sau nếu cần, không mở rộng ngoài phạm vi "sửa run" của phase này.
+Weapon-safety (mục 12) không có logic riêng theo loại vũ khí vì pipeline hiện không biết
+nhân vật có cầm vũ khí gì — biên độ tay (`RUN_ARM_AMP=0.5`) được giữ thấp hơn biên độ chân
+(`RUN_THIGH_AMP=0.55`) một cách thận trọng để giảm rủi ro xuyên mesh, nhưng không có kiểm tra
+hình học thật.
+
 ## Giới hạn đã biết (Phase 1.6.2)
 - Chưa test được trường hợp `skin_method: "automatic"` THÀNH CÔNG thật (coverage ≥85% ngay từ bone
   heat) trên máy dev này trong phase này — mesh test sẵn có đều rơi vào nhánh fallback. Logic

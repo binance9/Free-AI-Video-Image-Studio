@@ -22,6 +22,19 @@ from mathutils import Vector
 # threshold is what makes that failure mode detectable instead of silent.
 MIN_WEIGHT_COVERAGE = 0.85
 
+# ---- run cycle tuning (radians unless noted) - see bake_run_cycle() ----
+RUN_FPS = 24
+RUN_CYCLE_FRAMES = 24  # 24 frames @ 24fps = 1.0s/cycle, top of the 0.7-1.0s target
+RUN_THIGH_AMP = 0.55       # forward/back thigh swing - shorter than a human stride (chibi)
+RUN_KNEE_AMP = 0.85        # knee bend during swing only - a bit pronounced (chibi)
+RUN_ARM_AMP = 0.5          # arm swing amplitude, opposite phase to the same-side leg
+RUN_FOREARM_BEND = -0.35   # constant relaxed elbow bend (keeps forearm/hand off the torso)
+RUN_FOOT_AMP = 0.35        # ankle articulation (lift/plant)
+RUN_HIPS_ROT_AMP = 0.05    # subtle pelvis twist
+RUN_HIPS_DIP = 0.02        # hips lower slightly at the two mid-swing passes, never rises hard
+RUN_CHEST_LEAN = -0.10     # small constant forward lean, not an oscillation
+RUN_HEAD_BOB_AMP = 0.02    # tiny stabilizing counter-bob only
+
 
 def args_after_dash():
     argv = sys.argv
@@ -250,6 +263,67 @@ def new_action(rig, name):
     return action
 
 
+def bake_run_cycle(rig):
+    """In-place run cycle built from one continuous phase function per limb
+    instead of hand-picked poses, so left/right legs are exact mirror
+    images at every sample and the last frame is mathematically identical
+    to the first (seamless loop). phase_l = t, phase_r = t+0.5 (mod 1) is
+    what guarantees the two legs are always in anti-phase - not just
+    "different", but the same curve shifted by half a cycle:
+
+      t=0.00 (frame 1 ): left thigh forward / right thigh back, right arm
+                          forward / left arm back (contact pose)
+      t=0.25 (frame 7 ): both thighs pass through neutral, hips dip once
+      t=0.50 (frame 13): mirror of t=0 (right thigh forward)
+      t=0.75 (frame 19): both thighs pass through neutral again, hips dip
+      t=1.00 (frame 25): identical to t=0 - loop seam
+
+    Knee bend is 0 through each leg's own stance half (phase 0..0.5, foot
+    planted/moving back under the body) and only bends through its swing
+    half (phase 0.5..1, leg off the ground recovering forward), peaking at
+    its own phase 0.75 - so at any instant exactly one leg is bent (airborne)
+    while the other is straight (planted), never both/neither.
+    """
+    a = new_action(rig, "run"); reset_pose(rig)
+    for i, t in enumerate((0.0, 0.25, 0.5, 0.75, 1.0)):
+        f = i * (RUN_CYCLE_FRAMES // 4) + 1
+        phase_l = t % 1.0
+        phase_r = (t + 0.5) % 1.0
+
+        def thigh(phase):
+            return RUN_THIGH_AMP * math.cos(2 * math.pi * phase)
+
+        def knee(phase):
+            swing = math.sin(2 * math.pi * (phase - 0.5))
+            return -RUN_KNEE_AMP * max(0.0, swing)
+
+        def foot(phase):
+            return -RUN_FOOT_AMP * math.sin(2 * math.pi * phase)
+
+        thigh_l, thigh_r = thigh(phase_l), thigh(phase_r)
+        arm_l, arm_r = -thigh_l * (RUN_ARM_AMP / RUN_THIGH_AMP), -thigh_r * (RUN_ARM_AMP / RUN_THIGH_AMP)
+        hips_rot_z = RUN_HIPS_ROT_AMP * math.cos(2 * math.pi * phase_l)
+        hips_z = -RUN_HIPS_DIP if t in (0.25, 0.75) else 0.0
+        head_x = RUN_HEAD_BOB_AMP * math.cos(4 * math.pi * phase_l)
+
+        set_pose_rotation(rig, "thigh.L", (thigh_l, 0, 0), f)
+        set_pose_rotation(rig, "thigh.R", (thigh_r, 0, 0), f)
+        set_pose_rotation(rig, "shin.L", (knee(phase_l), 0, 0), f)
+        set_pose_rotation(rig, "shin.R", (knee(phase_r), 0, 0), f)
+        set_pose_rotation(rig, "foot.L", (foot(phase_l), 0, 0), f)
+        set_pose_rotation(rig, "foot.R", (foot(phase_r), 0, 0), f)
+        set_pose_rotation(rig, "upper_arm.L", (arm_l, 0, 0), f)
+        set_pose_rotation(rig, "upper_arm.R", (arm_r, 0, 0), f)
+        set_pose_rotation(rig, "forearm.L", (RUN_FOREARM_BEND, 0, 0), f)
+        set_pose_rotation(rig, "forearm.R", (RUN_FOREARM_BEND, 0, 0), f)
+        set_pose_rotation(rig, "hips", (0, 0, hips_rot_z), f)
+        set_pose_location(rig, "hips", (0, 0, hips_z), f)
+        set_pose_rotation(rig, "chest", (RUN_CHEST_LEAN, 0, 0), f)
+        set_pose_rotation(rig, "head", (head_x, 0, 0), f)
+    a.frame_range = (1, RUN_CYCLE_FRAMES + 1)
+    return a
+
+
 def bake_starter_actions(rig):
     actions=[]
     # Idle: tiny breathing/bob only.
@@ -260,14 +334,7 @@ def bake_starter_actions(rig):
         set_pose_rotation(rig,"upper_arm.R",(0,0,-.04 if f==24 else 0),f)
     a.frame_range=(1,48); actions.append(a)
 
-    # Run in-place: root translation is intentionally zero; game owns movement.
-    a=new_action(rig,"run"); reset_pose(rig)
-    for f, s in [(1,1),(7,-1),(13,1),(19,-1),(25,1)]:
-        set_pose_rotation(rig,"thigh.L",(s*.72,0,0),f); set_pose_rotation(rig,"thigh.R",(-s*.72,0,0),f)
-        set_pose_rotation(rig,"shin.L",(-max(0,s)*.55,0,0),f); set_pose_rotation(rig,"shin.R",(-max(0,-s)*.55,0,0),f)
-        set_pose_rotation(rig,"upper_arm.L",(-s*.55,0,0),f); set_pose_rotation(rig,"upper_arm.R",(s*.55,0,0),f)
-        set_pose_location(rig,"hips",(0,0,.018 if f in (7,19) else 0),f)
-    a.frame_range=(1,25); actions.append(a)
+    actions.append(bake_run_cycle(rig))
 
     # Generic starter attack; later clips can replace it without re-rigging.
     a=new_action(rig,"attack_01"); reset_pose(rig)
@@ -308,6 +375,7 @@ def main():
     rigged_glb = out_dir / "rigged.glb"
     shutil.copy2(src, source_glb)
 
+    bpy.context.scene.render.fps = RUN_FPS  # explicit, so exported clip durations are predictable
     clear_scene(); meshes=import_glb(src); mesh=join_meshes(meshes)
     before, after=optimize_mesh(mesh,a.target_faces)
     export_glb(optimized_glb)

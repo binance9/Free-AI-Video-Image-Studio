@@ -15,6 +15,7 @@ phat hien dung truong hop do.
 from __future__ import annotations
 
 import json
+import math
 import struct
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -22,6 +23,17 @@ from pathlib import Path
 REQUIRED_CLIPS = ("idle", "run", "attack_01")
 MIN_WEIGHT_COVERAGE = 0.85
 MOTION_EPSILON = 1e-4
+
+# ---- run-cycle gait numeric thresholds (see _validate_run_gait) ----
+# Calibrated with real margin below what a real Blender export actually
+# produces (verified: thigh range ~63deg / ~1.1rad, knee range ~49deg /
+# ~0.85rad, hips vertical range ~0.02, L/R correlation exactly -1.0) - these
+# are deliberately loose enough to tolerate a different but still-genuine
+# gait, while still catching "barely moving" or "both legs in phase".
+MIN_LEG_ROTATION_RANGE = 0.35   # rad (~20deg) peak-to-peak swing per thigh
+MIN_KNEE_BEND_RANGE = 0.25      # rad (~14deg) peak-to-peak knee bend per leg
+MIN_HIPS_VERTICAL_RANGE = 0.005 # hips translation, largest-axis peak-to-peak
+MAX_LEG_PHASE_CORRELATION = -0.5  # Pearson r between L/R thigh angle over time; must be this negative or lower
 
 # (struct format char, byte size)
 _COMPONENT = {
@@ -55,6 +67,7 @@ class KetQuaKiemTraGameReady:
     clip_has_motion: dict = field(default_factory=dict)
     required_clips_present: dict = field(default_factory=dict)
     required_clips_animated: dict = field(default_factory=dict)
+    run_gait: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -68,6 +81,7 @@ class KetQuaKiemTraGameReady:
             "clip_has_motion": self.clip_has_motion,
             "required_clips_present": self.required_clips_present,
             "required_clips_animated": self.required_clips_animated,
+            "run_gait": self.run_gait,
         }
 
 
@@ -153,6 +167,151 @@ def _channel_has_motion(values: list[tuple]) -> bool:
         if any(abs(a - b) > MOTION_EPSILON for a, b in zip(first, row)):
             return True
     return False
+
+
+def _node_name_index(doc: dict) -> dict:
+    return {node.get("name"): i for i, node in enumerate(doc.get("nodes") or []) if node.get("name")}
+
+
+def _clip_channel(doc: dict, bin_data: bytes, anim: dict, node_index: int, path: str):
+    """Return (times, values) for the FIRST channel of `anim` targeting
+    `node_index` on `path`, sorted by time. None if not found/unreadable."""
+    samplers = anim.get("samplers") or []
+    for ch in anim.get("channels") or []:
+        target = ch.get("target") or {}
+        if target.get("node") != node_index or target.get("path") != path:
+            continue
+        sampler_idx = ch.get("sampler")
+        if sampler_idx is None or sampler_idx >= len(samplers):
+            continue
+        sampler = samplers[sampler_idx]
+        try:
+            times = [t[0] for t in _read_accessor_raw(doc, bin_data, sampler.get("input"))]
+            values = _read_accessor_raw(doc, bin_data, sampler.get("output"))
+        except GlbKhongHopLe:
+            return None
+        pairs = sorted(zip(times, values), key=lambda p: p[0])
+        return [p[0] for p in pairs], [p[1] for p in pairs]
+    return None
+
+
+def _signed_angle_x(quat: tuple) -> float:
+    """Signed rotation angle (radians) about local X, valid exactly when
+    the quaternion represents a pure-X rotation (true here: every run-cycle
+    channel this is used on was authored with rotation_euler=(x,0,0,0)).
+    Includes whatever constant rest/bind offset the exporter baked in -
+    that offset is irrelevant for range/correlation, which only look at
+    how the value CHANGES across the clip."""
+    x, _y, _z, w = quat
+    return 2.0 * math.atan2(x, w)
+
+
+def _unwrap(angles: list[float], discont: float = math.pi) -> list[float]:
+    """Classic phase unwrap: keeps a sequence of angles continuous across
+    the +-pi wrap boundary, assuming consecutive samples never actually
+    jump by more than `discont` radians (true for a per-frame-baked clip)."""
+    out = list(angles)
+    for i in range(1, len(out)):
+        d = out[i] - out[i - 1]
+        while d > discont:
+            out[i] -= 2 * math.pi
+            d = out[i] - out[i - 1]
+        while d < -discont:
+            out[i] += 2 * math.pi
+            d = out[i] - out[i - 1]
+    return out
+
+
+def _pearson(a: list[float], b: list[float]) -> float:
+    n = len(a)
+    if n == 0 or n != len(b):
+        return 0.0
+    ma, mb = sum(a) / n, sum(b) / n
+    cov = sum((a[i] - ma) * (b[i] - mb) for i in range(n))
+    va = sum((x - ma) ** 2 for x in a)
+    vb = sum((x - mb) ** 2 for x in b)
+    if va <= 0 or vb <= 0:
+        return 0.0
+    return cov / math.sqrt(va * vb)
+
+
+def _bone_rotation_x_range(doc: dict, bin_data: bytes, anim: dict, node_index: int) -> float | None:
+    channel = _clip_channel(doc, bin_data, anim, node_index, "rotation")
+    if channel is None:
+        return None
+    _times, values = channel
+    if len(values) < 2:
+        return 0.0
+    angles = _unwrap([_signed_angle_x(q) for q in values])
+    return max(angles) - min(angles)
+
+
+def _validate_run_gait(doc: dict, bin_data: bytes, run_anim: dict) -> dict:
+    """Numeric motion checks for the 'run' clip specifically (section 13 of
+    the run-cycle fix): NOT just "some channel changed", but the actual
+    biomechanics the animation is supposed to show - legs swinging in real
+    opposite phase, knees actually bending, hips moving vertically."""
+    node_index = _node_name_index(doc)
+    out = {
+        "thigh_l_range": None, "thigh_r_range": None,
+        "knee_l_range": None, "knee_r_range": None,
+        "hips_vertical_range": None, "legs_anti_phase": None,
+        "leg_phase_correlation": None, "ok": False, "issues": [],
+    }
+
+    required_bones = ("thigh.L", "thigh.R", "shin.L", "shin.R", "hips")
+    missing = [b for b in required_bones if b not in node_index]
+    if missing:
+        out["issues"].append(f"Thiếu bone để kiểm tra gait: {', '.join(missing)}")
+        return out
+
+    thigh_l_ch = _clip_channel(doc, bin_data, run_anim, node_index["thigh.L"], "rotation")
+    thigh_r_ch = _clip_channel(doc, bin_data, run_anim, node_index["thigh.R"], "rotation")
+    if thigh_l_ch is None or thigh_r_ch is None or len(thigh_l_ch[1]) < 2 or len(thigh_r_ch[1]) < 2:
+        out["issues"].append("Clip 'run' không có rotation channel thật cho thigh.L/thigh.R")
+        return out
+
+    angles_l = _unwrap([_signed_angle_x(q) for q in thigh_l_ch[1]])
+    angles_r = _unwrap([_signed_angle_x(q) for q in thigh_r_ch[1]])
+    out["thigh_l_range"] = round(max(angles_l) - min(angles_l), 4)
+    out["thigh_r_range"] = round(max(angles_r) - min(angles_r), 4)
+
+    n = min(len(angles_l), len(angles_r))
+    correlation = _pearson(angles_l[:n], angles_r[:n])
+    out["leg_phase_correlation"] = round(correlation, 4)
+    out["legs_anti_phase"] = correlation <= MAX_LEG_PHASE_CORRELATION
+
+    out["knee_l_range"] = round(_bone_rotation_x_range(doc, bin_data, run_anim, node_index["shin.L"]) or 0.0, 4)
+    out["knee_r_range"] = round(_bone_rotation_x_range(doc, bin_data, run_anim, node_index["shin.R"]) or 0.0, 4)
+
+    hips_ch = _clip_channel(doc, bin_data, run_anim, node_index["hips"], "translation")
+    if hips_ch is not None and len(hips_ch[1]) >= 2:
+        best = 0.0
+        for axis in range(3):
+            vals = [v[axis] for v in hips_ch[1]]
+            best = max(best, max(vals) - min(vals))
+        out["hips_vertical_range"] = round(best, 5)
+    else:
+        out["hips_vertical_range"] = 0.0
+
+    if out["thigh_l_range"] < MIN_LEG_ROTATION_RANGE:
+        out["issues"].append(f"thigh.L rotation range quá nhỏ ({out['thigh_l_range']:.3f} rad < {MIN_LEG_ROTATION_RANGE})")
+    if out["thigh_r_range"] < MIN_LEG_ROTATION_RANGE:
+        out["issues"].append(f"thigh.R rotation range quá nhỏ ({out['thigh_r_range']:.3f} rad < {MIN_LEG_ROTATION_RANGE})")
+    if not out["legs_anti_phase"]:
+        out["issues"].append(
+            f"Hai chân KHÔNG ngược pha (correlation={out['leg_phase_correlation']:.2f}, "
+            f"cần <= {MAX_LEG_PHASE_CORRELATION}) - có thể đang chạy cùng pha (2 chân cùng đưa ra một lúc)"
+        )
+    if out["knee_l_range"] < MIN_KNEE_BEND_RANGE:
+        out["issues"].append(f"shin.L (gối) không bend đủ ({out['knee_l_range']:.3f} rad < {MIN_KNEE_BEND_RANGE})")
+    if out["knee_r_range"] < MIN_KNEE_BEND_RANGE:
+        out["issues"].append(f"shin.R (gối) không bend đủ ({out['knee_r_range']:.3f} rad < {MIN_KNEE_BEND_RANGE})")
+    if out["hips_vertical_range"] < MIN_HIPS_VERTICAL_RANGE:
+        out["issues"].append(f"hips không có chuyển động lên/xuống đủ ({out['hips_vertical_range']:.4f} < {MIN_HIPS_VERTICAL_RANGE})")
+
+    out["ok"] = len(out["issues"]) == 0
+    return out
 
 
 def validate_game_ready_glb(path: str | Path) -> KetQuaKiemTraGameReady:
@@ -280,14 +439,26 @@ def validate_game_ready_glb(path: str | Path) -> KetQuaKiemTraGameReady:
         if present_name is None:
             result.required_clips_animated[required] = False
             result.warnings.append(f"Thiếu animation clip bắt buộc: '{required}'")
+            continue
+        animated = bool(result.clip_has_motion.get(present_name))
+        if not animated:
+            result.required_clips_animated[required] = False
+            result.warnings.append(
+                f"Clip '{present_name}' tồn tại nhưng không có bone transform nào thay đổi thật "
+                "(đứng yên) - không được tính là animation hợp lệ"
+            )
+            continue
+        if required == "run":
+            # "run" is held to a higher bar than "has some motion": it must
+            # look like an actual alternating gait, not a bounce/twitch.
+            run_anim = next(a for i, a in enumerate(animations) if (a.get("name") or f"clip_{i+1}") == present_name)
+            gait = _validate_run_gait(doc, bin_data, run_anim)
+            result.run_gait = gait
+            result.required_clips_animated[required] = gait["ok"]
+            for issue in gait["issues"]:
+                result.warnings.append(f"run gait: {issue}")
         else:
-            animated = bool(result.clip_has_motion.get(present_name))
-            result.required_clips_animated[required] = animated
-            if not animated:
-                result.warnings.append(
-                    f"Clip '{present_name}' tồn tại nhưng không có bone transform nào thay đổi thật "
-                    "(đứng yên) - không được tính là animation hợp lệ"
-                )
+            result.required_clips_animated[required] = True
 
     result.animation_ok = all(result.required_clips_animated.get(c) for c in REQUIRED_CLIPS)
     result.ok = len(result.errors) == 0
