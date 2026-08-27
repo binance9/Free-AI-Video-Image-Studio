@@ -4,7 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from app.modules.subtitle_local import extract_audio
+from app.modules.phu_de import extract_audio
 
 router = APIRouter(prefix="/api", tags=["captions-local"])
 

@@ -7,7 +7,7 @@ from app.api.settings_routes import router as settings_router
 from app.modules.cong_cu_van_ban.api_cong_cu_van_ban import router as text_router
 from app.api.ai_image_routes import router as ai_image_router
 from app.modules.am_nhac.api_am_nhac import router as music_router
-from app.api.caption_routes import router as caption_router
+from app.modules.phu_de.api_phu_de import router as caption_router
 from app.api.model_3d_routes import router as model_3d_router
 from app.api.facebook_video_routes import router as facebook_video_router
 from app.api.video_cleanup_routes import router as video_cleanup_router
@@ -21,8 +21,7 @@ from app.modules.video_editor import VideoEditor
 from app.modules.video_editor.workspace import VideoWorkspace
 from app.modules.image_ai_local import AiImageWorkspace, LocalImageService, AiImageJobManager
 from app.modules.am_nhac import LocalMusicLibrary
-from app.modules.subtitle_local import LocalCaptionService
-from app.modules.translate_local import LocalTranslationService
+from app.modules.phu_de import LocalCaptionService, LocalTranslationService
 from app.modules.model_3d_local import Local3DService, Model3DWorkspace, Model3DJobManager
 from app.modules.model_3d_local.turntable_video import TurntableVideoExporter
 from app.modules.facebook_video import FacebookVideoDownloader, FacebookVideoJobManager
