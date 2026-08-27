@@ -1,0 +1,6 @@
+/* === Đồ vật 3D (do_vat_3d) - Phase 1.6 === */
+.dovat3d-progress > div:first-child { display: flex; justify-content: space-between; color: #dbe5ff; font-size: 11px; }
+.dovat3d-track { height: 7px; margin: 6px 0; border-radius: 999px; background: #272c3e; overflow: hidden; }
+.dovat3d-track i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #5fdc9a, #3d9dff); transition: width .3s ease; }
+.dovat3d-progress small { color: #9caac0; }
+#dovat3dUseInMap { opacity: .55; cursor: not-allowed; }

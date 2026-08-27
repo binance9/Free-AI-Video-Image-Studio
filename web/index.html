@@ -6,6 +6,7 @@
 <title>AI Video Factory · Free Local Studio 0.8.9.3.3</title>
 <link rel="stylesheet" href="/static/style.css?v=08932"/>
 <link rel="stylesheet" href="/static/modules/nhan_vat_game_ready/nhan_vat_game_ready.css?v=0893"/>
+<link rel="stylesheet" href="/static/modules/do_vat_3d/do_vat_3d.css?v=0161"/>
 </head>
 <!-- compatibility history: 0.8.6. Character HD / texture viewer -->
 <body class="home-mode">
@@ -70,6 +71,20 @@
             <svg viewBox="0 0 64 64"><path d="M32 7 53 19v26L32 57 11 45V19L32 7Z"/><path d="m12 19 20 12 20-12M32 31v25"/></svg>
           </span>
           <span class="studio-feature-copy"><strong>Nhân vật 3D</strong><small>Nhận thẳng ảnh PASS từ 2D</small><em>2D → GLB · texture · viewer</em></span>
+          <span class="studio-feature-arrow">→</span>
+        </button>
+        <button class="studio-feature-card studio-feature-3d" data-tool-open="dovat3d">
+          <span class="studio-feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><path d="M32 8v20M20 44l12-16 12 16M20 44v10h24V44"/><circle cx="32" cy="8" r="4"/></svg>
+          </span>
+          <span class="studio-feature-copy"><strong>Đồ vật 3D</strong><small>Cây · Đá · Nhà · Props</small><em>Asset cho game, dùng chung engine 3D</em></span>
+          <span class="studio-feature-arrow">→</span>
+        </button>
+        <button class="studio-feature-card studio-feature-3d" disabled title="Bản đồ 3D chưa triển khai">
+          <span class="studio-feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><path d="M8 16 24 8l16 8 16-8v40l-16 8-16-8-16 8Z"/><path d="M24 8v40M40 16v40"/></svg>
+          </span>
+          <span class="studio-feature-copy"><strong>Bản đồ 3D</strong><small>Sắp triển khai</small><em>Ghép asset thành scene game</em></span>
           <span class="studio-feature-arrow">→</span>
         </button>
       </div>
@@ -395,6 +410,50 @@
         </div>
       </div>
 
+      <!-- MODULE: do_vat_3d BEGIN (JS/CSS o web/modules/do_vat_3d/) -->
+      <div id="panel-dovat3d" class="panel toolpanel hidden">
+        <div class="panel-title">ĐỒ VẬT 3D</div>
+        <div class="notice">Tạo asset cho game: cây, đá, nhà, đồ trang trí… Dùng lại engine 3D local sẵn có (không tốn thêm dung lượng cài đặt).</div>
+        <div class="segmented simple-source"><button id="dovat3dSourceImage" class="active">TỪ ẢNH</button><button id="dovat3dSourcePrompt">TỪ MÔ TẢ</button></div>
+        <div id="dovat3dImageBox">
+          <label class="dropzone"><strong id="dovat3dImageName">＋ Upload ảnh đồ vật</strong><span>Ảnh nền sạch, thấy rõ toàn bộ vật thể (cành, mái, chân…)</span><input id="dovat3dImageFile" type="file" accept="image/png,image/jpeg,image/webp" hidden></label>
+        </div>
+        <div id="dovat3dPromptBox" class="hidden">
+          <div class="field"><label>Mô tả đồ vật</label><textarea id="dovat3dPrompt" placeholder="Ví dụ: cây sồi già, thân xoắn, tán lá rộng"></textarea></div>
+        </div>
+        <div class="field section-gap"><label>Loại</label><select id="dovat3dCategory">
+          <option value="cay">Cây</option><option value="da">Đá</option><option value="co_bui">Cỏ / bụi</option>
+          <option value="ruong">Rương</option><option value="thung">Thùng</option><option value="hang_rao">Hàng rào</option>
+          <option value="cot">Cột</option><option value="den">Đèn</option><option value="nha_nho">Nhà nhỏ</option>
+          <option value="cong">Cổng</option><option value="tuong">Tượng</option><option value="trang_tri">Trang trí</option>
+          <option value="tu_do" selected>Tự do</option>
+        </select></div>
+        <div class="row"><div class="field"><label>Chất lượng</label><select id="dovat3dQuality">
+          <option value="lite">Nháp nhanh</option><option value="standard" selected>Chuẩn</option><option value="final">Final</option>
+        </select></div><div class="field"><label>Tô màu</label><select id="dovat3dTexture">
+          <option value="none">Không tô màu</option><option value="lite" selected>Nhanh</option><option value="hd">Chất lượng</option>
+        </select></div></div>
+        <button class="btn accent wide primary-action" id="dovat3dRun">✨ TẠO ĐỒ VẬT 3D</button>
+        <div id="dovat3dStatus" class="selected-card section-gap"><strong>Đang kiểm tra engine 3D…</strong></div>
+
+        <div id="dovat3dProgress" class="hidden section-gap dovat3d-progress">
+          <div><span id="dovat3dProgressStage">Chuẩn bị</span><b id="dovat3dProgressPct">0%</b></div>
+          <div class="dovat3d-track"><i id="dovat3dProgressBar"></i></div>
+          <small id="dovat3dProgressDetail"></small>
+        </div>
+
+        <div id="dovat3dResult" class="ai-image-result hidden section-gap">
+          <div id="dovat3dStageViewerHost"></div>
+          <div class="selected-card"><strong id="dovat3dResultTitle">Đồ vật 3D đã tạo</strong><small id="dovat3dResultMeta"></small></div>
+          <div class="action-grid">
+            <a class="btn primary center-link" id="dovat3dDownload" download>💾 LƯU GLB</a>
+            <button class="btn" id="dovat3dAgain">↻ TẠO LẠI</button>
+          </div>
+          <button class="btn wide" id="dovat3dUseInMap" disabled title="Bản đồ 3D chưa triển khai">🗺 DÙNG TRONG MAP · sắp có</button>
+        </div>
+      </div>
+      <!-- MODULE: do_vat_3d END -->
+
       <div class="panel" id="selectedPanel">
         <div class="panel-title">Đối tượng đang chọn</div>
         <div id="noSelection" class="hint">Chọn một chữ / ảnh / sticker trên preview hoặc Layers.</div>
@@ -429,6 +488,7 @@
 <script src="/static/modules/nhan_vat_3d/ai_3d_presets.js?v=0890"></script>
 <script src="/static/modules/nhan_vat_3d/nhan_vat_3d.js?v=08933"></script>
 <script src="/static/modules/nhan_vat_game_ready/nhan_vat_game_ready.js?v=0893"></script>
+<script src="/static/modules/do_vat_3d/do_vat_3d.js?v=0161"></script>
 <script src="/static/modules/nhan_vat_2d/nhan_vat_2d.js?v=0132"></script>
 </body>
 </html>
