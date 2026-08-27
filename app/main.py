@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import router as core_router
+from app.core.api_core import router as core_router
+from app.modules.chinh_sua_video.api_chinh_sua_video import router as video_editor_router
 from app.api.settings_routes import router as settings_router
 from app.modules.cong_cu_van_ban.api_cong_cu_van_ban import router as text_router
 from app.api.ai_image_routes import router as ai_image_router
@@ -17,8 +18,8 @@ from app.api.character_2d_routes import router as character_2d_router
 from app.api.game_ready_3d_routes import router as game_ready_3d_router
 from app.core.config import settings
 from app.modules.director import DirectorAI
-from app.modules.video_editor import VideoEditor
-from app.modules.video_editor.workspace import VideoWorkspace
+from app.modules.chinh_sua_video import VideoEditor
+from app.modules.chinh_sua_video.workspace import VideoWorkspace
 from app.modules.image_ai_local import AiImageWorkspace, LocalImageService, AiImageJobManager
 from app.modules.am_nhac import LocalMusicLibrary
 from app.modules.phu_de import LocalCaptionService, LocalTranslationService
@@ -73,7 +74,7 @@ def create_app(db_path=None, editor_dir=None) -> FastAPI:
         app.state.video_cleanup_runtime, app.state.video_workspace, settings.video_cleanup_jobs_dir
     )
 
-    for router in (core_router, settings_router, text_router, ai_image_router, character_2d_router, music_router, caption_router, model_3d_router, game_ready_3d_router, facebook_video_router, video_cleanup_router, job_control_router, system_router):
+    for router in (core_router, video_editor_router, settings_router, text_router, ai_image_router, character_2d_router, music_router, caption_router, model_3d_router, game_ready_3d_router, facebook_video_router, video_cleanup_router, job_control_router, system_router):
         app.include_router(router)
 
     app.mount("/static", StaticFiles(directory=settings.web_dir), name="static")

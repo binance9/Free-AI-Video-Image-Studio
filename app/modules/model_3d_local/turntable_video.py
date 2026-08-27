@@ -5,7 +5,7 @@ import subprocess
 import uuid
 from pathlib import Path
 
-from app.modules.video_editor.ffmpeg_tools import ffmpeg_bin
+from app.modules.chinh_sua_video.ffmpeg_tools import ffmpeg_bin
 
 
 class TurntableVideoExporter:

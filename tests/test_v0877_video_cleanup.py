@@ -39,8 +39,8 @@ def test_cleanup_runtime_is_isolated_and_setup_is_explicit():
 
 
 def test_transparent_versions_preserve_webm_suffix():
-    workspace=text('app/modules/video_editor/workspace.py')
-    routes=text('app/api/routes.py')
+    workspace=text('app/modules/chinh_sua_video/workspace.py')
+    routes=text('app/modules/chinh_sua_video/api_chinh_sua_video.py')
     assert 'suffix = generated_path.suffix.lower() or ".mp4"' in workspace
     assert '".webm": "video/webm"' in routes
 

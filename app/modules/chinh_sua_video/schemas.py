@@ -1,10 +1,6 @@
 from pydantic import BaseModel, Field, model_validator
 
 
-class ProjectCreateRequest(BaseModel):
-    command: str = Field(min_length=3, max_length=5000)
-
-
 class VideoCutRequest(BaseModel):
     source: str = Field(min_length=1, max_length=4096)
     output: str = Field(min_length=1, max_length=4096)

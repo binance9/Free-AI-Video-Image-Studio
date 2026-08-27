@@ -10,8 +10,8 @@ from PIL import Image
 from app.main import create_app
 from app.modules.image_ai_local.upscale import generation_dimensions, target_dimensions
 from app.modules.am_nhac import LocalMusicLibrary
-from app.modules.video_editor.ffmpeg_tools import run_tool
-from app.modules.video_editor.probe import probe_video
+from app.modules.chinh_sua_video.ffmpeg_tools import run_tool
+from app.modules.chinh_sua_video.probe import probe_video
 
 
 def make_video(path: Path, seconds: float = 3.0, size: str = "640x360", audio: bool = True):

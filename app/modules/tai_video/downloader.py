@@ -13,8 +13,8 @@ from pathlib import Path
 from typing import Callable
 from urllib.parse import urlparse
 
-from app.modules.video_editor.ffmpeg_tools import run_tool
-from app.modules.video_editor.errors import VideoEditorError
+from app.modules.chinh_sua_video.ffmpeg_tools import run_tool
+from app.modules.chinh_sua_video.errors import VideoEditorError
 from app.modules.job_control import JobCancelled
 
 

@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from app.modules.video_editor.ffmpeg_tools import run_tool
-from app.modules.video_editor.probe import probe_video
+from app.modules.chinh_sua_video.ffmpeg_tools import run_tool
+from app.modules.chinh_sua_video.probe import probe_video
 from .clip_selector import choose_excerpt
 
 

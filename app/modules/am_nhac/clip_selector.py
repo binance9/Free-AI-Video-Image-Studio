@@ -6,7 +6,7 @@ import tempfile
 import wave
 from pathlib import Path
 
-from app.modules.video_editor.ffmpeg_tools import run_tool
+from app.modules.chinh_sua_video.ffmpeg_tools import run_tool
 
 
 def choose_excerpt(source: str | Path, clip_seconds: float) -> float:

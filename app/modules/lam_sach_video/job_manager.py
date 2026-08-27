@@ -9,9 +9,9 @@ import time
 from pathlib import Path
 from uuid import uuid4
 
-from app.modules.video_editor.ffmpeg_tools import ffmpeg_bin
+from app.modules.chinh_sua_video.ffmpeg_tools import ffmpeg_bin
 from app.modules.job_control import JobCancelled, terminate_process
-from app.modules.video_editor.probe import probe_video
+from app.modules.chinh_sua_video.probe import probe_video
 
 
 class VideoCleanupJobManager:

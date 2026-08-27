@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from app.modules.video_editor.ffmpeg_tools import run_tool
+from app.modules.chinh_sua_video.ffmpeg_tools import run_tool
 
 
 def extract_audio(video: str | Path, output: str | Path) -> Path:

@@ -7,16 +7,14 @@ from tempfile import NamedTemporaryFile
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 
-from app.api.schemas import EditorCutRequest, ProjectCreateRequest, RenderRequest, VideoCutRequest, VideoMergeRequest
-from app.modules.video_editor.errors import VideoEditorError
+from app.modules.chinh_sua_video.schemas import EditorCutRequest, RenderRequest, VideoCutRequest, VideoMergeRequest
+from app.modules.chinh_sua_video.errors import VideoEditorError
 
 router = APIRouter(prefix="/api")
 
 
 def _editor_error(exc: Exception) -> HTTPException:
     return HTTPException(status_code=400, detail=str(exc))
-
-
 
 
 def _video_media_type(path: Path) -> str:
@@ -34,11 +32,6 @@ def _save_upload(upload: UploadFile, parent: Path) -> Path:
     with NamedTemporaryFile(delete=False, dir=parent, suffix=suffix) as target:
         shutil.copyfileobj(upload.file, target, length=1024 * 1024)
         return Path(target.name)
-
-
-@router.get("/health")
-def health():
-    return {"status": "ok"}
 
 
 @router.post("/editor/upload")
@@ -156,27 +149,6 @@ def editor_download(session_id: str, request: Request):
         return FileResponse(path, media_type=_video_media_type(path), filename=f"{stem}_edited{path.suffix.lower() or '.mp4'}")
     except (VideoEditorError, ValueError) as exc:
         raise _editor_error(exc) from exc
-
-
-@router.post("/projects", status_code=201)
-def create_project(payload: ProjectCreateRequest, request: Request):
-    try:
-        return request.app.state.director.create_project(payload.command)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-
-@router.get("/projects")
-def list_projects(request: Request):
-    return {"items": request.app.state.memory.list_projects()}
-
-
-@router.get("/projects/{project_id}")
-def get_project(project_id: str, request: Request):
-    project = request.app.state.memory.get_project(project_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-    return project
 
 
 @router.post("/video/cut")
