@@ -14,8 +14,8 @@ def test_character_hd_status_isolated(tmp_path):
 def test_ui_has_backend_selector_and_manual_rotation():
     root = Path(__file__).resolve().parents[1]
     html = (root / "web" / "index.html").read_text(encoding="utf-8")
-    js = (root / "web" / "js" / "ai_3d_viewer.js").read_text(encoding="utf-8")
-    ai3d = (root / "web" / "js" / "ai_3d.js").read_text(encoding="utf-8")
+    js = (root / "web" / "modules" / "nhan_vat_3d" / "ai_3d_viewer.js").read_text(encoding="utf-8")
+    ai3d = (root / "web" / "modules" / "nhan_vat_3d" / "nhan_vat_3d.js").read_text(encoding="utf-8")
     assert "0.8.6" in html
     assert 'id="ai3dBackend"' in html
     assert 'value="character_hd"' in html

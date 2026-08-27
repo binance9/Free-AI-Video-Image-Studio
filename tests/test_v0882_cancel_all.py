@@ -4,7 +4,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def text(p): return (ROOT/p).read_text(encoding='utf-8')
 
 def test_cancel_all_ui_and_route_present():
-    html=text('web/index.html'); app=text('web/app.js'); main=text('app/main.py')
+    html=text('web/index.html'); app=text('web/core/app.js'); main=text('app/main.py')
     assert 'id="stopAllBtn"' in html and 'id="busyStopBtn"' in html
     assert '/api/jobs/cancel-all' in app
     assert 'job_control_router' in main
@@ -21,7 +21,7 @@ def test_all_background_managers_have_cancel_all():
         assert 'def cancel_all(' in s
 
 def test_ai_image_uses_cancellable_jobs():
-    js=text('web/js/ai_image.js'); routes=text('app/modules/tao_anh_ai/api_tao_anh_ai.py')
+    js=text('web/modules/tao_anh_ai/tao_anh_ai.js'); routes=text('app/modules/tao_anh_ai/api_tao_anh_ai.py')
     assert '/api/ai-image/jobs/generate' in js
     assert '/api/ai-image/jobs/edit' in js
     assert 'callback_on_step_end' in text('app/modules/tao_anh_ai/service.py')

@@ -17,7 +17,7 @@ def test_shared_progress_ui_is_present():
     html = text('web/index.html')
     for marker in ['busyPct', 'busyBar', 'busyDetail', 'busyElapsed', 'task_progress.js?v=0878']:
         assert marker in html
-    js = text('web/js/task_progress.js')
+    js = text('web/core/task_progress.js')
     assert 'class TaskProgress' in js
     assert "this.mode = 'auto'" in js
     assert 'return Math.min(94' in js
@@ -25,7 +25,7 @@ def test_shared_progress_ui_is_present():
 
 
 def test_studio_exports_shared_progress_hooks():
-    js = text('web/app.js')
+    js = text('web/core/app.js')
     assert 'function updateBusyProgress' in js
     assert 'function failBusyProgress' in js
     assert 'updateBusyProgress,failBusyProgress' in js
@@ -33,8 +33,8 @@ def test_studio_exports_shared_progress_hooks():
 
 
 def test_real_job_modules_mirror_progress():
-    fb = text('web/js/facebook_video.js')
-    d3 = text('web/js/ai_3d.js')
+    fb = text('web/modules/tai_video/tai_video.js')
+    d3 = text('web/modules/nhan_vat_3d/nhan_vat_3d.js')
     assert 'S.updateBusyProgress?.(value' in fb
     assert "S.setBusy(true, 'Tải video từ Facebook'" in fb
     assert 'S.updateBusyProgress?.(p' in d3
@@ -42,10 +42,10 @@ def test_real_job_modules_mirror_progress():
 
 
 def test_legacy_long_actions_inherit_progress():
-    captions = text('web/js/captions.js')
-    image = text('web/js/ai_image.js')
-    music = text('web/js/music.js')
-    app = text('web/app.js')
+    captions = text('web/modules/phu_de/phu_de.js')
+    image = text('web/modules/tao_anh_ai/tao_anh_ai.js')
+    music = text('web/modules/am_nhac/am_nhac.js')
+    app = text('web/core/app.js')
     assert captions.count('S.setBusy(true') >= 2
     assert image.count('S.setBusy(true') >= 2
     assert music.count('S.setBusy(true') >= 3
@@ -54,6 +54,6 @@ def test_legacy_long_actions_inherit_progress():
 
 
 def test_local_ai_install_uses_same_progress():
-    js = text('web/js/settings.js')
+    js = text('web/core/settings.js')
     assert 'S.updateBusyProgress?.' in js
     assert "S.setBusy(true,'Đang cài AI local'" in js

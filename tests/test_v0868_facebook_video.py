@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_facebook_module_is_separate_and_visible():
     cfg = (ROOT / "app/core/config.py").read_text(encoding="utf-8")
     html = (ROOT / "web/index.html").read_text(encoding="utf-8")
-    js = (ROOT / "web/js/facebook_video.js").read_text(encoding="utf-8")
+    js = (ROOT / "web/modules/tai_video/tai_video.js").read_text(encoding="utf-8")
     req = (ROOT / "requirements.txt").read_text(encoding="utf-8")
     main = (ROOT / "app/main.py").read_text(encoding="utf-8")
     assert 'version: str = "0.8.9.0"' in cfg

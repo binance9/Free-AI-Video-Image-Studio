@@ -108,10 +108,10 @@ def test_3d_api_from_image(tmp_path):
 
 def test_ui_and_modules_are_separate():
     html=(ROOT/'web/index.html').read_text(encoding='utf-8')
-    appjs=(ROOT/'web/app.js').read_text(encoding='utf-8')
+    appjs=(ROOT/'web/core/app.js').read_text(encoding='utf-8')
     assert ('data-tool="ai3d"' in html) or ('data-tool-open="ai3d"' in html)
-    assert '/static/js/ai_3d.js?v=' in html
-    assert '/static/js/ai_3d_viewer.js?v=' in html
+    assert '/static/modules/nhan_vat_3d/nhan_vat_3d.js?v=' in html
+    assert '/static/modules/nhan_vat_3d/ai_3d_viewer.js?v=' in html
     assert "ai3d:" in appjs
     assert (ROOT/'app/modules/nhan_vat_3d/triposr_backend.py').exists()
     assert (ROOT/'app/modules/tao_anh_ai/service.py').exists()

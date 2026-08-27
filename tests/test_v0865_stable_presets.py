@@ -14,11 +14,11 @@ def test_version_and_safe_html_defaults():
     assert 'value="character_shape" selected' in html
     assert 'id="ai3dTexture" type="checkbox">' in html
     assert 'id="ai3dOptimizeMesh" type="checkbox" checked' in html
-    assert '/static/js/ai_3d_presets.js?v=08' in html
+    assert '/static/modules/nhan_vat_3d/ai_3d_presets.js?v=08' in html
 
 
 def test_presets_are_isolated_and_safe():
-    js = (ROOT / 'web/js/ai_3d_presets.js').read_text(encoding='utf-8')
+    js = (ROOT / 'web/modules/nhan_vat_3d/ai_3d_presets.js').read_text(encoding='utf-8')
     assert "character_shape" in js
     assert "backend: 'character_hd', texture: false, optimize: true" in js
     assert "character_color" in js

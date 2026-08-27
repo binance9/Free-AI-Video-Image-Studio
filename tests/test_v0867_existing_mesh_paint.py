@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_version_and_two_step_paint_ui():
     cfg = (ROOT / "app/core/config.py").read_text(encoding="utf-8")
     html = (ROOT / "web/index.html").read_text(encoding="utf-8")
-    js = (ROOT / "web/js/ai_3d.js").read_text(encoding="utf-8")
+    js = (ROOT / "web/modules/nhan_vat_3d/nhan_vat_3d.js").read_text(encoding="utf-8")
     assert 'version: str = "0.8.9.0"' in cfg
     assert 'FREE LOCAL STUDIO · 0.8.9.0' in html
     assert 'id="ai3dColorizeCurrent"' in html

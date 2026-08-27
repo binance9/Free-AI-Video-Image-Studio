@@ -9,7 +9,7 @@ def test_legacy_toolrail_removed_and_home_grid_kept():
     assert 'id="previewExpandBtn"' in html
 
 def test_preview_expand_and_version():
-    js=(ROOT/'web/js/home_screen.js').read_text(encoding='utf-8')
+    js=(ROOT/'web/core/home_screen.js').read_text(encoding='utf-8')
     css=(ROOT/'web/style.css').read_text(encoding='utf-8')
     html=(ROOT/'web/index.html').read_text(encoding='utf-8')
     assert 'preview-expanded' in js

@@ -3,7 +3,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 def test_viewer_is_separate_module():
-    js = ROOT / "web" / "js" / "ai_3d_viewer.js"
+    js = ROOT / "web" / "modules" / "nhan_vat_3d" / "ai_3d_viewer.js"
     assert js.exists()
     text = js.read_text(encoding="utf-8")
     assert "WebGL2" in text or "webgl2" in text
@@ -15,7 +15,7 @@ def test_viewer_ui_hooked():
     html = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
     assert 'id="ai3dStageViewer"' in html
     assert 'id="ai3dCanvas"' in html
-    assert '/static/js/ai_3d_viewer.js?v=' in html
+    assert '/static/modules/nhan_vat_3d/ai_3d_viewer.js?v=' in html
 
 def test_view_route_present():
     routes = (ROOT / "app" / "modules" / "nhan_vat_3d" / "api_nhan_vat_3d.py").read_text(encoding="utf-8")

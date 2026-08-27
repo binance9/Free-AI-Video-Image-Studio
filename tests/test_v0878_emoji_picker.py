@@ -17,7 +17,7 @@ def test_chat_emoji_ui():
     assert '★ STICKER' in h and 'GIPHY' in h
 
 def test_emoji_rasterizes_to_png_asset():
-    js=text('web/js/emoji_picker.js')
+    js=text('web/modules/chinh_sua_video/emoji_picker.js')
     assert 'emojiToPng' in js
     assert 'canvas.toBlob' in js
     assert 'new File([blob]' in js

@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_version_and_ui_toggle():
     cfg = (ROOT / "app/core/config.py").read_text(encoding="utf-8")
     html = (ROOT / "web/index.html").read_text(encoding="utf-8")
-    js = (ROOT / "web/js/ai_3d.js").read_text(encoding="utf-8")
+    js = (ROOT / "web/modules/nhan_vat_3d/nhan_vat_3d.js").read_text(encoding="utf-8")
     assert '0.8.' in cfg
     assert 'ai3dOptimizeMesh' in html
     assert "optimize_mesh" in js

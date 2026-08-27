@@ -15,8 +15,8 @@ def test_custom_chick_pack_has_24_pngs_and_ui_tab():
     assert len(files) == 24
     assert all(p.stat().st_size > 5000 for p in files)
     html = (ROOT / "web/index.html").read_text(encoding="utf-8")
-    js = (ROOT / "web/app.js").read_text(encoding="utf-8")
-    emoji = (ROOT / "web/js/emoji_picker.js").read_text(encoding="utf-8")
+    js = (ROOT / "web/core/app.js").read_text(encoding="utf-8")
+    emoji = (ROOT / "web/modules/chinh_sua_video/emoji_picker.js").read_text(encoding="utf-8")
     assert 'data-sticker-tab="custom"' in html
     assert 'id="customStickerGrid"' in html
     assert "const customStickers =" in js

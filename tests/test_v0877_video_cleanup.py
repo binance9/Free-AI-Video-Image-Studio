@@ -16,7 +16,7 @@ def test_version_0877_and_separate_modules():
 
 
 def test_cleanup_ui_has_both_tools_and_shared_progress():
-    html=text('web/index.html'); js=text('web/js/video_cleanup.js')
+    html=text('web/index.html'); js=text('web/modules/lam_sach_video/lam_sach_video.js')
     assert ('data-tool="bgremove"' in html) or ('data-tool-open="bgremove"' in html)
     assert 'id="cleanupModeErase"' in html
     assert 'XÓA NỀN NGAY' in html
