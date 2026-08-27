@@ -12,7 +12,7 @@ def test_cancel_all_ui_and_route_present():
 def test_all_background_managers_have_cancel_all():
     for rel in [
         'app/modules/model_3d_local/job_manager.py',
-        'app/modules/video_cleanup/job_manager.py',
+        'app/modules/lam_sach_video/job_manager.py',
         'app/modules/tai_video/job_manager.py',
         'app/modules/image_ai_local/job_manager.py',
     ]:

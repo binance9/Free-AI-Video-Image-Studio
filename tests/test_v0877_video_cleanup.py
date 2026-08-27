@@ -10,9 +10,9 @@ def test_version_0877_and_separate_modules():
     assert 'version: str = "0.8.9.0"' in text('app/core/config.py')
     assert 'FREE LOCAL STUDIO · 0.8.9.0' in text('web/index.html')
     assert 'studio=0.8.9.0' in text('START_VIDEO_FACTORY.py')
-    assert (ROOT/'app/modules/video_cleanup/background_worker.py').is_file()
-    assert (ROOT/'app/modules/video_cleanup/inpaint_worker.py').is_file()
-    assert (ROOT/'app/api/video_cleanup_routes.py').is_file()
+    assert (ROOT/'app/modules/lam_sach_video/background_worker.py').is_file()
+    assert (ROOT/'app/modules/lam_sach_video/inpaint_worker.py').is_file()
+    assert (ROOT/'app/modules/lam_sach_video/api_lam_sach_video.py').is_file()
 
 
 def test_cleanup_ui_has_both_tools_and_shared_progress():
@@ -46,8 +46,8 @@ def test_transparent_versions_preserve_webm_suffix():
 
 
 def test_overlay_modes_and_background_models_are_validated():
-    routes=text('app/api/video_cleanup_routes.py')
-    jobs=text('app/modules/video_cleanup/job_manager.py')
+    routes=text('app/modules/lam_sach_video/api_lam_sach_video.py')
+    jobs=text('app/modules/lam_sach_video/job_manager.py')
     assert '^(transparent|solid)$' in routes
     assert '^(delogo|inpaint)$' in routes
     assert 'u2net_human_seg' in jobs
