@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>AI Video Factory · Free Local Studio 0.8.9.3.3</title>
 <link rel="stylesheet" href="/static/style.css?v=08932"/>
+<link rel="stylesheet" href="/static/modules/nhan_vat_game_ready/nhan_vat_game_ready.css?v=0893"/>
 </head>
 <!-- compatibility history: 0.8.6. Character HD / texture viewer -->
 <body class="home-mode">
@@ -379,6 +380,10 @@
             <a class="btn primary wide center-link hidden" id="ai3dTurntableDownload" download>💾 LƯU MP4</a>
           </div>
           <div class="action-grid"><a class="btn center-link" id="ai3dDownload" download>💾 LƯU GLB</a><button class="btn" id="ai3dOpenFolder">📂 MỞ THƯ MỤC</button></div>
+          <!-- MODULE: nhan_vat_game_ready BEGIN (JS/CSS đã tách riêng vào
+               web/modules/nhan_vat_game_ready/ — markup này vẫn nằm trong panel
+               ai3d vì đây là bước tiếp theo ngay sau khi dựng model 3D, xem
+               app/modules/nhan_vat_game_ready/README_MODULE.md) -->
           <div class="game-ready-box" id="ai3dGameReadyBox">
             <div class="game-ready-head"><span class="game-ready-icon">🦴</span><div><strong>GAME READY</strong><small>Optimize → Rig → Skin → Idle / Run / Attack</small></div></div>
             <div class="game-ready-status" id="ai3dGameReadyStatus">Đang kiểm tra Blender local…</div><button class="btn wide game-ready-setup" id="ai3dGameReadySetup">CÀI BLENDER GAME READY · 1 LẦN</button>
@@ -386,6 +391,7 @@
             <div class="game-ready-progress hidden" id="ai3dGameReadyProgress"><div><span id="ai3dGameReadyStage">Chuẩn bị</span><b id="ai3dGameReadyPct">0%</b></div><div class="game-ready-track"><i id="ai3dGameReadyBar"></i></div><small id="ai3dGameReadyDetail">Đang chuẩn bị…</small></div>
             <a class="btn primary wide center-link hidden" id="ai3dGameReadyDownload" download>💾 LƯU GAME-READY GLB</a>
           </div>
+          <!-- MODULE: nhan_vat_game_ready END -->
         </div>
       </div>
 
@@ -422,6 +428,7 @@
 <script src="/static/modules/nhan_vat_3d/ai_3d_viewer.js?v=08933"></script>
 <script src="/static/modules/nhan_vat_3d/ai_3d_presets.js?v=0890"></script>
 <script src="/static/modules/nhan_vat_3d/nhan_vat_3d.js?v=08933"></script>
+<script src="/static/modules/nhan_vat_game_ready/nhan_vat_game_ready.js?v=0893"></script>
 <script src="/static/modules/nhan_vat_2d/nhan_vat_2d.js?v=0132"></script>
 </body>
 </html>
