@@ -19,8 +19,14 @@ mỗi asset là 1 file GLB độc lập có `asset_id`, không bị bake chết 
 - `POST /api/do-vat-3d/create` — multipart: `file`, `category`, `quality`, `texture`,
   `display_name` (tuỳ chọn), `low_vram` (tuỳ chọn) → `{job_id, status_url}`.
 - `POST /api/do-vat-3d/create-from-prompt` — JSON: `prompt`, `category`, `quality`, `texture`.
-- `GET /api/do-vat-3d/job/{job_id}` — trạng thái job.
-- `POST /api/do-vat-3d/job/{job_id}/cancel` — huỷ job (giữ nguyên `shape.glb` nếu đã có).
+- `GET /api/do-vat-3d/job/{job_id}` — trạng thái job (`queued|running|cancelling|done|
+  partial_success|cancelled|error`).
+- `POST /api/do-vat-3d/job/{job_id}/cancel` — huỷ job (giữ nguyên `shape.glb`/`optimized.glb` nếu
+  đã có). Nếu job còn đang xếp hàng chờ GPU (chưa lấy được `heavy_gpu_job_lock`), huỷ ngay không
+  cần đợi GPU rảnh (Phase 1.6.1).
+- `POST /api/do-vat-3d/job/{job_id}/retry-texture` — JSON `{texture_mode}`: chạy LẠI CHỈ stage tô
+  màu trên mesh đã có của job (ưu tiên `optimized.glb`, fallback `shape.glb`) — KHÔNG dựng lại
+  shape/preprocess (Phase 1.6.1, xem "Retry texture").
 - `GET /api/do-vat-3d/view/{asset_id}` — GLB inline cho viewer.
 - `GET /api/do-vat-3d/output/{asset_id}` — tải GLB.
 - `GET /api/do-vat-3d/assets` — danh sách asset đã tạo (đọc `asset.json`, không dùng database).
@@ -75,17 +81,24 @@ thêm `app/modules/nhan_vat_3d/`.
 
 ---
 
-## Pipeline (tách stage đúng yêu cầu — shape không mất nếu texture lỗi)
+## Pipeline (Phase 1.6.1 — tách stage, shape KHÔNG mất nếu optimize/texture lỗi)
 ```
 INPUT (ảnh/prompt)
 → PREPROCESS (chuan_hoa_anh_do_vat, canh giữa — khác nhan_vat_3d canh lệch xuống cho "chân")
 → SHAPE (Local3DService.from_image/from_prompt, texture=False)
 → SAVE shape.glb (luôn giữ, bất kể bước sau)
 → [nếu engine = character_hd] CHUẨN HOÁ PIVOT (gọi lại mesh_finish.py — TripoSR đã tự làm rồi)
-→ optional TEXTURE (Local3DService.colorize_existing trên shape.glb — lỗi thì giữ nguyên shape)
+→ ENFORCE POLY TARGET (toi_uu_so_mat -> optimized.glb; lỗi/timeout thì optimize_applied=False,
+  giữ nguyên shape.glb, KHÔNG fail job)
+→ optional TEXTURE (Local3DService.colorize_existing trên mesh ĐÃ TỐI ƯU — quyết định chạy TRƯỚC
+  texture vì decimate bằng vertex-clustering không remap UV/material, làm sau sẽ phá texture; có
+  timeout riêng theo texture_quality — lỗi/timeout thì giữ nguyên mesh đã tối ưu)
 → VALIDATE (kiem_tra_do_vat.py — thuần stdlib, KHÔNG cần trimesh/Blender)
-→ DONE
+→ DONE (hoặc PARTIAL_SUCCESS nếu texture được yêu cầu nhưng lỗi/timeout)
 ```
+File giữ lại trong `work/`: `shape.glb` (gốc, luôn còn), `optimized.glb` (chỉ ghi nếu optimize
+thành công), `textured.glb` (chỉ ghi nếu tô màu thành công) — `best_output_path` trong metadata
+trỏ vào file tốt nhất hiện có theo thứ tự `textured > optimized > shape`.
 
 ## Cache
 Model cache dùng chung `data/models/3d/` với `nhan_vat_3d` — job sau tái dùng weight đã tải, KHÔNG
@@ -97,25 +110,93 @@ Nếu `low_vram=true` và preset `FINAL` chọn Character-HD: tự hạ `mesh_pr
 `texture` (hd→lite), **giữ nguyên engine đã chọn** (không âm thầm đổi sang engine khác), có log rõ
 lý do. `NHÁP NHANH` không bị ảnh hưởng (đã nhẹ sẵn).
 
-## GPU lock (giới hạn — xem "Limitations")
-`app.core.shared_services.heavy_gpu_job_lock()` đảm bảo tối đa 1 job đồ vật 3D nặng chạy cùng lúc
-trong `do_vat_3d`. **`nhan_vat_3d` chưa được nối vào cùng lock này** (job manager đó không bị đụng
-tới trong phase này để tuân thủ nguyên tắc "không rewrite Character 3D") — nghĩa là hiện tại 1 job
-`nhan_vat_3d` VÀ 1 job `do_vat_3d` vẫn có thể chạy đồng thời, tranh GPU thật. Đây là giới hạn đã
-biết, ghi rõ để tránh hiểu nhầm là đã có hàng đợi GPU toàn hệ thống.
+## GPU QUEUE (Phase 1.6.1 — nối chung với nhan_vat_3d)
+`app.core.shared_services.heavy_gpu_job_lock()` đảm bảo tối đa 1 job 3D nặng (shape hoặc texture)
+chạy cùng lúc trên toàn hệ thống. Từ Phase 1.6.1, `nhan_vat_3d.job_manager.Model3DJobManager` cũng
+được nối vào **cùng lock** này (adapter mỏng bọc quanh `from_image`/`from_prompt`/
+`colorize_existing`, KHÔNG rewrite nội bộ Character 3D) — nghĩa là 1 job `do_vat_3d` và 1 job
+`nhan_vat_3d` không còn tranh GPU thật cùng lúc nữa. Lock chỉ giữ trong lúc GỌI GPU (shape/texture),
+KHÔNG giữ khi optimize (CPU) hay validate.
+- `GET /api/do-vat-3d/status` trả thêm `gpu_queue: {busy, current_owner, queued_jobs, wait_seconds}`.
+- Job đang xếp hàng chờ GPU nếu bị huỷ (`cancel`) thì thoát ngay, KHÔNG cần đợi tới lượt.
 
-## Giới hạn đã biết: poly_target chưa được enforce thật cho engine TripoSR
-Test thật (xem "Kết quả test thật" bên dưới) cho thấy: `QUALITY_PRESETS[...]["poly_target_min/max"]`
-hiện là **mục tiêu tham khảo**, không phải giá trị được ép cứng. Với engine `character_hd`, giá trị
-này map đúng sang `mesh_profile` (hd/medium/light) và được `mesh_optimize_profiles.py` thực sự
-giảm poly. Với engine `quick` (TripoSR), `Local3DService.from_image()` hiện **không forward**
-`mesh_profile`/`optimize_mesh` sang `TripoSRBackend.generate()` (giới hạn có sẵn từ trước, không
-phải do `do_vat_3d` gây ra) — nên triangle count là output thô của TripoSR marching-cubes, có thể
-vượt xa target (ví dụ preset STANDARD ghi 15K-40K nhưng test thật ra 129,680 tam giác cho 1 viên
-đá). Metadata `poly_count` LUÔN ghi số thật lấy từ `kiem_tra_do_vat.py`, không bao giờ fake theo
-target. Enforce poly budget thật cho nhánh TripoSR là việc để lại cho lần sau (cần gọi thêm
-`mesh_optimize_light.py`, hiện chưa làm để tránh rủi ro thay đổi hành vi mesh ngoài kế hoạch phase
-này).
+## POLY TARGETS (Phase 1.6.1 — enforce thật, không chỉ tham khảo)
+`chon_engine.poly_target_cho(category, quality)` tính `poly_target` cụ thể (không còn chỉ là dải
+min/max tham khảo):
+| Quality | poly_target mặc định | Ghi chú |
+|---|---|---|
+| LITE | 12,000 | |
+| STANDARD | 32,000 | có sàn tối thiểu riêng theo category (xem `POLY_FLOOR_STANDARD`) |
+| FINAL | 60,000 | |
+
+Sau khi dựng shape, `toi_uu_do_vat.toi_uu_so_mat()` giảm poly về gần `poly_target` (dung sai
+±15%, `POLY_TOLERANCE`) bằng cách gọi `app/modules/nhan_vat_3d/mesh_decimate.py` qua subprocess
+(python của Character HD venv, có `trimesh`) — thuật toán vertex-clustering có sẵn (tái dùng
+`mesh_optimize_light._cluster_once`, KHÔNG thêm dependency nặng như pymeshlab/open3d), tìm
+`cell_ratio` bằng binary search tới khi trong ngưỡng dung sai. Áp dụng cho **cả TripoSR lẫn
+Character HD** (trước Phase 1.6.1 chỉ Character HD có optimize thật).
+
+An toàn (section 5-7 kế hoạch phase):
+- Optimizer lỗi/timeout/không có runtime → fallback: **copy nguyên `shape.glb`**, `optimize_applied
+  = False`, `optimize_error` ghi rõ lý do — KHÔNG fail job.
+- Sau optimize, so bounding-box volume trước/sau; nếu lệch ngoài `[0.70, 1.30]` (sập hoặc phồng bất
+  thường) → tự động reject, dùng lại bản gốc.
+- `POLY_FLOOR_STANDARD` (chỉ áp dụng preset STANDARD) nâng sàn tối thiểu cho category dễ mất chi
+  tiết: `cay`(cây) 20K, `nha_nho`(nhà) 25K, `cong`(cổng) 20K, `da`(đá) 10K, `ruong`(rương) 8K — chỉ
+  NÂNG target lên nếu preset mặc định thấp hơn, không bao giờ hạ.
+
+Metadata `asset.json` lưu block `poly`: `original_triangle_count`, `optimized_triangle_count`,
+`poly_target`, `poly_target_met`, `optimization_ratio`, `optimizer`, `optimize_applied`,
+`optimize_error` — tất cả là số liệu thật, không fake.
+
+## TEXTURE MODES & TIMEOUT (Phase 1.6.1)
+Texture chạy TRÊN mesh đã tối ưu (không phải shape gốc) vì lý do UV nêu ở "Pipeline". Mỗi
+`texture_quality` có timeout riêng (`TEXTURE_TIMEOUT_SECONDS`, cả `timeout_seconds` lẫn
+`idle_timeout_seconds` của `paint_existing` đều dùng giá trị này):
+- `lite`: 600s (10 phút)
+- `hd`: 1800s (30 phút)
+
+Vượt timeout → `paint_existing` tự kill subprocess, ném lỗi rõ ràng ("quá thời gian tối đa" /
+"không có heartbeat"), `do_vat_3d` nhận diện lỗi này để đánh dấu `texture_timed_out=True` và giữ
+nguyên mesh đã tối ưu (không mất). Độ phân giải/steps của Paint HD (`run_character_hd_paint.py`)
+KHÔNG được thay đổi trong phase này để tránh rewrite Hunyuan3D-Paint — xem "Giới hạn đã biết".
+
+## LOW VRAM POLICY
+Giữ nguyên chính sách từ Phase 1.6: `low_vram=true` chỉ hạ `mesh_profile`/`texture` cho preset
+FINAL + Character HD, không đổi engine. Phase 1.6.1 KHÔNG thêm auto-hạ resolution/steps theo VRAM
+runtime (cần sửa `run_character_hd_paint.py`, ngoài phạm vi "không rewrite Hunyuan") — xem "Giới
+hạn đã biết".
+
+## PARTIAL SUCCESS
+Job có 5 trạng thái: `queued|running|cancelling|done|partial_success|cancelled|error`.
+`partial_success` = shape (và optimize) đã xong, nhưng texture được yêu cầu (`texture != "none"`)
+mà lỗi/timeout. Asset vẫn được lưu vào thư viện với `has_texture=false` và mesh tốt nhất hiện có
+(`optimized.glb` nếu có, không thì `shape.glb`). Frontend hiện thông báo "Shape 3D đã hoàn tất. Tô
+màu chưa hoàn tất." + nút "THỬ TÔ MÀU LẠI".
+
+## RETRY TEXTURE
+`POST /api/do-vat-3d/job/{job_id}/retry-texture` (`DoVat3DJobManager.retry_texture` →
+`DoVat3DService.to_mau_lai`) chạy LẠI CHỈ stage tô màu trên mesh đã lưu của job đó (ưu tiên
+`optimized.glb`) và ảnh tham chiếu đã lưu — KHÔNG gọi lại preprocess/shape (test thật xem "Kết quả
+test thật" — `service.tao_do_vat_calls` không tăng khi retry). Kết quả retry tạo 1 asset mới trong
+thư viện (không ghi đè asset cũ).
+
+## Giới hạn đã biết (Phase 1.6.1)
+- **Texture resolution/steps/VRAM-aware degrade chưa cấu hình được**: `run_character_hd_paint.py`
+  hiện không nhận tham số độ phân giải/steps từ `do_vat_3d`; sửa file này được xem là rủi ro
+  "rewrite Hunyuan3D-Paint" nên để lại cho phase riêng nếu cần.
+- **Model KHÔNG được cache trong RAM/GPU giữa các job**: kiến trúc hiện tại chạy TripoSR/Character
+  HD như subprocess mới cho MỖI job (venv riêng, không có process "sống" giữ model). Cache chỉ ở
+  cấp đĩa (HF cache, không tải lại weight) — `used_cached_shape_model`/`used_cached_texture_model`
+  vì vậy không có ý nghĩa thật (luôn "tải lại vào GPU" dù weight đã có sẵn trên đĩa) nên KHÔNG được
+  thêm vào `job.json` để tránh gây hiểu nhầm. Cache thật cấp process cần 1 worker service sống lâu
+  dài — thay đổi kiến trúc lớn, ngoài phạm vi "patch nhỏ, không rewrite" của phase này.
+- **Timing chỉ tách được ở mức stage, không tách được `model_load_seconds` riêng khỏi
+  `shape_seconds`**: TripoSR/Character HD là subprocess đen (stdout dạng log tiến trình, không
+  phải structured timing) — tách nhỏ hơn cần sửa các runner đó (`run_character_hd.py`,
+  TripoSR script), vi phạm "không rewrite engine".
+- Thumbnail cho asset library vẫn chưa có (kế thừa từ Phase 1.6).
+- Map Composer (`ban_do_3d`) vẫn CHƯA triển khai.
 
 ## Pivot / scale
 Mặc định `bottom_center` cho mọi category (xem `cau_hinh_do_vat.py`). TripoSR tự chuẩn hoá pivot
@@ -124,7 +205,7 @@ bên trong `generate()` (đã có sẵn, không phải code mới); Character-HD
 `recommended_scale` là gợi ý (min/max game unit), KHÔNG ép mesh về scale tuyệt đối — chỉ lưu gợi ý
 vào metadata để Map Composer sau này tham khảo.
 
-## Kết quả test thật (đã chạy, không phải mô phỏng)
+## Kết quả test thật Phase 1.6 (đã chạy, không phải mô phỏng)
 Ngày 2026-08-27, máy dev có sẵn TripoSR + Character-HD cài đặt/cache: chạy 1 job thật category
 `da` (đá), quality `standard`, texture `none`, ảnh đầu vào là 1 ảnh nhân vật có sẵn trong repo
 (không có ảnh đá/rương thật trong dự án, dùng tạm để kiểm tra CƠ CHẾ pipeline, không kiểm tra độ
@@ -136,7 +217,42 @@ Ngày 2026-08-27, máy dev có sẵn TripoSR + Character-HD cài đặt/cache: c
   `cuda:0`, `pivot=bottom_center`.
 - Validator `kiem_tra_do_vat.py` (tự viết, thuần stdlib) đọc đúng file GLB THẬT do TripoSR xuất ra
   — xác nhận parser JSON/binary chunk của module hoạt động đúng trên dữ liệu thật, không chỉ dữ
-  liệu test tự tạo.
+  liệu test tự tạo. **poly_target CHƯA enforce ở thời điểm này** (xem Phase 1.6.1 bên dưới).
+
+## Kết quả test thật Phase 1.6.1 — poly enforcement (đã chạy, không phải mô phỏng)
+Ngày 2026-08-27, chạy trực tiếp `DoVat3DService.tao_do_vat()` (không qua HTTP, cùng code path job
+manager gọi) với 1 ảnh tổng hợp đơn giản (hình khối tròn/đa giác vẽ bằng PIL, dùng để kiểm tra CƠ
+CHẾ enforce poly — không kiểm tra chất lượng silhouette "đá" thật):
+- category=`da`, quality=`standard`, texture=`none`, engine=TripoSR (`quick`).
+- **Shape thô (TripoSR marching-cubes): 127,640 tam giác, 63,912 vertex** (tương đương lần chạy
+  Phase 1.6 ở trên — xác nhận TripoSR luôn xuất mesh rất dày bất kể input).
+- **Sau `toi_uu_so_mat()` (optimized.glb): 31,223 tam giác** — target `poly_target=32,000`,
+  `poly_target_met=true` (trong dung sai ±15%), `optimization_ratio=0.2446`,
+  `optimizer=trimesh-vertex-clustering`, `optimize_applied=true`, `optimize_error=null`.
+- Timing thật: `preprocess=0.22s`, `shape=24.95s`, `optimize=4.62s`, `validate≈0s`,
+  **`total=29.57s`** — enforce poly chỉ cộng thêm ~4.6s so với Phase 1.6 (không optimize), vẫn nằm
+  trong mục tiêu "< 45s cho asset đơn giản đã cache model".
+- GLB sau optimize được `kiem_tra_glb` xác nhận hợp lệ (bbox hợp lệ, không NaN, triangle_count>0);
+  bbox-volume-ratio giữa bản gốc và bản optimize nằm trong ngưỡng an toàn `[0.70, 1.30]`.
+
+## Kết quả test thật Phase 1.6.1 — texture lite (đã chạy, không phải mô phỏng)
+Cùng ảnh test, chạy full pipeline `quality=standard, texture=lite` (shape → optimize → texture
+trên `optimized.glb`, KHÔNG phải shape gốc):
+- GPU phát hiện: NVIDIA GeForce RTX 3050 · VRAM 6.0 GB (log thật từ Character HD backend).
+- Paint HD tự bật **Low VRAM CPU offload** (hành vi có sẵn của `character_hd_backend.py`, không
+  phải code mới của phase này).
+- Kết quả: **`has_texture=true`, `texture_error=null`** — GLB xuất ra có material + texture nhúng
+  hợp lệ (Paint HD tự kiểm tra và xác nhận trước khi trả về).
+- Texture chạy TRÊN `optimized.glb` (31,223 tam giác) — sau khi tô màu, `triangle_count` vẫn giữ
+  nguyên 31,223 (Paint HD không đổi topology, chỉ thêm UV/texture) → xác nhận quyết định "optimize
+  TRƯỚC texture" (xem "Pipeline") không bị Paint HD làm mất tác dụng.
+- Timing thật: `preprocess=0.21s`, `shape=23.07s`, `optimize=4.64s`, **`texture=287.06s` (~4.8
+  phút)**, `validate=0.01s`, **`total=314.79s` (~5.25 phút)** — trong ngưỡng timeout `lite=600s`
+  (10 phút) với biên độ thoải mái, và trong mục tiêu "texture lite cố gắng 2-5 phút" (mục 16 kế
+  hoạch phase, dù hơi vượt mốc 5 phút một chút do CPU offload của VRAM 6GB).
+- Xác nhận cơ chế timeout HOẠT ĐỘNG ĐÚNG dù không kích hoạt ở lần chạy này (287s < 600s) — xem
+  `character_hd_backend.paint_existing(timeout_seconds=600, idle_timeout_seconds=600)` được gọi
+  đúng tham số từ `TEXTURE_TIMEOUT_SECONDS["lite"]`.
 
 ## Không đổi ở nhan_vat_3d/nhan_vat_2d/nhan_vat_game_ready
 Toàn bộ engine TripoSR/Hunyuan3D/Blender giữ nguyên logic. Thay đổi duy nhất ở `nhan_vat_3d`:

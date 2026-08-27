@@ -36,7 +36,24 @@ def test_status_endpoint_returns_200(smoke_tmp_path):
     client = TestClient(app)
     resp = client.get("/api/do-vat-3d/status")
     assert resp.status_code == 200
-    assert "installed" in resp.json()
+    body = resp.json()
+    assert "installed" in body
+    # Phase 1.6.1: status phai kem theo trang thai hang doi GPU dung chung.
+    assert "gpu_queue" in body
+    assert "current_owner" in body["gpu_queue"]
+    assert "queued_jobs" in body["gpu_queue"]
+
+
+def test_retry_texture_route_exists_and_rejects_unknown_job(smoke_tmp_path):
+    from fastapi.testclient import TestClient
+    from app.main import create_app
+    app = create_app(db_path=smoke_tmp_path / "db.sqlite", editor_dir=smoke_tmp_path / "editor")
+    client = TestClient(app)
+    resp = client.post(
+        "/api/do-vat-3d/job/" + "0" * 32 + "/retry-texture",
+        json={"texture_mode": "lite"},
+    )
+    assert resp.status_code == 400  # route ton tai, tu choi vi job khong ton tai/chua co retry_info
 
 
 def test_categories_endpoint_lists_13_categories(smoke_tmp_path):

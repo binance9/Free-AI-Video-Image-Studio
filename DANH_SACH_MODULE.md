@@ -189,17 +189,20 @@ data/do_vat_3d/assets/ (asset hoàn thành), data/do_vat_3d/_jobs/ (job), model 
 data/models/3d/ với nhan_vat_3d
 
 FILE CHÍNH:
-dich_vu_do_vat_3d.py (điều phối, gọi lại Local3DService của nhan_vat_3d — KHÔNG duplicate engine),
-chon_engine.py (tự chọn TripoSR/Character-HD theo độ phức tạp category + quality), cau_hinh_do_vat.py
-(13 category, 3 quality preset, 3 texture preset), kiem_tra_do_vat.py (validate GLB thuần stdlib,
-không cần trimesh/Blender), toi_uu_do_vat.py (chuẩn hoá pivot cho nhánh character_hd), hop_dong_asset.py
-(contract GameAsset3D cho ban_do_3d đọc sau này), quan_ly_job.py (job nền + GPU lock).
+dich_vu_do_vat_3d.py (điều phối, gọi lại Local3DService của nhan_vat_3d — KHÔNG duplicate engine;
+Phase 1.6.1: thêm stage enforce poly target + texture timeout + to_mau_lai retry), chon_engine.py
+(tự chọn TripoSR/Character-HD theo độ phức tạp category + quality, tính poly_target_cho()),
+cau_hinh_do_vat.py (13 category, 3 quality preset, 3 texture preset, poly floor theo category,
+texture timeout theo texture_quality), kiem_tra_do_vat.py (validate GLB thuần stdlib, không cần
+trimesh/Blender), toi_uu_do_vat.py (chuẩn hoá pivot cho nhánh character_hd + toi_uu_so_mat() enforce
+poly target với fallback/bbox-safety), hop_dong_asset.py (contract GameAsset3D + metadata poly cho
+ban_do_3d đọc sau này), quan_ly_job.py (job nền + GPU lock + partial_success + retry_texture).
 
 API:
-GET /api/do-vat-3d/status, GET /api/do-vat-3d/categories, POST /api/do-vat-3d/create,
+GET /api/do-vat-3d/status (kèm gpu_queue), GET /api/do-vat-3d/categories, POST /api/do-vat-3d/create,
 POST /api/do-vat-3d/create-from-prompt, GET /api/do-vat-3d/job/{id},
-POST /api/do-vat-3d/job/{id}/cancel, GET /api/do-vat-3d/view/{asset_id},
-GET /api/do-vat-3d/output/{asset_id}, GET /api/do-vat-3d/assets
+POST /api/do-vat-3d/job/{id}/cancel, POST /api/do-vat-3d/job/{id}/retry-texture (Phase 1.6.1),
+GET /api/do-vat-3d/view/{asset_id}, GET /api/do-vat-3d/output/{asset_id}, GET /api/do-vat-3d/assets
 
 PHỤ THUỘC:
 - app.modules.nhan_vat_3d.service.Local3DService (engine TripoSR/Character-HD — tái dùng nguyên,
@@ -207,8 +210,11 @@ PHỤ THUỘC:
 - app.modules.nhan_vat_3d.image_preprocess (hàm chung, tham số vertical_bias mới thêm — tương
   thích ngược 100%, không đổi hành vi nhan_vat_3d).
 - app.modules.nhan_vat_3d.mesh_finish (gọi lại qua subprocess để chuẩn hoá pivot cho Character-HD).
+- app.modules.nhan_vat_3d.mesh_decimate (Phase 1.6.1, mới - gọi lại qua subprocess để enforce poly
+  target, tái dùng thuật toán vertex-clustering của mesh_optimize_light.py, KHÔNG dependency mới).
 - app.modules.tao_anh_ai (sinh ảnh concept khi tạo từ prompt — KHÔNG dùng nhan_vat_2d).
-- app.core.shared_services.heavy_gpu_job_lock (giới hạn 1 job nặng cùng lúc — mới thêm Phase 1.6).
+- app.core.shared_services.heavy_gpu_job_lock (giới hạn 1 job nặng cùng lúc — Phase 1.6; Phase
+  1.6.1 nối thêm nhan_vat_3d.job_manager vào cùng lock qua adapter mỏng, không rewrite Character 3D).
 
 LỆNH TEST NHANH:
 pytest -q tests/smoke/test_do_vat_3d_smoke.py

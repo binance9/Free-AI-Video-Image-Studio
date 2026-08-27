@@ -1,6 +1,10 @@
 MODULE:
 do_vat_3d
 
+MODULE_VERSION:
+1.1.0 (Phase 1.6.1 - trước là 1.0.0 ở Phase 1.6; không có VERSION constant riêng trong code, dự án
+không dùng quy ước đó ở module khác - version bump ở đây là git tag do-vat-3d-v1-1-complete)
+
 STATUS:
 ACTIVE
 
@@ -19,17 +23,25 @@ TripoSR, Hunyuan3D-2/Character-HD (dùng chung với nhan_vat_3d, chạy trong v
 subprocess - không tốn cài đặt thêm)
 
 LAST_VERIFIED:
-2026-08-27 (đã chạy test thật thành công: category=da, quality=standard, texture=none,
-engine=TripoSR, 29.47s, GLB hợp lệ 129,680 tam giác - xem README_MODULE.md "Kết quả test thật")
+2026-08-27 Phase 1.6.1 (đã chạy test thật poly enforcement: category=da, quality=standard,
+texture=none, engine=TripoSR - shape thô 127,640 tam giác -> optimized 31,223 (target 32,000,
+poly_target_met=true), tổng 29.57s (shape 24.95s + optimize 4.62s). Đã chạy test thật texture=lite
+trên cùng ảnh: has_texture=true, texture_error=null, triangle_count giữ nguyên 31,223 sau tô màu,
+texture=287.06s, tổng=314.79s (~5.25 phút, trong timeout lite=600s) - xem README_MODULE.md "Kết
+quả test thật Phase 1.6.1".
 
-KNOWN_LIMITATIONS:
-- poly_target trong quality preset CHƯA được enforce thật cho engine TripoSR (chỉ đúng cho
-  character_hd) - xem README_MODULE.md phần "Giới hạn đã biết".
-- Shared GPU lock (heavy_gpu_job_lock) mới chỉ áp dụng trong do_vat_3d, CHƯA nối vào job manager
-  của nhan_vat_3d - 2 module vẫn có thể tranh GPU thật nếu chạy đồng thời.
-- Texture stage (colorize_existing) chưa được test thật trong phase này (chỉ test thật nhánh
-  shape-only, texture="none") - logic giữ shape khi texture lỗi đã có nhưng chưa verify bằng job
-  thật có texture.
+KNOWN_LIMITATIONS (Phase 1.6.1):
+- Texture resolution/steps/VRAM-aware runtime degrade CHƯA cấu hình được từ do_vat_3d
+  (run_character_hd_paint.py không nhận tham số này; sửa file đó = rủi ro rewrite Hunyuan3D-Paint).
+- Model KHÔNG cache trong RAM/GPU giữa các job (kiến trúc subprocess-per-job có sẵn từ trước, chỉ
+  cache cấp đĩa/HF cache) - không thêm used_cached_*_model giả vào job.json.
+- Timing chỉ tách theo stage (preprocess/shape/optimize/texture/validate/total), KHÔNG tách được
+  model_load_seconds riêng (engine chạy như subprocess đen, tách nhỏ hơn cần sửa runner = rewrite).
 - Chưa có thumbnail cho asset library (thumbnail_path luôn null hiện tại).
 - Map Composer (ban_do_3d) vẫn CHƯA triển khai - nút "DÙNG TRONG MAP" ở UI disabled đúng như yêu
   cầu, không fake chức năng.
+
+RESOLVED trong Phase 1.6.1 (trước đây là KNOWN_LIMITATIONS):
+- poly_target giờ được enforce thật cho CẢ TripoSR lẫn character_hd (toi_uu_so_mat + mesh_decimate.py).
+- Shared GPU lock (heavy_gpu_job_lock) đã nối vào nhan_vat_3d.job_manager (adapter mỏng).
+- Texture stage đã test thật (texture=lite) - xem README_MODULE.md.
