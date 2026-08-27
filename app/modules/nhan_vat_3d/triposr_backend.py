@@ -10,7 +10,7 @@ import threading
 import time
 from pathlib import Path
 
-from app.modules.job_control import JobCancelled, terminate_process
+from app.core.shared_services import JobCancelled, terminate_process
 
 from .texture_cuda_patch import apply_texture_cuda_patch
 from .windows_path_staging import create_ascii_staging_dir, has_non_ascii

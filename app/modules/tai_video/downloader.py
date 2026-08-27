@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 
 from app.modules.chinh_sua_video.ffmpeg_tools import run_tool
 from app.modules.chinh_sua_video.errors import VideoEditorError
-from app.modules.job_control import JobCancelled
+from app.core.shared_services import JobCancelled
 
 
 ProgressCallback = Callable[[int, str, str], None]

@@ -10,7 +10,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from .downloader import FacebookVideoDownloader
-from app.modules.job_control import JobCancelled
+from app.core.shared_services import JobCancelled
 
 
 class FacebookVideoJobManager:

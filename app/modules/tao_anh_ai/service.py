@@ -5,7 +5,7 @@ from pathlib import Path
 from threading import Lock
 import inspect
 
-from app.modules.job_control import JobCancelled
+from app.core.shared_services import JobCancelled
 
 from PIL import Image
 

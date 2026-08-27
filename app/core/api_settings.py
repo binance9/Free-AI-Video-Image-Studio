@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
-from app.modules.local_ai import dependency_status
+from app.core.shared_services import dependency_status
 
 router = APIRouter(prefix="/api/settings", tags=["local-ai"])
 _INSTALLER = None

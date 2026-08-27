@@ -10,7 +10,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from app.modules.chinh_sua_video.ffmpeg_tools import ffmpeg_bin
-from app.modules.job_control import JobCancelled, terminate_process
+from app.core.shared_services import JobCancelled, terminate_process
 from app.modules.chinh_sua_video.probe import probe_video
 
 

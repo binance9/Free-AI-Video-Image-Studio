@@ -8,7 +8,7 @@ import threading
 import time
 from pathlib import Path
 
-from app.modules.job_control import JobCancelled, terminate_process
+from app.core.shared_services import JobCancelled, terminate_process
 
 
 class CharacterHDBackend:

@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.api_core import router as core_router
 from app.modules.chinh_sua_video.api_chinh_sua_video import router as video_editor_router
-from app.api.settings_routes import router as settings_router
+from app.core.api_settings import router as settings_router
 from app.modules.cong_cu_van_ban.api_cong_cu_van_ban import router as text_router
 from app.modules.tao_anh_ai.api_tao_anh_ai import router as ai_image_router
 from app.modules.am_nhac.api_am_nhac import router as music_router
@@ -12,12 +12,12 @@ from app.modules.phu_de.api_phu_de import router as caption_router
 from app.modules.nhan_vat_3d.api_nhan_vat_3d import router as model_3d_router
 from app.modules.tai_video.api_tai_video import router as facebook_video_router
 from app.modules.lam_sach_video.api_lam_sach_video import router as video_cleanup_router
-from app.api.job_control_routes import router as job_control_router
-from app.api.system_routes import router as system_router
+from app.core.api_job_control import router as job_control_router
+from app.core.api_system import router as system_router
 from app.modules.nhan_vat_2d.api_nhan_vat_2d import router as character_2d_router
 from app.modules.nhan_vat_game_ready.api_nhan_vat_game_ready import router as game_ready_3d_router
 from app.core.config import settings
-from app.modules.director import DirectorAI
+from app.core.module_registry import DirectorAI
 from app.modules.chinh_sua_video import VideoEditor
 from app.modules.chinh_sua_video.workspace import VideoWorkspace
 from app.modules.tao_anh_ai import AiImageWorkspace, LocalImageService, AiImageJobManager

@@ -7,7 +7,7 @@ import time
 import uuid
 from pathlib import Path
 
-from app.modules.job_control import JobCancelled
+from app.core.shared_services import JobCancelled
 
 
 class Model3DJobManager:
