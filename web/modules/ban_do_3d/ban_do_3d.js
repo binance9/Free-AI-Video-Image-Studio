@@ -1,228 +1,60 @@
 (() => {
-  const S = window.Studio;
-  if (!S) return;
-  const $ = S.$;
+  if (window.AIVFMapHD?.version === '3.0-main-stage') return;
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const state = { active:false, quality:'standard', jobId:null, pollTimer:null, manifest:null, sourceUrl:null, zoom:1, panX:0, panY:0, dragging:false, lastX:0, lastY:0, header:null, stageSnapshot:null };
 
-  let job = null;
-  let pollTimer = null;
-  let manifest = null;
-  let viewMode = 'tiles'; // 'tiles' | 'full'
-  let zoom = 1, pan = [0, 0];
-  let drag = null, lastPointer = [0, 0];
+  const panelMarkup = () => `
+    <div class="panel-title">BẢN ĐỒ HD</div>
+    <div class="notice">Khóa bố cục tổng, chia tile HD và ghép liền mạch. Ảnh mẫu và map hiển thị trong khung lớn.</div>
+    <div class="dropzone map-hd-upload" id="mapHdUploadBox"><button type="button" id="mapHdChooseFile">＋ CHỌN ẢNH MẪU</button><strong id="mapHdFileName">Chưa chọn ảnh</strong><span>PNG/JPG/WebP · hiển thị ngay trong khung lớn</span><input id="mapHdImageFile" type="file" accept="image/png,image/jpeg,image/webp" hidden></div>
+    <div class="field section-gap"><label>Mô tả map</label><textarea id="mapHdPrompt" placeholder="Giữ bố cục ảnh mẫu; khóa vị trí vùng chính, đường, sông, bờ biển; bỏ chữ/nhãn/UI..."></textarea></div>
+    <div class="field"><label>Chất lượng</label><div class="map-hd-quality"><button type="button" data-q="lite">NHẸ</button><button type="button" class="active" data-q="standard">TRUNG BÌNH</button><button type="button" data-q="final">ĐẸP</button></div></div>
+    <div class="field"><label>Số tile</label><select id="mapHdTiles"><option value="">Tự tính theo chất lượng</option><option>4</option><option>6</option><option>8</option><option>10</option><option>12</option><option>16</option><option>20</option></select></div>
+    <button type="button" class="map-hd-create" id="mapHdCreate">✦ TẠO MAP HD</button>
+    <div class="map-hd-progress section-gap"><div><b id="mapHdProgressStage">Sẵn sàng</b><strong id="mapHdPct">0%</strong></div><div class="map-hd-track"><i id="mapHdBar"></i></div><small id="mapHdDetail">Trung bình là mặc định.</small></div>
+    <div class="map-hd-actions" id="mapHdActions"></div>`;
 
-  async function refreshStatus() {
-    const box = $('mapHdStatus');
-    if (!box) return;
-    try {
-      const data = await S.jsonRequest('/api/ban-do-3d/status');
-      box.innerHTML = `<strong>${data.ok ? '✓ Bản đồ HD sẵn sàng' : 'Chưa sẵn sàng'}</strong><span>Chất lượng: Nhẹ / Trung bình / Đẹp · Deep zoom tile gốc${data.prompt_ai ? '' : ' · AI ảnh local chưa sẵn sàng, cần ảnh mẫu'}</span>`;
-      box.classList.toggle('ok-card', !!data.ok);
-    } catch (e) {
-      box.innerHTML = `<strong>Không kiểm tra được Bản đồ HD</strong><span>${S.esc(e.message)}</span>`;
-    }
+  function isActive() { const p=$('#panel-bandohd'); return Boolean(p && !p.classList.contains('hidden') && !document.body.classList.contains('home-mode')); }
+  function rememberHeader() { if(!state.header) state.header={title:$('.preview-head h2')?.textContent||'',meta:$('#videoMeta')?.textContent||'',hint:$('.preview-head-actions > span')?.textContent||''}; }
+  function setHeader(meta='Chưa có bản đồ') { rememberHeader(); if($('.preview-head h2'))$('.preview-head h2').textContent='BẢN ĐỒ HD'; if($('#videoMeta'))$('#videoMeta').textContent=meta; if($('.preview-head-actions > span'))$('.preview-head-actions > span').textContent='Kéo để xem · cuộn để zoom'; }
+  function restoreHeader() { if(!state.header)return; if($('.preview-head h2'))$('.preview-head h2').textContent=state.header.title; if($('#videoMeta'))$('#videoMeta').textContent=state.header.meta; if($('.preview-head-actions > span'))$('.preview-head-actions > span').textContent=state.header.hint; state.header=null; }
+  function setMapStageActive(active) {
+    if(active && !state.active){state.stageSnapshot=['#empty','#videoBox','#ai3dSourcePreview','#ai3dStageViewer'].map(selector=>({selector,hidden:$(selector)?.classList.contains('hidden')}));}
+    state.active=active;document.body.classList.toggle('map-hd-active',active);$('#mapHdStageViewer')?.classList.toggle('hidden',!active);
+    if(active){$('#empty')?.classList.add('hidden');$('#videoBox')?.classList.add('hidden');$('#ai3dSourcePreview')?.classList.add('hidden');$('#ai3dStageViewer')?.classList.add('hidden');setHeader(state.manifest?'Map HD hoàn tất':'Chưa có bản đồ');}
+    else{for(const item of state.stageSnapshot||[]){const el=$(item.selector);if(el)el.classList.toggle('hidden',item.hidden);}state.stageSnapshot=null;restoreHeader();}
   }
+  function activate(){setMapStageActive(true);if(state.manifest)showMap();else if(state.sourceUrl)showSource(state.sourceUrl);else showEmpty('Chọn ảnh mẫu hoặc nhập mô tả để tạo bản đồ.');if(state.jobId&&!state.pollTimer&&!state.manifest)pollJob();}
+  function deactivate(){clearTimeout(state.pollTimer);state.pollTimer=null;state.dragging=false;setMapStageActive(false);}
+  function showEmpty(text){$('#mapHdEmpty').textContent=text;$('#mapHdEmpty').classList.remove('hidden');$('#mapHdViewport').classList.add('hidden');$('#mapHdLoading').classList.add('hidden');}
+  function showSource(url){setMapStageActive(true);$('#mapHdEmpty').classList.add('hidden');$('#mapHdLoading').classList.add('hidden');$('#mapHdViewport').classList.remove('hidden');const c=$('#mapHdCanvas');c.className='map-hd-canvas map-hd-source-canvas';c.innerHTML='<img class="map-hd-source-image" alt="Ảnh mẫu bản đồ">';$('.map-hd-source-image',c).src=url;c.style.transform='';setHeader('Ảnh mẫu bản đồ');}
+  function showLoading(stage='Đang phân tích bố cục...',pct=0,detail=''){setMapStageActive(true);$('#mapHdEmpty').classList.add('hidden');$('#mapHdViewport').classList.add('hidden');$('#mapHdLoading').classList.remove('hidden');$('#mapHdLoadingStage').textContent=stage;$('#mapHdLoadingPct').textContent=`${Math.round(pct)}%`;$('#mapHdLoadingBar').style.width=`${Math.max(0,Math.min(100,pct))}%`;$('#mapHdLoadingDetail').textContent=detail;setHeader(`${Math.round(pct)}% · ${stage}`);}
+  function updateProgress(stage,pct,detail){const p=Number(pct)||0;$('#mapHdProgressStage').textContent=stage||'Đang xử lý';$('#mapHdPct').textContent=`${Math.round(p)}%`;$('#mapHdBar').style.width=`${Math.max(0,Math.min(100,p))}%`;$('#mapHdDetail').textContent=detail||'';if(state.active)showLoading(stage||'Đang xử lý',p,detail||'');}
+  function setBusy(busy){const b=$('#mapHdCreate');if(b){b.disabled=busy;b.textContent=busy?'ĐANG TẠO...':'✦ TẠO MAP HD';}}
+  function previewUrl(d){return d.preview_url||d.preview_image_url||d.current_tile_url||d.tile_preview_url||d.current_tile_output||'';}
 
-  // ---------- sidebar wiring ----------
-
-  let quality = 'standard';
-  document.querySelectorAll('#panel-bandohd .map-hd-quality button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#panel-bandohd .map-hd-quality button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      quality = btn.dataset.q;
-    });
-  });
-
-  let refImage = null;
-  $('mapHdImageFile') && ($('mapHdImageFile').onchange = (e) => {
-    refImage = e.target.files[0] || null;
-    $('mapHdImageName').textContent = refImage ? refImage.name : '＋ Ảnh mẫu (khuyên dùng)';
-  });
-
-  function setProgress(stage, pct, detail) {
-    const box = $('mapHdProgress');
-    if (!box) return;
-    box.classList.remove('hidden');
-    const p = Math.max(0, Math.min(100, Number(pct || 0)));
-    $('mapHdStage').textContent = stage || 'Đang xử lý';
-    $('mapHdPct').textContent = `${p}%`;
-    $('mapHdBar').style.width = `${p}%`;
-    $('mapHdDetail').textContent = detail || '';
-    S.updateBusyProgress?.(p, stage || 'Đang tạo Bản đồ HD', detail || '', 'real');
+  async function createMap(){
+    if(state.pollTimer)return;const file=$('#mapHdImageFile')?.files?.[0],prompt=$('#mapHdPrompt')?.value.trim()||'';
+    if(!file&&!prompt)return window.Studio?.setStatus?.('Cần ảnh mẫu hoặc mô tả map.',true);
+    setBusy(true);showLoading('Đang phân tích bố cục...',0,'Khởi tạo job Bản đồ HD');updateProgress('Đang phân tích bố cục...',0,'Khởi tạo job Bản đồ HD');
+    const form=new FormData();form.append('prompt',prompt);form.append('quality',state.quality);if($('#mapHdTiles')?.value)form.append('tile_count',$('#mapHdTiles').value);const route=file?'/api/ban-do-3d/tao-tu-anh':'/api/ban-do-3d/tao-tu-mo-ta';if(file)form.append('file',file);
+    try{const r=await fetch(route,{method:'POST',body:form}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.detail||`API ${r.status}`);if(!d.job_id)throw new Error('Backend không trả job_id');state.jobId=d.job_id;pollJob();}catch(e){failJob(e.message);}
   }
-
-  async function createMap() {
-    if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
-    $('mapHdResult')?.classList.add('hidden');
-    const prompt = $('mapHdPrompt').value.trim();
-    if (!refImage && !prompt) { return S.setStatus('Cần ảnh mẫu hoặc mô tả map.', true); }
-    const tileCount = $('mapHdTiles').value;
-    $('mapHdCreate').disabled = true;
-    S.setBusy(true, 'Đang tạo Bản đồ HD…', 'Khóa bố cục tổng → chia tile → tinh chỉnh → ghép');
-    setProgress('Bắt đầu', 1, '');
-    try {
-      const form = new FormData();
-      form.append('prompt', prompt);
-      form.append('quality', quality);
-      if (tileCount) form.append('tile_count', tileCount);
-      let url = '/api/ban-do-3d/tao-tu-mo-ta';
-      if (refImage) { form.append('file', refImage); url = '/api/ban-do-3d/tao-tu-anh'; }
-      const started = await S.jsonRequest(url, { method: 'POST', body: form });
-      job = started.job_id;
-      poll(started.status_url);
-    } catch (e) {
-      S.setBusy(false);
-      $('mapHdCreate').disabled = false;
-      S.setStatus('Không tạo được Bản đồ HD: ' + e.message, true);
-    }
+  async function pollJob(){
+    clearTimeout(state.pollTimer);
+    try{const r=await fetch(`/api/ban-do-3d/job/${state.jobId}`,{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.detail||`Job API ${r.status}`);const stage=d.stage||d.status||'Đang xử lý',pct=Number(d.progress)||0,tile=d.current_tile||d.tile_index||d.current_tile_index,total=d.tile_count||d.total_tiles,detail=d.detail||(tile?`Đang tạo tile ${tile}${total?`/${total}`:''}`:'');updateProgress(stage,pct,detail);if(previewUrl(d)){showSource(previewUrl(d));$('#mapHdState').textContent=`${Math.round(pct)}% · ${stage}${detail?` · ${detail}`:''}`;}if(d.status==='completed'){await loadMap(d);setBusy(false);state.pollTimer=null;return;}if(['failed','cancelled'].includes(d.status)){failJob(d.error||(d.status==='cancelled'?'Job đã bị hủy':'Job tạo map thất bại'));return;}if(state.active)state.pollTimer=setTimeout(pollJob,900);}catch(e){failJob(e.message);}
   }
-  $('mapHdCreate')?.addEventListener('click', createMap);
+  function failJob(message){clearTimeout(state.pollTimer);state.pollTimer=null;state.jobId=null;setBusy(false);updateProgress('Không thể tạo bản đồ',0,message);$('#mapHdLoadingStage').textContent='Không thể tạo bản đồ';$('#mapHdLoadingDetail').textContent=message;window.Studio?.setStatus?.(`Không thể tạo bản đồ: ${message}`,true);}
+  async function loadMap(job){const manifestUrl=job.manifest_url||`/api/ban-do-3d/job/${state.jobId}/manifest`,r=await fetch(manifestUrl,{cache:'no-store'});if(!r.ok)throw new Error(`Không đọc được manifest (${r.status})`);state.manifest=await r.json();showMap();const width=job.width||state.manifest.width||'?',height=job.height||state.manifest.height||'?';$('#mapHdProgressStage').textContent='Hoàn tất';$('#mapHdPct').textContent='100%';$('#mapHdBar').style.width='100%';$('#mapHdDetail').textContent=`${state.manifest.tiles?.length||job.tile_count||0} tile · ${width}×${height}px`;$('#mapHdActions').innerHTML=`<a href="/api/ban-do-3d/job/${state.jobId}/full" target="_blank">MỞ MAP FULL</a><a href="${manifestUrl}" target="_blank">MANIFEST</a>`;setHeader(`Map HD · ${width}×${height}px`);}
+  function showMap(){if(!state.manifest)return;setMapStageActive(true);$('#mapHdEmpty').classList.add('hidden');$('#mapHdLoading').classList.add('hidden');$('#mapHdViewport').classList.remove('hidden');const c=$('#mapHdCanvas'),m=state.manifest,cols=Number(m.cols)||1,size=Math.min(768,Math.max(256,Math.round((Number(m.tile_size)||1024)/2)));c.className='map-hd-canvas map-hd-tile-canvas';c.innerHTML='';c.style.gridTemplateColumns=`repeat(${cols},${size}px)`;for(const t of m.tiles||[]){const img=document.createElement('img');img.alt=t.tile_id||'Map tile';img.src=t.url||`/api/ban-do-3d/job/${state.jobId}/tile/${t.tile_id}?v=${Date.now()}`;img.style.width=`${size}px`;img.style.height=`${size}px`;c.appendChild(img);}state.zoom=1;state.panX=0;state.panY=0;requestAnimationFrame(fitMap);}
+  function applyTransform(){const c=$('#mapHdCanvas');if(c?.classList.contains('map-hd-tile-canvas'))c.style.transform=`translate(${state.panX}px,${state.panY}px) scale(${state.zoom})`;$('#mapHdZoomText').textContent=`${Math.round(state.zoom*100)}%`;}
+  function zoom(kind){if(kind==='in')state.zoom=Math.min(6,state.zoom*1.25);else if(kind==='out')state.zoom=Math.max(.08,state.zoom/1.25);else{state.zoom=1;state.panX=0;state.panY=0;}applyTransform();}
+  function fitMap(){const v=$('#mapHdViewport'),c=$('#mapHdCanvas');if(!v||!c||!state.manifest)return;const w=c.scrollWidth||1,h=c.scrollHeight||1;state.zoom=Math.min((v.clientWidth-32)/w,(v.clientHeight-32)/h,1);state.panX=(v.clientWidth-w*state.zoom)/2;state.panY=(v.clientHeight-h*state.zoom)/2;applyTransform();}
 
-  async function poll(statusUrl) {
-    try {
-      const data = await S.jsonRequest(statusUrl);
-      setProgress(data.stage, data.progress, data.detail || data.error || '');
-      if (data.status === 'completed') {
-        S.setBusy(false);
-        $('mapHdCreate').disabled = false;
-        S.setStatus('100% · Bản đồ HD đã tạo xong.');
-        await showResult(data);
-        return;
-      }
-      if (data.status === 'failed') {
-        throw new Error(data.error || 'Bản đồ HD lỗi không rõ');
-      }
-      if (data.status === 'cancelled') {
-        S.setBusy(false);
-        $('mapHdCreate').disabled = false;
-        S.setStatus('Đã hủy tạo Bản đồ HD.');
-        return;
-      }
-      pollTimer = setTimeout(() => poll(statusUrl), 900);
-    } catch (e) {
-      S.setBusy(false);
-      $('mapHdCreate').disabled = false;
-      S.setStatus('Bản đồ HD lỗi: ' + e.message, true);
-      $('mapHdDetail').textContent = 'Lỗi: ' + e.message;
-    }
-  }
-
-  async function showResult(data) {
-    manifest = await (await fetch(data.manifest_url, { cache: 'no-store' })).json();
-    $('mapHdResult')?.classList.remove('hidden');
-    const v = data.validation || {};
-    $('mapHdResultTitle').textContent = v.pass ? '✓ Bản đồ HD đạt chuẩn liền mạch' : '⚠ Bản đồ HD đã tạo (mép nối chưa đạt ngưỡng)';
-    $('mapHdResultMeta').textContent =
-      `${data.tile_count} tile · ${data.width}×${data.height}px · nét ${Math.round((v.sharpness_score || 0) * 100)}% · mép nối ${Math.round((v.tile_border_score || 0) * 100)}% · ${data.elapsed_seconds}s`;
-    viewMode = 'tiles';
-    $('mapHdOpenFull').textContent = '🗺 MỞ MAP FULL';
-    $('mapHdManifest').href = data.manifest_url;
-    openInViewer();
-  }
-
-  $('mapHdOpenFull')?.addEventListener('click', () => {
-    viewMode = viewMode === 'tiles' ? 'full' : 'tiles';
-    $('mapHdOpenFull').textContent = viewMode === 'full' ? '🧩 XEM THEO TILE' : '🗺 MỞ MAP FULL';
-    renderCanvas();
-  });
-  $('mapHdGridToggle')?.addEventListener('change', renderCanvas);
-
-  // ---------- central viewer (shared stage, not a separate frame) ----------
-
-  function hideOtherStageContent() {
-    $('empty')?.classList.add('hidden');
-    $('videoBox')?.classList.add('hidden');
-    $('busy')?.classList.add('hidden');
-    $('ai3dSourcePreview')?.classList.add('hidden');
-    $('ai3dStageViewer')?.classList.add('hidden');
-    document.querySelector('.transport')?.classList.add('viewer-transport-hidden');
-  }
-
-  function openInViewer() {
-    hideOtherStageContent();
-    $('mapHdStageViewer')?.classList.remove('hidden');
-    $('mapHdEmpty')?.classList.add('hidden');
-    zoom = 1; pan = [0, 0];
-    applyTransform();
-    renderCanvas();
-  }
-
-  function renderCanvas() {
-    const canvas = $('mapHdCanvas');
-    if (!canvas || !manifest) return;
-    canvas.innerHTML = '';
-    canvas.classList.toggle('map-hd-canvas-grid', viewMode === 'tiles');
-    const showGrid = !!$('mapHdGridToggle')?.checked;
-    if (viewMode === 'full') {
-      const img = document.createElement('img');
-      img.className = 'map-hd-full-img';
-      img.alt = 'Bản đồ HD đầy đủ';
-      img.src = `/api/ban-do-3d/job/${job}/full?v=${Date.now()}`;
-      canvas.appendChild(img);
-      $('mapHdState').textContent = `Map full · ${manifest.tiles.length} tile gốc ghép liền mạch`;
-      return;
-    }
-    canvas.style.gridTemplateColumns = `repeat(${manifest.cols}, 220px)`;
-    for (const t of manifest.tiles) {
-      const cell = document.createElement('div');
-      cell.className = 'map-hd-tile-cell';
-      const img = document.createElement('img');
-      img.loading = 'lazy';
-      img.alt = t.tile_id;
-      img.src = `/api/ban-do-3d/job/${job}/tile/${t.tile_id}?v=${Date.now()}`;
-      cell.appendChild(img);
-      if (showGrid) {
-        const label = document.createElement('span');
-        label.className = 'map-hd-tile-label';
-        label.textContent = `${t.tile_id} · (${t.row},${t.col})`;
-        cell.appendChild(label);
-        cell.classList.add('map-hd-tile-grid-on');
-      }
-      canvas.appendChild(cell);
-    }
-    $('mapHdState').textContent = `${manifest.tiles.length} tile · ${manifest.cols}×${manifest.rows} lưới · overlap ${manifest.overlap_px}px`;
-  }
-
-  function applyTransform() {
-    const canvas = $('mapHdCanvas');
-    if (!canvas) return;
-    canvas.style.transform = `translate(${pan[0]}px, ${pan[1]}px) scale(${zoom})`;
-    $('mapHdZoomText').textContent = `${Math.round(zoom * 100)}%`;
-  }
-
-  function setZoom(kind) {
-    if (kind === 'in') zoom = Math.min(4, zoom * 1.25);
-    else if (kind === 'out') zoom = Math.max(0.2, zoom / 1.25);
-    else { zoom = 1; pan = [0, 0]; }
-    applyTransform();
-  }
-  $('mapHdZoomIn')?.addEventListener('click', () => setZoom('in'));
-  $('mapHdZoomOut')?.addEventListener('click', () => setZoom('out'));
-  $('mapHdZoomReset')?.addEventListener('click', () => setZoom('reset'));
-
-  const viewport = $('mapHdViewport');
-  if (viewport) {
-    viewport.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      zoom = Math.max(0.2, Math.min(4, zoom * Math.exp(-e.deltaY * 0.0012)));
-      applyTransform();
-    }, { passive: false });
-    viewport.addEventListener('pointerdown', (e) => {
-      drag = true; lastPointer = [e.clientX, e.clientY];
-      viewport.setPointerCapture(e.pointerId);
-    });
-    viewport.addEventListener('pointermove', (e) => {
-      if (!drag) return;
-      const dx = e.clientX - lastPointer[0], dy = e.clientY - lastPointer[1];
-      lastPointer = [e.clientX, e.clientY];
-      pan[0] += dx; pan[1] += dy;
-      applyTransform();
-    });
-    const stopDrag = (e) => { drag = false; try { viewport.releasePointerCapture(e.pointerId); } catch (_) {} };
-    viewport.addEventListener('pointerup', stopDrag);
-    viewport.addEventListener('pointercancel', stopDrag);
-  }
-
-  window.AIVFMapHD = { open: openInViewer };
-  refreshStatus();
+  function bindStage(){const v=$('#mapHdStageViewer');if(!v)return;v.insertAdjacentHTML('beforeend','<div class="map-hd-loading hidden" id="mapHdLoading"><strong>BẢN ĐỒ HD</strong><b id="mapHdLoadingStage">Đang phân tích bố cục...</b><div class="map-hd-loading-track"><i id="mapHdLoadingBar"></i></div><em id="mapHdLoadingPct">0%</em><small id="mapHdLoadingDetail"></small></div>');$('#mapHdZoomOut').onclick=()=>zoom('out');$('#mapHdZoomReset').onclick=()=>zoom('reset');$('#mapHdZoomIn').onclick=()=>zoom('in');$('#mapHdViewport').addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?'in':'out');},{passive:false});$('#mapHdViewport').addEventListener('mousedown',e=>{if(!state.manifest)return;state.dragging=true;state.lastX=e.clientX;state.lastY=e.clientY;});window.addEventListener('mousemove',e=>{if(!state.dragging||!state.active)return;state.panX+=e.clientX-state.lastX;state.panY+=e.clientY-state.lastY;state.lastX=e.clientX;state.lastY=e.clientY;applyTransform();});window.addEventListener('mouseup',()=>{state.dragging=false;});}
+  function bindPanel(){const panel=$('#panel-bandohd');if(!panel)return;panel.innerHTML=panelMarkup();$$('.map-hd-quality button',panel).forEach(b=>b.onclick=()=>{$$('.map-hd-quality button',panel).forEach(x=>x.classList.remove('active'));b.classList.add('active');state.quality=b.dataset.q;});$('#mapHdChooseFile').onclick=()=>{$('#mapHdImageFile').value='';$('#mapHdImageFile').click();};$('#mapHdImageFile').onchange=e=>{const f=e.target.files?.[0];if(!f)return;if(state.sourceUrl)URL.revokeObjectURL(state.sourceUrl);state.sourceUrl=URL.createObjectURL(f);$('#mapHdFileName').textContent=f.name;showSource(state.sourceUrl);$('#mapHdProgressStage').textContent='Ảnh mẫu đã chọn';$('#mapHdDetail').textContent='Ảnh đã hiện trong khung lớn.';};$('#mapHdCreate').onclick=createMap;new MutationObserver(()=>isActive()?activate():deactivate()).observe(panel,{attributes:true,attributeFilter:['class']});}
+  function mount(){$('#mapHdModal')?.remove();$('#mapHdLauncher')?.remove();$('#mapHdLauncherMain')?.remove();$('#panel-bando3d')?.remove();bindStage();bindPanel();$('#homeBtn')?.addEventListener('click',deactivate);if(isActive())activate();window.addEventListener('beforeunload',()=>{clearTimeout(state.pollTimer);if(state.sourceUrl)URL.revokeObjectURL(state.sourceUrl);});}
+  window.AIVFMapHD={version:'3.0-main-stage',open:activate,close:deactivate,setMapStageActive,fitMap};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
 })();
