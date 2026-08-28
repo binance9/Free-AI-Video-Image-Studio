@@ -113,13 +113,43 @@ async function uploadVideo(file){
 }
 $('videoFile').onchange=e=>uploadVideo(e.target.files[0]);
 
+// Khung video luon hien DU 100% frame (khong crop, khong keo gian): do
+// thu cong kich thuoc that cua #stage roi tinh width/height theo dung ty
+// le video (contain-fit), thay vi dua vao CSS max-height:calc(100vh-...)
+// cu (gia tri co dinh theo vh, sai lech voi kich thuoc that cua #stage khi
+// layout thay doi - vd preview-expanded, sidebar, man hinh thap - gay mat
+// mep duoi cua video). object-fit:contain trong CSS la luoi an toan bo
+// sung, khong phai co che chinh.
+function fitVideoStage(){
+  const stageEl=$('stage'), videoEl=$('video');
+  if(!stageEl||!videoEl) return;
+  const vw=videoEl.videoWidth, vh=videoEl.videoHeight;
+  if(!vw||!vh) return;
+  const availW=stageEl.clientWidth, availH=stageEl.clientHeight;
+  if(availW<=0||availH<=0) return;
+  const scale=Math.min(availW/vw, availH/vh);
+  videoEl.style.width=Math.max(1,Math.floor(vw*scale))+'px';
+  videoEl.style.height=Math.max(1,Math.floor(vh*scale))+'px';
+  videoEl.style.maxWidth='none';
+  videoEl.style.maxHeight='none';
+}
+window.AIVFFitVideoStage=fitVideoStage;
+(function(){
+  const stageEl=$('stage');
+  if(stageEl && 'ResizeObserver' in window){
+    new ResizeObserver(()=>fitVideoStage()).observe(stageEl);
+  }
+  window.addEventListener('resize',fitVideoStage);
+  document.addEventListener('fullscreenchange',fitVideoStage);
+})();
+
 function applyInfo(info,first=false){
   state.sessionId=info.session_id; state.duration=info.duration; state.width=info.width; state.height=info.height;
   $('empty').classList.add('hidden'); $('videoBox').classList.remove('hidden'); $('exportBtn').disabled=false; $('cutBtn').disabled=false;
   $('undoBtn').disabled=!info.can_undo; $('videoMeta').textContent=`${info.original_name} · ${info.width}×${info.height} · ${info.fps} FPS · ${fmt(info.duration)}`;
   $('cutStart').value=0; $('cutEnd').value=info.duration.toFixed(2); $('showTo').value=info.duration.toFixed(1);
   const video=$('video'); video.src=`/api/editor/${state.sessionId}/media?v=${Date.now()}`; video.load();
-  video.onloadedmetadata=()=>{ updateTime(); renderTimeline(); updateLayerVisibility(); };
+  video.onloadedmetadata=()=>{ fitVideoStage(); updateTime(); renderTimeline(); updateLayerVisibility(); };
   if(first){ selectLayer(null); }
   try{localStorage.setItem('aivf_recent_video',JSON.stringify({session_id:state.sessionId,name:info.original_name,width:info.width,height:info.height,duration:info.duration,updated:Date.now()}));window.dispatchEvent(new CustomEvent('aivf-recent-updated'));}catch(_e){}
   renderTimeline(); renderLayers();
