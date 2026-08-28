@@ -12,6 +12,7 @@
 </head>
 <!-- compatibility history: 0.8.6. Character HD / texture viewer -->
 <body class="home-mode">
+<button class="btn danger" id="killBotBtn" title="Tắt toàn bộ AI Video Factory: dừng job, FFmpeg, model worker, đóng server" style="position:fixed;top:14px;right:16px;z-index:60">⏻ TẮT BOT</button>
 <div class="app">
   <section class="home-screen" id="homeScreen" aria-label="Trang chủ AI Video Factory">
     <aside class="home-sidebar">
@@ -574,6 +575,7 @@
 <script src="/static/core/realtime_progress.js?v=001"></script>
 <script src="/static/core/image_prompt_input.js?v=001"></script>
 <script src="/static/core/app.js?v=0891"></script>
+<script src="/static/core/kill_bot.js?v=001"></script>
 <script src="/static/core/home_screen.js?v=0891"></script>
 <!-- web/modules: per-feature UI, load order preserved from before the module split
      (some depend on globals from earlier scripts: TextTemplates -> captions,
