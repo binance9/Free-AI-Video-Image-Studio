@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="/static/modules/nhan_vat_game_ready/nhan_vat_game_ready.css?v=0893"/>
 <link rel="stylesheet" href="/static/modules/do_vat_3d/do_vat_3d.css?v=0161"/>
   <link rel="stylesheet" href="/static/modules/ban_do_3d/ban_do_3d.css?v=200">
+  <link rel="stylesheet" href="/static/core/realtime_preview.css?v=001">
 </head>
 <!-- compatibility history: 0.8.6. Character HD / texture viewer -->
 <body class="home-mode">
@@ -50,6 +51,7 @@
         <button class="home-tool-card" data-tool-open="music"><b>♫</b><strong>Thêm nhạc</strong><small>Nhạc local và ghép audio</small></button>
         <button class="home-tool-card" data-tool-open="sticker"><b>😊</b><strong>Emoji & Sticker</strong><small>Bảng emoji kiểu chat</small></button>
         <button class="home-tool-card" data-tool-open="facebook"><b>FB</b><strong>Tải Facebook</strong><small>Đưa video công khai vào editor</small></button>
+        <button class="home-tool-card" data-tool-open="taivideoweb"><b>↓</b><strong>Tải Video Web</strong><small>YouTube và các trang phổ biến qua yt-dlp</small></button>
       </div>
 
       <div class="home-all-tools hidden" id="homeAllTools">
@@ -120,6 +122,7 @@
       <div class="stage" id="stage">
         <div class="empty" id="empty"><div class="empty-card"><div class="empty-icon">▶</div><h3>Tải video lên để bắt đầu</h3><p>Cắt, ghép, phụ đề local, dịch local, nhạc, văn bản, hình ảnh, nhãn dán và AI ảnh miễn phí trong một khung.</p><label class="btn accent" for="videoFile">＋ CHỌN VIDEO</label></div></div>
         <div class="video-box hidden" id="videoBox"><video id="video" playsinline></video><div class="overlay-surface" id="overlaySurface"></div><div class="cleanup-mask hidden" id="cleanupMask"><span>VÙNG XÓA</span></div></div>
+        <div class="realtime-preview hidden" id="realtimePreview"><div class="realtime-preview-empty" id="realtimePreviewEmpty">Thêm ảnh hoặc nhập mô tả để bắt đầu.</div><img class="hidden" id="realtimePreviewImage" alt="Realtime preview"><video class="hidden" id="realtimePreviewVideo" controls playsinline></video><div class="realtime-preview-progress"><div><strong id="realtimePreviewStage">Sẵn sàng</strong><b id="realtimePreviewPct">0%</b></div><div class="realtime-preview-track"><i id="realtimePreviewBar"></i></div><small id="realtimePreviewMessage">Preview sẽ cập nhật tại đây.</small></div></div>
         <div class="ai3d-source-preview hidden" id="ai3dSourcePreview"><img id="ai3dSourcePreviewImage" alt="Ảnh nguồn 3D"><div class="ai3d-source-preview-label">ẢNH NGUỒN · FAST PREVIEW / HD FINAL</div></div>
         <div class="ai3d-stage-viewer hidden" id="ai3dStageViewer">
           <canvas id="ai3dCanvas"></canvas>
@@ -191,6 +194,39 @@
         </div>
         <div class="hint section-gap">0.8.7.6: module Facebook tách riêng. Chỉ dùng với video công khai / nội dung bạn có quyền tải và sử dụng.</div>
       </div>
+
+      <!-- MODULE: tai_video_web BEGIN (JS o web/modules/tai_video_web/) -->
+      <div id="panel-taivideoweb" class="panel toolpanel hidden">
+        <div class="panel-title">TẢI VIDEO TỪ WEB</div>
+        <div class="notice">Dán URL YouTube hoặc các trang phổ biến khác. Dùng yt-dlp local, không dùng cookie đăng nhập. Tiến trình hiện ngay trong khung video lớn - không có ô xem trước nhỏ ở đây.</div>
+        <div id="taiVideoWebStatus" class="selected-card"><strong>Đang kiểm tra bộ tải video…</strong><small>yt-dlp + FFmpeg local</small></div>
+        <div class="field section-gap"><label>URL video</label><textarea id="taiVideoWebUrl" placeholder="https://www.youtube.com/watch?v=... hoặc URL trang hỗ trợ yt-dlp khác"></textarea></div>
+        <div class="row">
+          <div class="field"><label>Chất lượng</label><select id="taiVideoWebQuality">
+            <option value="360p">360p</option>
+            <option value="720p" selected>720p</option>
+            <option value="1080p">1080p</option>
+            <option value="best">Tốt nhất</option>
+          </select></div>
+          <div class="field"><label>Định dạng</label><select id="taiVideoWebMode">
+            <option value="video" selected>Video (vào editor)</option>
+            <option value="audio">Chỉ audio (MP3)</option>
+          </select></div>
+        </div>
+        <button class="btn accent wide" id="taiVideoWebDownloadBtn">⬇ TẢI VIDEO</button>
+        <div id="taiVideoWebProgress" class="ai3d-progress hidden">
+          <div class="ai3d-progress-head"><strong id="taiVideoWebProgressStage">Chuẩn bị tải video</strong><b id="taiVideoWebProgressPct">0%</b></div>
+          <div class="ai3d-progress-track"><i id="taiVideoWebProgressBar"></i></div>
+          <div id="taiVideoWebProgressDetail" class="hint">Đang chuẩn bị…</div>
+        </div>
+        <div id="taiVideoWebAudioResult" class="selected-card hidden">
+          <strong>Audio đã tải xong</strong>
+          <small id="taiVideoWebAudioMeta"></small>
+          <a class="btn primary wide center-link" id="taiVideoWebAudioDownload" download>TẢI FILE MP3 ↓</a>
+        </div>
+        <div class="hint section-gap">Chỉ tải nội dung công khai / nội dung bạn có quyền tải và sử dụng.</div>
+      </div>
+      <!-- MODULE: tai_video_web END -->
 
       <div id="panel-bgremove" class="panel toolpanel hidden">
         <div class="panel-title">DỌN VIDEO AI</div>
@@ -315,7 +351,6 @@
         <label class="char2d-upload" for="char2dRefFile">
           <span class="char2d-upload-icon">＋</span>
           <span><strong id="char2dRefName">Ảnh mẫu · không bắt buộc</strong><small>PNG / JPG / WebP · nhân vật toàn thân rõ nét</small></span>
-          <img id="char2dRefPreview" class="hidden" alt="Reference preview">
           <input id="char2dRefFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
         </label>
 
@@ -337,7 +372,7 @@
 
         <div id="char2dResult" class="char2d-result hidden">
           <div class="char2d-result-head"><span id="char2dResultBadge" class="char2d-badge">PASS</span><strong id="char2dResultTitle">Ảnh đạt gate</strong><small id="char2dOperation">AUTO</small></div>
-          <div class="char2d-preview-wrap"><img id="char2dResultImage" alt="Character 2D result"></div>
+          <div class="selected-card"><strong>Kết quả đang hiển thị trong khung lớn</strong></div>
           <div class="char2d-score-grid">
             <div><b id="char2dScore">--</b><span>Gate</span></div>
             <div><b id="char2dIdentity">--</b><span>Identity</span></div>
@@ -361,7 +396,7 @@
         <div class="field"><label>Kích thước</label><select id="aiImageSize"><option value="1024x1024">1024×1024 · local</option><option value="1536x1024" selected>1536×1024 ngang · local + upscale</option><option value="1024x1536">1024×1536 dọc · local + upscale</option><option value="2048x1152">2K ngang · AI + upscale</option><option value="2048x2048">2K vuông · AI + upscale</option><option value="3840x2160">4K ngang · AI + upscale</option><option value="2160x3840">4K dọc · AI + upscale</option></select></div>
         <label class="dropzone"><strong id="aiRefName">＋ Ảnh tham chiếu (không bắt buộc)</strong><span>PNG / JPG / WebP</span><input id="aiRefFile" type="file" accept="image/png,image/jpeg,image/webp" hidden></label>
         <button class="btn accent wide" id="aiImageRun">✨ TẠO / SỬA ẢNH</button>
-        <div id="aiImageResult" class="ai-image-result hidden"><img id="aiImagePreview" alt="AI result"><div class="action-grid"><button class="btn" id="aiImageAgain">Tạo lại</button><button class="btn primary" id="aiImageToVideo">ĐƯA VÀO VIDEO</button></div></div>
+        <div id="aiImageResult" class="ai-image-result hidden"><div class="selected-card"><strong>Ảnh final đang hiển thị trong khung lớn</strong></div><div class="action-grid"><button class="btn" id="aiImageAgain">Tạo lại</button><button class="btn primary" id="aiImageToVideo">ĐƯA VÀO VIDEO</button></div></div>
       </div>
 
       <div id="panel-ai3d" class="panel toolpanel hidden">
@@ -408,7 +443,7 @@
           <div id="ai3dProgressDetail" class="hint">Đang chuẩn bị…</div>
         </div>
         <div id="ai3dResult" class="ai3d-result hidden">
-          <video id="ai3dPreview" controls loop muted playsinline></video>
+          <div class="selected-card"><strong>Model sẽ chuyển sang Viewer 3D trong khung lớn</strong></div>
           <div class="selected-card"><strong id="ai3dResultTitle">Model 3D đã tạo</strong><span id="ai3dResultMeta"></span></div>
           <button class="btn primary wide" id="ai3dOpenViewer">◉ XEM MODEL 3D</button>
           <div class="turntable-box">
@@ -528,6 +563,9 @@
 <input id="videoFile" type="file" accept="video/*" hidden/>
 <!-- web/core: shared shell/runtime, load first -->
 <script src="/static/core/task_progress.js?v=0878"></script>
+<script src="/static/core/realtime_preview.js?v=001"></script>
+<script src="/static/core/realtime_progress.js?v=001"></script>
+<script src="/static/core/image_prompt_input.js?v=001"></script>
 <script src="/static/core/app.js?v=0891"></script>
 <script src="/static/core/home_screen.js?v=0891"></script>
 <!-- web/modules: per-feature UI, load order preserved from before the module split
@@ -535,6 +573,7 @@
      AIVF3DViewer/AIVF3DPresets -> ai_3d, ai_3d -> character_2d) -->
 <script src="/static/modules/chinh_sua_video/emoji_picker.js?v=0890"></script>
 <script src="/static/modules/tai_video/tai_video.js?v=0890"></script>
+<script src="/static/modules/tai_video_web/tai_video_web.js?v=001"></script>
 <script src="/static/modules/lam_sach_video/lam_sach_video.js?v=0890"></script>
 <script src="/static/core/settings.js?v=0890"></script>
 <script src="/static/modules/cong_cu_van_ban/cong_cu_van_ban.js?v=0890"></script>
@@ -548,5 +587,6 @@
 <script src="/static/modules/do_vat_3d/do_vat_3d.js?v=0161"></script>
 <script src="/static/modules/nhan_vat_2d/nhan_vat_2d.js?v=0132"></script>
   <script src="/static/modules/ban_do_3d/ban_do_3d.js?v=200"></script>
+  <script src="/static/js/ai_3d_library.js?v=08934lib1"></script>
 </body>
 </html>

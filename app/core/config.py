@@ -18,6 +18,7 @@ class Settings:
     triposr_dir: Path = BASE_DIR / "tools" / "external" / "TripoSR"
     music_library_dir: Path = BASE_DIR / "data" / "music_library"
     facebook_download_dir: Path = BASE_DIR / "data" / "facebook_downloads"
+    tai_video_web_dir: Path = BASE_DIR / "data" / "tai_video_web"
     video_cleanup_runtime_dir: Path = BASE_DIR / "data" / "runtime_video_cleanup"
     video_cleanup_jobs_dir: Path = BASE_DIR / "data" / "video_cleanup_jobs"
     model_dir: Path = BASE_DIR / "data" / "models"

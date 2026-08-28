@@ -24,6 +24,7 @@ const customStickers = ["ga_haha", "ga_yeu", "ga_wow", "ga_cay", "ga_buon", "ga_
 
 const toolMeta = {
   facebook: ['TẢI VIDEO TỪ FACEBOOK','Dán link Facebook công khai, tải xong đưa thẳng vào editor.'],
+  taivideoweb: ['TẢI VIDEO TỪ WEB','YouTube và các trang phổ biến qua yt-dlp, chọn chất lượng, video hoặc audio.'],
   bgremove: ['DỌN VIDEO AI','Xóa nền, chữ/logo hoặc vật thể trong một công cụ.'],
   erase: ['DỌN VIDEO AI','Khoanh vùng chữ, logo hoặc icon rồi xóa ngay.'],
   cut: ['CẮT VIDEO','Giữ lại đúng đoạn bạn muốn.'],
@@ -93,6 +94,12 @@ function switchTool(name){
   $$('.tool').forEach(b=>b.classList.toggle('active',b.dataset.tool===name));
   $$('.toolpanel').forEach(p=>p.classList.add('hidden')); $('panel-'+name).classList.remove('hidden');
   $('inspectTitle').textContent=toolMeta[name][0]; $('inspectDesc').textContent=toolMeta[name][1];
+  if(['aiimage','character2d'].includes(name)) window.AIVFRealtimePreview?.activate('image','ẢNH REALTIME');
+  else if(name==='bandohd') window.AIVFMapHD?.open?.();
+  else if(!['ai3d','dovat3d'].includes(name)){
+    window.AIVFRealtimePreview?.deactivate();
+    if(hasVideo())$('videoBox')?.classList.remove('hidden');else $('empty')?.classList.remove('hidden');
+  }
 }
 $$('.tool').forEach(b=>b.onclick=()=>switchTool(b.dataset.tool));
 
