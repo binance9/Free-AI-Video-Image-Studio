@@ -12,7 +12,8 @@ NEGATIVE_PROMPT = (
     "detailed background, scenery, landscape, room, city, poster, character sheet layout, "
     "portrait, close-up, bust shot, upper body only, cropped head, cropped legs, cropped feet, off frame, "
     "faceless, blurry face, deformed face, bad anatomy, malformed hands, extra fingers, "
-    "oversized weapon, weapon covering face, extra weapon, second sword, two swords, dual wielding, dagger, knife, scabbard, sheath, invented equipment, generic sportswear, plain bodysuit, basic casual clothes"
+    "oversized weapon, weapon covering face, extra weapon, second sword, two swords, dual wielding, dagger, knife, scabbard, sheath, invented equipment, generic sportswear, plain bodysuit, basic casual clothes, "
+    "figurine, statue, toy figure, action figure, PVC figure, display stand, pedestal, round base, product photography, diorama"
 )
 
 _ANCHOR_CORE = (

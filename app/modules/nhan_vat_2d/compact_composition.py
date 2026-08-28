@@ -27,8 +27,13 @@ def inspect_compact_composition(image_path: str | Path) -> dict:
     hr=(y1-y0+1)/256.0; wr=(x1-x0+1)/256.0
     left=x0/256.0; right=(255-x1)/256.0; top=y0/256.0; bottom=(255-y1)/256.0
     cx=((x0+x1)/2)/255.0
-    # generous margins but enough size for readable gear/face
-    ok = (0.52 <= hr <= 0.82 and 0.20 <= wr <= 0.72 and left >= 0.08 and right >= 0.08 and top >= 0.06 and bottom >= 0.04 and 0.38 <= cx <= 0.62)
+    # generous margins but enough size for readable gear/face.
+    # Upper bound raised 0.82->0.90 after real-test evidence (job_1cc22b259cc3,
+    # candidate_04): a real accepted-looking render with clearly visible top/
+    # bottom margin measured hr=0.871 and was wrongly rejected, while genuinely
+    # edge-to-edge renders (no visible margin at all) measure hr=1.0 and still
+    # correctly fail at this relaxed bound.
+    ok = (0.52 <= hr <= 0.90 and 0.20 <= wr <= 0.72 and left >= 0.08 and right >= 0.08 and top >= 0.06 and bottom >= 0.04 and 0.38 <= cx <= 0.62)
     return {
         "ok": bool(ok), "height_ratio": round(hr,3), "width_ratio": round(wr,3),
         "left_margin": round(left,3), "right_margin": round(right,3),

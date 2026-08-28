@@ -49,7 +49,16 @@ class AttributeLock:
         with Image.open(image_path) as im: image=im.convert("RGB")
         out=[]
         out.append(self._choose(image,["a full body game character with both feet visible","a cropped upper body portrait or character with feet cut off"],"full_body",0,.42,.07))
-        out.append(self._choose(image,["one single person only","two or more people or duplicate characters"],"single_character",0,.42,.07))
+        # NOTE: no CLIP-based "single_character" check here on purpose. Real test
+        # evidence (3 real "final"-mode jobs, ~13 attempts) showed CLIP-vit-base-patch32
+        # confidently (conf 0.02-0.15, i.e. it believed "two or more people" with
+        # 85-98% certainty) misjudging genuinely single-character compact-chibi/figurine
+        # renders as "duplicate characters" in every single attempt, while the
+        # purpose-built classical layout heuristic (single_character_quality.py,
+        # already an independent hard-gate via quality_gate.py's base.passed) correctly
+        # scored the same images ok=True with a single foreground cluster. CLIP is a
+        # documented poor object-counter; re-adding a CLIP-based duplicate-count check
+        # here would just reintroduce that same near-100% false-positive rate.
         out.append(self._choose(image,["a character on a plain simple studio background","a character in detailed scenery or a complex interface"],"plain_background",0,.40,.06))
         out.append(self._choose(image,["a compact chibi game character with a large head and short body","a tall realistic adult character with long human proportions"],"compact_proportions",0,.40,.05))
         out.append(self._choose(image,["a game character standing directly on a plain floor with no platform","a figurine standing on a round pedestal display base"],"no_pedestal",0,.40,.06))

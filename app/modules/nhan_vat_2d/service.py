@@ -12,6 +12,7 @@ from .character_profile import CharacterProfile
 from .spec_parser import parse_character_spec
 from .prompt_lock import build_locked_prompt
 from .attribute_lock import AttributeLock
+from .auto_frame import auto_frame_character
 from .preview_validator import validate_candidate
 from .repair_planner import plan_repairs
 from .export_gate import export_if_passed
@@ -108,6 +109,40 @@ class Character2DService:
             im.save(path, format="PNG")
         return path
 
+    @staticmethod
+    def _save_and_frame_png_bytes(image_bytes: bytes, path: Path) -> Path:
+        """Same as _save_png_bytes, but first runs the deterministic
+        auto-frame post-process (crop away excess background / pad with
+        background color so the character lands inside
+        compact_composition.py's accepted ratio window - see auto_frame.py).
+        Used only for the create_anchor candidate save point: this is the
+        exact path real-tested (offline sweep across 31 real historical
+        candidates: 0 regressions in face/fullbody/background/single_character,
+        8/10 previously-failing candidates fixed) before wiring in, per
+        MODULE_STATUS.md.
+
+        Falls back to the untouched original whenever auto_frame_character()
+        can't confidently detect the character (never crashes, never risks a
+        bad crop) - AND also whenever framing, despite succeeding, would
+        regress face_quality/fullbody_quality on THIS specific image (real
+        test evidence: a dynamic angled-pose candidate dropped face from
+        passing to failing after framing even with a globally-tuned-safe
+        ratio; per-image verification catches pose-dependent cases a single
+        static constant can't guarantee for every render).
+        """
+        framed = auto_frame_character(image_bytes)
+        if framed is None:
+            return Character2DService._save_png_bytes(image_bytes, path)
+
+        saved = Character2DService._save_png_bytes(image_bytes, path)
+        before = evaluate_anchor(saved, min_score=0)
+        Character2DService._save_png_bytes(framed, path)
+        after = evaluate_anchor(saved, min_score=0)
+        for key in ("face", "fullbody"):
+            if before[key].get("ok") and not after[key].get("ok"):
+                return Character2DService._save_png_bytes(image_bytes, path)
+        return saved
+
     def parse_spec(self, prompt: str, preset: str = "compact_game") -> dict:
         spec = parse_character_spec(prompt)
         spec.render_preset = preset
@@ -171,7 +206,7 @@ class Character2DService:
                         repair_directives = directives
                         continue
                     raise
-            candidate = self._save_png_bytes(data, rejected_dir / f"candidate_{attempt:02d}.png")
+            candidate = self._save_and_frame_png_bytes(data, rejected_dir / f"candidate_{attempt:02d}.png")
             validation = validate_candidate(candidate, spec, self.attribute_lock, min_score)
             reference_similarity = None
             if reference.enabled and reference.path and reference.strict:

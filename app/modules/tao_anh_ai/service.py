@@ -35,7 +35,11 @@ class LocalImageService:
     def generate(self, prompt: str, style: str = "photo", size: str = "1536x1024", quality: str = "high", *, cancel_event=None, progress=None) -> bytes:
         if cancel_event is not None and cancel_event.is_set():
             raise JobCancelled("Đã dừng tạo ảnh")
+        if progress:
+            progress(8, "Loading model", "Loading weights / text-to-image pipeline…")
         pipe = self._text_pipeline()
+        if progress:
+            progress(20, "Loading pipeline components", "Pipeline components 100%")
         width, height = generation_dimensions(size)
         steps = 20 if quality == "high" else 12
         kwargs = dict(prompt=self._prompt(prompt, style), width=width, height=height, num_inference_steps=steps, guidance_scale=7.0)
@@ -46,15 +50,27 @@ class LocalImageService:
             raise JobCancelled("Đã dừng tạo ảnh")
         return finalize_pil(result.images[0], size)
 
-    def edit(self, image_path: str | Path, prompt: str, style: str = "photo", size: str = "1536x1024", quality: str = "high", *, cancel_event=None, progress=None) -> bytes:
+    def edit(self, image_path: str | Path, prompt: str, style: str = "photo", size: str = "1536x1024", quality: str = "high", *, strength: float = 0.58, cancel_event=None, progress=None) -> bytes:
         if cancel_event is not None and cancel_event.is_set():
             raise JobCancelled("Đã dừng sửa ảnh")
+        if progress:
+            progress(8, "Loading model", "Loading weights / image-to-image pipeline…")
         pipe = self._image_pipeline()
+        if progress:
+            progress(20, "Loading pipeline components", "Pipeline components 100%")
         width, height = generation_dimensions(size)
         with Image.open(image_path) as source:
             init_image = source.convert("RGB").resize((width, height), Image.Resampling.LANCZOS)
         steps = 24 if quality == "high" else 14
-        kwargs = dict(prompt=self._prompt(prompt, style), image=init_image, strength=0.58, num_inference_steps=steps, guidance_scale=7.0)
+        # strength mac dinh 0.58 hop voi "sua nhe 1 anh da tot" (character
+        # repair/refine). Cac caller dua vao 1 anh init CO CHU DICH lam mo/
+        # thoai hoa manh (vd Map HD - xem tao_o_ban_do.py::crop_reference_tile)
+        # can strength CAO HON de img2img thuc su "ve lai" thay vi chi nuong
+        # theo cau truc mo cua init - strength thap + it buoc (img2img so
+        # buoc THAT SU chay = num_inference_steps*strength) khien anh ra van
+        # con mo (da xac nhan that: sharpness_score ~0.147 lien tiep 2 lan
+        # voi strength=0.58 mac dinh, xem MODULE_STATUS.md ban_do_3d).
+        kwargs = dict(prompt=self._prompt(prompt, style), image=init_image, strength=strength, num_inference_steps=steps, guidance_scale=7.0)
         self._attach_cancel_callback(pipe, kwargs, steps, cancel_event, progress)
         with self._run_lock:
             result = pipe(**kwargs)
@@ -72,8 +88,9 @@ class LocalImageService:
             if cancel_event is not None and cancel_event.is_set():
                 raise JobCancelled("Đã dừng AI ảnh theo yêu cầu")
             if progress:
-                pct = 35 + int(((int(step_index) + 1) / max(1, int(steps))) * 60)
-                progress(min(95, pct), "Đang tạo ảnh AI", f"Bước {int(step_index)+1}/{steps}")
+                current = min(int(steps), int(step_index) + 1)
+                pct = 35 + int((current / max(1, int(steps))) * 60)
+                progress(min(95, pct), "Đang tạo ảnh AI", f"Bước {current}/{steps}")
             return callback_kwargs
         kwargs["callback_on_step_end"] = callback
 
