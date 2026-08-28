@@ -4,15 +4,15 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>AI Video Factory · Free Local Studio 0.8.9.3.3</title>
-<link rel="stylesheet" href="/static/style.css?v=08932"/>
+<link rel="stylesheet" href="/static/style.css?v=08933ui1"/>
 <link rel="stylesheet" href="/static/modules/nhan_vat_game_ready/nhan_vat_game_ready.css?v=0893"/>
 <link rel="stylesheet" href="/static/modules/do_vat_3d/do_vat_3d.css?v=0161"/>
   <link rel="stylesheet" href="/static/modules/ban_do_3d/ban_do_3d.css?v=200">
   <link rel="stylesheet" href="/static/core/realtime_preview.css?v=001">
 </head>
 <!-- compatibility history: 0.8.6. Character HD / texture viewer -->
-<body class="home-mode">
-<button class="btn danger" id="killBotBtn" title="Tắt toàn bộ AI Video Factory: dừng job, FFmpeg, model worker, đóng server" style="position:fixed;top:14px;right:16px;z-index:60">⏻ TẮT BOT</button>
+<body class="home-mode video-ui">
+<button class="btn danger kill-bot-floating" id="killBotBtn" title="Tắt toàn bộ AI Video Factory: dừng job, FFmpeg, model worker, đóng server">⏻ TẮT BOT</button>
 <div class="app">
   <section class="home-screen" id="homeScreen" aria-label="Trang chủ AI Video Factory">
     <aside class="home-sidebar">
@@ -122,7 +122,7 @@
       <div class="preview-head"><div><h2>Khung xem trước</h2><span id="videoMeta">Chưa có video</span></div><div class="preview-head-actions"><span>Kéo layer trực tiếp trên video để đặt vị trí</span><button class="preview-expand-btn" id="previewExpandBtn" title="Phóng to / thu nhỏ khung xem trước">⛶</button></div></div>
       <div class="stage" id="stage">
         <div class="empty" id="empty"><div class="empty-card"><div class="empty-icon">▶</div><h3>Tải video lên để bắt đầu</h3><p>Cắt, ghép, phụ đề local, dịch local, nhạc, văn bản, hình ảnh, nhãn dán và AI ảnh miễn phí trong một khung.</p><label class="btn accent" for="videoFile">＋ CHỌN VIDEO</label></div></div>
-        <div class="video-box hidden" id="videoBox"><video id="video" playsinline></video><div class="overlay-surface" id="overlaySurface"></div><div class="cleanup-mask hidden" id="cleanupMask"><span>VÙNG XÓA</span></div></div>
+        <div class="video-box hidden" id="videoBox"><video id="video" controls playsinline></video><div class="overlay-surface" id="overlaySurface"></div><div class="cleanup-mask hidden" id="cleanupMask"><span>VÙNG XÓA</span></div></div>
         <div class="realtime-preview hidden" id="realtimePreview"><div class="realtime-preview-empty" id="realtimePreviewEmpty">Thêm ảnh hoặc nhập mô tả để bắt đầu.</div><img class="hidden" id="realtimePreviewImage" alt="Realtime preview"><video class="hidden" id="realtimePreviewVideo" controls playsinline></video><div class="realtime-preview-progress"><div><strong id="realtimePreviewStage">Sẵn sàng</strong><b id="realtimePreviewPct">0%</b></div><div class="realtime-preview-track"><i id="realtimePreviewBar"></i></div><small id="realtimePreviewMessage">Preview sẽ cập nhật tại đây.</small></div></div>
         <div class="ai3d-source-preview hidden" id="ai3dSourcePreview"><img id="ai3dSourcePreviewImage" alt="Ảnh nguồn 3D"><div class="ai3d-source-preview-label">ẢNH NGUỒN · FAST PREVIEW / HD FINAL</div></div>
         <div class="ai3d-stage-viewer hidden" id="ai3dStageViewer">
@@ -170,7 +170,7 @@
           </div>
         </div>
       </div>
-      <div class="transport"><button id="backBtn">−1s</button><button id="playBtn">▶</button><span class="time" id="timeText">00:00 / 00:00</span><input id="seek" type="range" min="0" max="1000" value="0"/><button id="forwardBtn">+1s</button></div>
+      <div class="transport hidden" aria-hidden="true"><button id="backBtn">−1s</button><button id="playBtn">▶</button><span class="time" id="timeText">00:00 / 00:00</span><input id="seek" type="range" min="0" max="1000" value="0"/><button id="forwardBtn">+1s</button></div>
       <div class="status" id="status">Sẵn sàng</div>
     </section>
 
@@ -564,6 +564,7 @@
   </main>
 
   <section class="timeline"><div class="timeline-left">TIMELINE</div><div class="timeline-main"><div class="ruler" id="ruler"></div><div class="tracks" id="tracks"></div></div></section>
+  <section class="job-terminal hidden" id="jobTerminal" aria-live="polite"><header><strong id="jobTerminalTitle">⚙ ĐANG XỬ LÝ</strong><b id="jobTerminalPct">0%</b><select id="jobTerminalMode" aria-label="Chế độ log"><option value="normal">NORMAL</option><option value="debug">DEBUG</option></select><button id="jobTerminalCollapse">Thu gọn</button><button id="jobTerminalExpand">Mở rộng</button><button id="jobTerminalClear">Xóa log</button><button id="jobTerminalCopy">Sao chép log</button></header><div class="job-terminal-body" id="jobTerminalBody"></div></section>
 </div>
 
 <div class="modal hidden" id="apiModal"><div class="modal-card"><div class="modal-head"><div><h3>AI LOCAL MIỄN PHÍ</h3><p>Không cần OpenAI key, không có phí theo ảnh/token/video.</p></div><button class="btn" id="apiModalClose">✕</button></div><div class="notice">Editor cơ bản luôn chạy ngay. Phụ đề, dịch và AI ảnh cần bộ thư viện local cài một lần. Model sẽ tải miễn phí ở lần dùng đầu và lưu trên máy.</div><div id="localAiStatus" class="selected-card section-gap"><strong>Đang kiểm tra…</strong></div><button class="btn accent wide" id="installLocalAi">CÀI BỘ AI LOCAL MIỄN PHÍ</button><div class="hint section-gap">Nếu cài trong trình duyệt không thành công, đóng app và double-click SETUP_FREE_AI.bat.</div></div></div>
@@ -573,8 +574,9 @@
 <script src="/static/core/task_progress.js?v=0878"></script>
 <script src="/static/core/realtime_preview.js?v=001"></script>
 <script src="/static/core/realtime_progress.js?v=001"></script>
+<script src="/static/core/job_terminal.js?v=003"></script>
 <script src="/static/core/image_prompt_input.js?v=001"></script>
-<script src="/static/core/app.js?v=0891"></script>
+<script src="/static/core/app.js?v=0892ui1"></script>
 <script src="/static/core/kill_bot.js?v=001"></script>
 <script src="/static/core/home_screen.js?v=0891"></script>
 <!-- web/modules: per-feature UI, load order preserved from before the module split

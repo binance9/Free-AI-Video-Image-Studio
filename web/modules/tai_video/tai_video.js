@@ -96,6 +96,7 @@
         body: JSON.stringify({url}),
       });
       activeJob = job.job_id;
+      window.AIVFJobTerminal?.start({scope:'facebook_video',jobId:job.job_id,title:'ĐANG XỬ LÝ VIDEO FACEBOOK'});
       await pollJob();
       if (activeJob) timer = setInterval(pollJob, 1000);
     } catch (e) {

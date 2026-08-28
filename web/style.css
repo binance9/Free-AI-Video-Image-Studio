@@ -159,3 +159,26 @@ body.preview-expanded .ai3d-stage-viewer{min-height:calc(100vh - 235px)}
 .preview-cell{display:flex;flex-direction:column;gap:4px}
 .preview-cell small{opacity:.7;font-size:11px}
 .preview-cell img{width:100%;border-radius:8px;background:#000;object-fit:contain;aspect-ratio:16/9}
+
+/* Cleanup stage: preserve the complete native frame; letterbox stays black. */
+.video-box{line-height:0;background:#000}
+.video-box>video{display:block;width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;background:#000}
+
+.job-terminal{height:220px;min-height:180px;max-height:46vh;border:1px solid #2b3c54;border-radius:12px;background:#070b11;display:flex;flex-direction:column;overflow:hidden;resize:vertical}.job-terminal header{display:flex;align-items:center;gap:7px;min-height:38px;padding:5px 8px;background:#101824;border-bottom:1px solid #26364c}.job-terminal header strong{flex:1;color:#e8f1ff;font-size:12px}.job-terminal header b{color:#70a7ff;font-size:12px}.job-terminal header button,.job-terminal header select{border:1px solid #33445d;background:#151f2e;color:#cad7e8;border-radius:6px;padding:4px 7px;font-size:10px}.job-terminal-body{flex:1;overflow:auto;padding:8px 10px;font:12px/1.55 Consolas,"Cascadia Mono",monospace;color:#c9d5e5;white-space:pre-wrap}.job-terminal-line{display:flex;gap:9px}.job-terminal-line time{flex:0 0 auto;color:#5f728d}.job-terminal-line.warning span{color:#ffbd66}.job-terminal-line.error span{color:#ff7070}.job-terminal-line.success span{color:#65df9b}.job-terminal-line.debug span{color:#8ba0ba}.job-terminal-line.meta span{color:#70a7ff}.job-terminal.collapsed{height:40px!important;min-height:40px;resize:none}.job-terminal.collapsed .job-terminal-body{display:none}.job-terminal.expanded{height:45vh;max-height:60vh}
+
+/* Media-aware shell: assets never inherit video transport/timeline. */
+.app{height:auto;min-height:100vh;grid-template-rows:62px minmax(520px,1fr) auto auto;overflow:visible}
+.transport{display:none!important}
+body.asset-ui .timeline{display:none!important}
+body.video-ui .timeline{display:grid}
+.job-terminal{grid-column:1/-1;width:100%;margin:0;border-left:0;border-right:0;border-radius:0}
+.kill-bot-floating{position:fixed;right:18px;bottom:18px;top:auto;z-index:60;box-shadow:0 10px 30px #000b}
+
+/* Full-body 2D/image preview: preserve every source pixel and its ratio. */
+.realtime-preview>img,#realtimePreviewImage{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center center;background:#05080d}
+.realtime-preview>video{width:100%;height:100%;object-fit:contain;object-position:center center}
+.realtime-preview{grid-template-rows:minmax(0,1fr) auto!important}
+.realtime-preview>img,.realtime-preview>video{grid-row:1}
+.realtime-preview-empty{grid-row:1}
+.realtime-preview-progress{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;grid-row:2;width:calc(100% - 36px);margin:0 18px 16px}
+@media(max-width:850px){body.asset-ui .workspace{display:flex;flex-direction:column}body.asset-ui .canvas-wrap{min-height:760px}body.asset-ui .inspector{position:static;width:100%;box-shadow:none;border-top:1px solid var(--line)}}

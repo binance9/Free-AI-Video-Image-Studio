@@ -11,8 +11,8 @@
     sourceMode = mode;
     $('dovat3dSourceImage')?.classList.toggle('active', mode === 'image');
     $('dovat3dSourcePrompt')?.classList.toggle('active', mode === 'prompt');
-    $('dovat3dImageBox')?.classList.toggle('hidden', mode !== 'image');
-    $('dovat3dPromptBox')?.classList.toggle('hidden', mode !== 'prompt');
+    $('dovat3dImageBox')?.classList.remove('hidden');
+    $('dovat3dPromptBox')?.classList.remove('hidden');
   }
   $('dovat3dSourceImage')?.addEventListener('click', () => setSourceMode('image'));
   $('dovat3dSourcePrompt')?.addEventListener('click', () => setSourceMode('prompt'));
@@ -20,6 +20,7 @@
   $('dovat3dImageFile') && ($('dovat3dImageFile').onchange = (e) => {
     sourceImage = e.target.files[0] || null;
     $('dovat3dImageName').textContent = sourceImage ? sourceImage.name : '＋ Upload ảnh đồ vật';
+    if(sourceImage) window.AIVFRealtimePreview?.showFile(sourceImage,'image');
   });
 
   async function refreshStatus() {
@@ -44,6 +45,7 @@
     $('dovat3dProgressStage').textContent = d.stage || 'Đang xử lý';
     $('dovat3dProgressDetail').textContent = d.detail || '';
     S.updateBusyProgress?.(p, d.stage || 'Đang tạo đồ vật 3D', d.detail || '', 'real');
+    window.AIVFRealtimePreview?.update({...d,preview_type:'image'});
   }
 
   let lastJobId = null;
@@ -132,23 +134,24 @@
     setProgress({ progress: 1, stage: 'Bắt đầu', detail: '' });
     try {
       let started;
-      if (sourceMode === 'prompt') {
-        const prompt = $('dovat3dPrompt').value.trim();
-        if (prompt.length < 3) { S.setBusy(false); return S.setStatus('Nhập mô tả đồ vật trước.', true); }
+      const prompt = $('dovat3dPrompt').value.trim();
+      if (!sourceImage && prompt.length < 3) { S.setBusy(false); return S.setStatus('Hãy thêm ảnh hoặc nhập mô tả.', true); }
+      if (!sourceImage) {
         started = await S.jsonRequest('/api/do-vat-3d/create-from-prompt', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt, category, quality, texture }),
         });
       } else {
-        if (!sourceImage) { S.setBusy(false); return S.setStatus('Chọn một ảnh trước.', true); }
         const form = new FormData();
         form.append('file', sourceImage);
         form.append('category', category);
         form.append('quality', quality);
         form.append('texture', texture);
+        form.append('prompt',prompt);
         started = await S.jsonRequest('/api/do-vat-3d/create', { method: 'POST', body: form });
       }
       lastJobId = started.job_id;
+      window.AIVFJobTerminal?.start({scope:'object_3d',jobId:started.job_id,title:'ĐANG TẠO ĐỒ VẬT 3D'});
       pollJob(started.status_url);
     } catch (e) {
       S.setBusy(false);

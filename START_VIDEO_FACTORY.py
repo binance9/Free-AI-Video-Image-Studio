@@ -1,12 +1,21 @@
 from __future__ import annotations
 
 import socket
+import os
+import sys
 import threading
 import time
 import urllib.request
 import webbrowser
 
 import uvicorn
+
+# pythonw.exe has no console handles. Give libraries valid sinks while the
+# per-job broker still forwards bound stdout/stderr into web SSE.
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w", encoding="utf-8")
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w", encoding="utf-8")
 
 HOST = "127.0.0.1"
 PORT_START = 8123
@@ -35,7 +44,7 @@ def open_when_ready(port: int) -> None:
                     return
         except Exception:
             time.sleep(0.25)
-    print(f"[CANH BAO] Mở thủ công: {home_url}")
+    return
 
 
 def is_already_running(port: int) -> bool:
@@ -50,22 +59,25 @@ def is_already_running(port: int) -> bool:
         return False
 
 
+def running_port() -> int | None:
+    for port in range(PORT_START, PORT_END + 1):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+            probe.settimeout(0.03)
+            listening = probe.connect_ex((HOST, port)) == 0
+        if listening and is_already_running(port):
+            return port
+    return None
+
+
 def main() -> None:
-    if is_already_running(PORT_START):
-        print(f"AI Video Factory đã đang chạy tại http://{HOST}:{PORT_START} - chỉ mở lại trình duyệt.")
-        webbrowser.open(f"http://{HOST}:{PORT_START}/?studio=0.8.9.0")
+    active_port = PORT_START if is_already_running(PORT_START) else running_port()
+    if active_port is not None:
+        webbrowser.open(f"http://{HOST}:{active_port}/?studio=0.8.9.3")
         return
 
     port = find_free_port()
-    print("=" * 68)
-    print(" AI VIDEO FACTORY - FREE LOCAL STUDIO 0.8")
-    print(" Editor | Whisper local | Argos Translate | Stable Diffusion local")
-    print(" Khong bat buoc API tra phi")
-    print("=" * 68)
-    print(f"Đang chạy tại http://{HOST}:{port}")
-    print("Đóng cửa sổ này hoặc nhấn Ctrl+C để tắt Studio.\n")
     threading.Thread(target=open_when_ready, args=(port,), daemon=True).start()
-    uvicorn.run("app.main:app", host=HOST, port=port, reload=False, log_level="info")
+    uvicorn.run("app.main:app", host=HOST, port=port, reload=False, log_level="warning", access_log=False)
 
 
 if __name__ == "__main__":

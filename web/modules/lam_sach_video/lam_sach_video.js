@@ -40,6 +40,7 @@
 
   async function poll(jobId, title) {
     state.activeJob = jobId;
+    window.AIVFJobTerminal?.start({scope:'video_cleanup',jobId,title:`ĐANG ${title}`});
     S.setBusy(true, title, 'Đang khởi động job local…');
     try {
       while (true) {
@@ -76,10 +77,24 @@
     } catch (e) { if(e.cancelled) S.setStatus('Đã dừng xóa nền.'); else S.setStatus('Lỗi xóa nền: ' + e.message, true); }
   });
 
-  function videoRect() { return $('videoBox').getBoundingClientRect(); }
+  function videoMetrics() {
+    const video=$('video'), box=$('videoBox');
+    if (!video || !box) return null;
+    const rendered=video.getBoundingClientRect(), container=box.getBoundingClientRect();
+    if (rendered.width <= 0 || rendered.height <= 0) return null;
+    return {
+      rendered, container,
+      offsetX:rendered.left-container.left,
+      offsetY:rendered.top-container.top,
+      naturalWidth:video.videoWidth || S.state.width || 0,
+      naturalHeight:video.videoHeight || S.state.height || 0,
+    };
+  }
   function clamp(v) { return Math.max(0, Math.min(1, v)); }
   function point(ev) {
-    const r = videoRect();
+    const metrics=videoMetrics();
+    if (!metrics) return {x:0,y:0};
+    const r=metrics.rendered;
     return {x:clamp((ev.clientX-r.left)/Math.max(1,r.width)), y:clamp((ev.clientY-r.top)/Math.max(1,r.height))};
   }
   function normalizeRect(a,b) {
@@ -97,9 +112,13 @@
       hidePreviewGrid();
       return;
     }
-    const r=state.rect;
+    const r=state.rect, metrics=videoMetrics();
+    if (!metrics) { mask.classList.add('hidden'); return; }
     mask.classList.remove('hidden');
-    mask.style.left=(r.x*100)+'%'; mask.style.top=(r.y*100)+'%'; mask.style.width=(r.w*100)+'%'; mask.style.height=(r.h*100)+'%';
+    mask.style.left=(metrics.offsetX+r.x*metrics.rendered.width)+'px';
+    mask.style.top=(metrics.offsetY+r.y*metrics.rendered.height)+'px';
+    mask.style.width=(r.w*metrics.rendered.width)+'px';
+    mask.style.height=(r.h*metrics.rendered.height)+'px';
     if (info) info.innerHTML=`<strong>Đã chọn vùng xóa</strong><small>x ${(r.x*100).toFixed(1)}% · y ${(r.y*100).toFixed(1)}% · rộng ${(r.w*100).toFixed(1)}% · cao ${(r.h*100).toFixed(1)}%</small>`;
     if (apply) apply.disabled=!S.hasVideo();
     if (preview) preview.disabled=!S.hasVideo();
@@ -136,6 +155,19 @@
     if (!state.drawing || !state.start) return;
     ev.preventDefault(); state.rect=normalizeRect(state.start,point(ev)); renderRect(); stopDrawing();
   }, true);
+
+  // Selection coordinates stay normalized to the real video frame. Repaint
+  // from its rendered rect after any layout change, never from the letterbox.
+  const recalibrate=()=>{ if(state.rect) requestAnimationFrame(renderRect); };
+  const video=$('video'), stage=$('stage');
+  video?.addEventListener('loadedmetadata', recalibrate);
+  window.addEventListener('resize', recalibrate);
+  document.addEventListener('fullscreenchange', recalibrate);
+  if ('ResizeObserver' in window) {
+    const observer=new ResizeObserver(recalibrate);
+    if(video) observer.observe(video);
+    if(stage) observer.observe(stage);
+  }
 
   $('eraseApplyBtn')?.addEventListener('click', async () => {
     if (!S.hasVideo()) return S.setStatus('Tải video lên trước.', true);

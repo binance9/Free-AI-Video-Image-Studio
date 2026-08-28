@@ -56,8 +56,9 @@ function setBusy(on,text='Đang xử lý…',detail=''){
 }
 function updateBusyProgress(progress,stage,detail,mode='real'){
   taskProgress?.update(progress,stage,detail,mode);
+  window.AIVFJobTerminal?.update({progress,stage,detail});
 }
-function failBusyProgress(stage,detail){ taskProgress?.fail(stage||'Lỗi', detail||'Không xử lý được'); }
+function failBusyProgress(stage,detail){ taskProgress?.fail(stage||'Lỗi', detail||'Không xử lý được'); window.AIVFJobTerminal?.fail(stage||'Lỗi',detail||'Không xử lý được'); }
 async function stopAllJobs(){
   if(stoppingAll) return;
   stoppingAll=true;
@@ -91,6 +92,9 @@ async function jsonRequest(url,options={}){
 
 function switchTool(name){
   if(name==='erase') name='bgremove';
+  const assetTool=['aiimage','character2d','ai3d','dovat3d','bandohd'].includes(name);
+  document.body.classList.toggle('asset-ui',assetTool);
+  document.body.classList.toggle('video-ui',!assetTool);
   $$('.tool').forEach(b=>b.classList.toggle('active',b.dataset.tool===name));
   $$('.toolpanel').forEach(p=>p.classList.add('hidden')); $('panel-'+name).classList.remove('hidden');
   $('inspectTitle').textContent=toolMeta[name][0]; $('inspectDesc').textContent=toolMeta[name][1];
@@ -104,7 +108,7 @@ function switchTool(name){
 $$('.tool').forEach(b=>b.onclick=()=>switchTool(b.dataset.tool));
 
 async function uploadVideo(file){
-  if(!file)return; setBusy(true,`Đang tải ${file.name}…`);
+  if(!file)return; document.body.classList.remove('asset-ui');document.body.classList.add('video-ui');setBusy(true,`Đang tải ${file.name}…`);
   const form=new FormData(); form.append('file',file);
   try{
     const info=await jsonRequest('/api/editor/upload',{method:'POST',body:form});

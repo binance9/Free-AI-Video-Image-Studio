@@ -49,8 +49,8 @@
     simpleSource = source;
     $('ai3dSimpleImage')?.classList.toggle('active', source==='image');
     $('ai3dSimplePrompt')?.classList.toggle('active', source==='prompt');
-    $('ai3dSimpleImageBox')?.classList.toggle('hidden', source!=='image');
-    $('ai3dSimplePromptBox')?.classList.toggle('hidden', source!=='prompt');
+    $('ai3dSimpleImageBox')?.classList.remove('hidden');
+    $('ai3dSimplePromptBox')?.classList.remove('hidden');
     if(source==='prompt' && $('ai3dSimpleColor')) $('ai3dSimpleColor').checked=false;
   }
   function applySimpleQuality(){
@@ -64,9 +64,10 @@
   $('ai3dSimplePrompt')?.addEventListener('click',()=>setSimpleSource('prompt'));
   $('ai3dSimpleQuality')?.addEventListener('change',()=>{applySimpleQuality();if($('ai3dSimpleQuality').value==='fast' && $('ai3dSimpleColor'))$('ai3dSimpleColor').checked=false;});
   $('ai3dSimpleRun')?.addEventListener('click',()=>{
+    if(!sourceImage && $('ai3dPrompt').value.trim().length<3)return S.setStatus('Hãy thêm ảnh hoặc nhập mô tả.',true);
     applySimpleQuality();
     autoPaintAfterShape = simpleSource==='image' && Boolean($('ai3dSimpleColor')?.checked);
-    if(simpleSource==='image') $('ai3dFromImage')?.click(); else $('ai3dFromPrompt')?.click();
+    if(sourceImage) $('ai3dFromImage')?.click(); else $('ai3dFromPrompt')?.click();
   });
   applySimpleQuality(); setSimpleSource('image');
 
@@ -95,6 +96,8 @@
     form.append('backend', $('ai3dBackend').value);
     form.append('optimize_mesh', $('ai3dOptimizeMesh').checked ? 'true' : 'false');
     form.append('mesh_profile', $('ai3dMeshProfile').value || 'hd');
+    form.append('prompt',$('ai3dPrompt').value.trim());
+    form.append('style',$('ai3dStyle').value);
     await startJob('/api/3d/jobs/from-image', {method:'POST', body:form}, 'Đang khởi động AI 3D…', false);
   };
 
@@ -150,6 +153,7 @@
     setProgress({progress:1, stage:busyText, detail:modeText});
     try{
       const started = await S.jsonRequest(url, options);
+      window.AIVFJobTerminal?.start({scope:'character_3d',jobId:started.job_id,title:isPaint?'ĐANG TÔ MÀU NHÂN VẬT 3D':'ĐANG TẠO NHÂN VẬT 3D'});
       await pollJob(started.status_url, isPaint);
     }catch(e){
       $('ai3dProgressStage').textContent='Lỗi';
@@ -178,15 +182,6 @@
         const viewerUrl = result.viewer_url || result.model_url;
         hideSourcePreview();
         if (window.AIVF3DViewer && viewerUrl) window.AIVF3DViewer.show(viewerUrl, result.texture ? 'Model 3D màu vừa tạo' : 'Model 3D vừa tạo');
-        const preview = $('ai3dPreview');
-        if (result.preview_url){
-          preview.src = result.preview_url + '?v=' + Date.now();
-          preview.classList.remove('hidden');
-          preview.load();
-        }else{
-          preview.removeAttribute('src');
-          preview.classList.add('hidden');
-        }
         S.updateBusyProgress?.(100, 'Hoàn tất', result.texture ? 'GLB màu đã tạo xong' : 'GLB đã tạo xong', 'real');
         S.setBusy(false);
         S.setStatus(result.texture ? '100% · GLB màu đã tạo · mesh trắng gốc vẫn còn.' : '100% · GLB đã tạo xong · viewer 3D đã mở.');

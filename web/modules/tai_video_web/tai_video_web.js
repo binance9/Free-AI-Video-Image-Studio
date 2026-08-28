@@ -100,6 +100,7 @@
         body: JSON.stringify({ url, quality, audio_only: audioOnly }),
       });
       activeJob = job.job_id;
+      window.AIVFJobTerminal?.start({scope:'web_video',jobId:job.job_id,title:'ĐANG TẢI VÀ XỬ LÝ VIDEO'});
       await pollJob();
       if (activeJob) timer = setInterval(pollJob, 1000);
     } catch (e) {

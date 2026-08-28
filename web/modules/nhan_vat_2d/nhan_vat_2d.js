@@ -7,22 +7,20 @@
   let referenceObjectUrl = '';
   let lastResult = null;
   let lastImageUrl = '';
+  const realtime = window.AIVFRealtimePreview;
 
   const pct = (v) => v == null ? '--' : `${Math.round(Number(v) * (Number(v) <= 1 ? 100 : 1))}%`;
 
   function setReference(file){
     referenceFile = file || null;
     if (referenceObjectUrl){ URL.revokeObjectURL(referenceObjectUrl); referenceObjectUrl = ''; }
-    const preview = $('char2dRefPreview');
     if (!referenceFile){
       $('char2dRefName').textContent = 'Ảnh mẫu · không bắt buộc';
-      preview?.classList.add('hidden');
-      preview?.removeAttribute('src');
       return;
     }
     $('char2dRefName').textContent = referenceFile.name;
     referenceObjectUrl = URL.createObjectURL(referenceFile);
-    if (preview){ preview.src = referenceObjectUrl; preview.classList.remove('hidden'); }
+    realtime?.showFile(referenceFile,'image');
   }
 
   $('char2dRefFile')?.addEventListener('change', e => setReference(e.target.files?.[0] || null));
@@ -43,13 +41,8 @@
     $('char2dResultTitle').textContent = accepted ? 'Ảnh đạt gate · sẵn sàng' : 'Chưa đạt gate · xem ảnh tốt nhất';
     $('char2dOperation').textContent = String(data.operation || 'auto').replaceAll('-', ' ');
 
-    const img = $('char2dResultImage');
     if (imgUrl){
-      img.src = imgUrl + (imgUrl.includes('?') ? '&' : '?') + 'v=' + Date.now();
-      img.classList.remove('hidden');
-    }else{
-      img.removeAttribute('src');
-      img.classList.add('hidden');
+      realtime?.show('image',imgUrl);
     }
 
     const gate = data.gate_summary || {};
@@ -79,10 +72,11 @@
 
   async function generate(){
     const prompt = $('char2dPrompt')?.value.trim() || '';
-    if (prompt.length < 3) return S.setStatus('Nhập yêu cầu nhân vật 2D trước.', true);
+    if (prompt.length < 3 && !referenceFile) return S.setStatus('Hãy thêm ảnh hoặc nhập mô tả.', true);
     const btn = $('char2dGenerate');
     if (btn) btn.disabled = true;
-    S.setBusy(true, 'Character 2D đang xử lý…', referenceFile ? 'Đang khóa form theo ảnh mẫu và kiểm gate…' : 'Đang tạo nhân vật mới và kiểm gate…');
+    realtime?.activate('image','NHÂN VẬT 2D REALTIME');
+    realtime?.update({status:'running',progress:1,stage:referenceFile?'Ảnh nguồn':'Chuẩn bị',message:'Character 2D đang xử lý',preview_type:'image'});
     S.setStatus('Character 2D đang tạo ảnh…');
     try{
       const form = new FormData();
@@ -91,7 +85,10 @@
       form.append('strength', $('char2dStrength')?.value || '0.28');
       form.append('quality', $('char2dQuality')?.value || 'medium');
       if (referenceFile) form.append('image', referenceFile);
-      const data = await S.jsonRequest('/api/character-2d/create', {method:'POST', body:form});
+      const started = await S.jsonRequest('/api/character-2d/jobs', {method:'POST', body:form});
+      window.AIVFJobTerminal?.start({scope:'character_2d',jobId:started.job_id,title:'ĐANG TẠO NHÂN VẬT 2D'});
+      const job = await window.AIVFRealtimeProgress.poll({url:started.status_url});
+      const data = job.result;
       showResult(data);
       if (data.accepted){
         S.setStatus(`Character 2D PASS · gate ${Math.round(data.gate_summary?.score || 0)}% · có thể gửi thẳng sang 3D.`);
@@ -103,7 +100,6 @@
       S.setStatus('Character 2D lỗi: ' + e.message, true);
     }finally{
       if (btn) btn.disabled = false;
-      S.setBusy(false);
     }
   }
 

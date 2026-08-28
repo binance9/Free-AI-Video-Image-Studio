@@ -1,0 +1,2 @@
+/* V2 safe shim: global preview styling intentionally disabled.
+   Each module owns its own preview UI to avoid cross-module regressions. */
