@@ -155,3 +155,8 @@ body.preview-expanded .ai3d-stage-viewer{min-height:calc(100vh - 235px)}
 .ai3d-source-preview.hidden{display:none}
 .ai3d-source-preview img{max-width:88%;max-height:88%;object-fit:contain;border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,.45)}
 .ai3d-source-preview-label{position:absolute;left:16px;bottom:14px;padding:7px 11px;border:1px solid rgba(119,205,255,.32);border-radius:999px;background:rgba(4,15,30,.78);font-size:11px;font-weight:800;letter-spacing:.06em;color:#9edcff}
+.preview-grid-2x2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.preview-grid-2x2.hidden{display:none}
+.preview-cell{display:flex;flex-direction:column;gap:4px}
+.preview-cell small{opacity:.7;font-size:11px}
+.preview-cell img{width:100%;border-radius:8px;background:#000;object-fit:contain;aspect-ratio:16/9}

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import base64
 import json
 import os
 import queue
 import subprocess
+import sys
 import threading
 import time
 from pathlib import Path
@@ -153,11 +155,60 @@ class VideoCleanupJobManager:
         ph = min(info.height - py, max(4, int(round(h * info.height)) + padding * 2))
         return source, px, py, pw, ph, info.duration
 
-    def start_overlay(self, session_id: str, *, x: float, y: float, w: float, h: float, padding=4, method="delogo") -> str:
+    def preview_overlay(self, session_id: str, *, x: float, y: float, w: float, h: float, padding=4, feather=6, radius=5.0) -> dict:
+        """Xem truoc THAT (khong mo phong) 1 frame giua video qua tung buoc
+        cua pipeline: anh goc -> mask -> da inpaint -> final (blend+sharpen).
+        Chay dong bo, dung chung venv chinh (co san cv2/numpy) - khong can
+        subprocess/isolated runtime, tra ve trong duoi 1 giay cho 1 frame."""
+        import cv2
+
+        from app.modules.lam_sach_video.video_mask import build_rect_mask, feather_mask, dilate_mask
+        from app.modules.lam_sach_video.video_inpaint import inpaint_frame
+        from app.modules.lam_sach_video.temporal_blend import blend_edges, sharpen_region
+
+        source, px, py, pw, ph, duration = self._rect_pixels(session_id, x, y, w, h, max(0, min(80, int(padding))))
+        cap = cv2.VideoCapture(str(source))
+        if not cap.isOpened():
+            raise ValueError("Không mở được video để xem trước")
+        try:
+            total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+            cap.set(cv2.CAP_PROP_POS_FRAMES, max(0, total // 2))
+            ok, frame = cap.read()
+            if not ok:
+                ok, frame = cap.read()
+            if not ok or frame is None:
+                raise ValueError("Không đọc được frame để xem trước")
+        finally:
+            cap.release()
+
+        height, width = frame.shape[:2]
+        mask = build_rect_mask((height, width), (px, py, pw, ph), padding=0)
+        alpha = feather_mask(mask, feather_px=max(0, min(10, int(feather))))
+        inpainted = inpaint_frame(frame, mask, radius=radius, method="telea")
+        blended = blend_edges(frame, inpainted, alpha)
+        final = sharpen_region(blended, dilate_mask(mask, pixels=2), amount=0.5)
+
+        def encode(img) -> str:
+            ok, buf = cv2.imencode(".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY), 88])
+            if not ok:
+                raise ValueError("Không mã hóa được ảnh xem trước")
+            return base64.b64encode(buf.tobytes()).decode("ascii")
+
+        mask_vis = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+        return {
+            "bbox": {"x": px, "y": py, "w": pw, "h": ph},
+            "original_jpg_b64": encode(frame),
+            "mask_jpg_b64": encode(mask_vis),
+            "inpainted_jpg_b64": encode(inpainted),
+            "final_jpg_b64": encode(final),
+        }
+
+    def start_overlay(self, session_id: str, *, x: float, y: float, w: float, h: float, padding=4, method="delogo", feather=6) -> str:
         if method not in {"delogo", "inpaint"}:
             raise ValueError("Kiểu xóa vùng không hợp lệ")
-        if method == "inpaint" and not self.runtime.status().get("ready"):
-            raise ValueError("Inpaint cần Video Cleanup AI. Chạy SETUP_VIDEO_CLEANUP_AI.bat một lần.")
+        # Inpaint la CV co dien (cv2 TELEA + optical flow), CHI can cv2/numpy
+        # da co san trong venv chinh cua app - khong can rembg/onnxruntime
+        # (runtime AI rieng chi phuc vu xóa nền, khong lien quan inpaint).
         source, px, py, pw, ph, duration = self._rect_pixels(session_id, x, y, w, h, max(0, min(80, int(padding))))
         job_id, folder = self._new("overlay")
         output = folder / "overlay_removed.mp4"
@@ -166,10 +217,14 @@ class VideoCleanupJobManager:
             self._update(job_id, status="running", progress=5, stage="Chuẩn bị vùng xóa", detail=f"{px},{py} · {pw}×{ph}")
             try:
                 if method == "inpaint":
-                    env = {**os.environ, "U2NET_HOME": str(self.runtime.model_dir)}
-                    cmd = [str(self.runtime.python_exe), str(self.runtime.inpaint_worker), "--input", str(source), "--output", str(output),
-                           "--ffmpeg", ffmpeg_bin(), "--x", str(px), "--y", str(py), "--w", str(pw), "--h", str(ph), "--radius", "5"]
-                    proc = subprocess.Popen(cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, bufsize=1)
+                    cmd = [sys.executable, str(self.runtime.inpaint_worker), "--input", str(source), "--output", str(output),
+                           "--ffmpeg", ffmpeg_bin(), "--x", str(px), "--y", str(py), "--w", str(pw), "--h", str(ph),
+                           "--radius", "5", "--feather", str(max(0, min(10, int(feather))))]
+                    # encoding="utf-8" phai khop voi sys.stdout.reconfigure("utf-8")
+                    # ben trong inpaint_worker.py, neu khong tren Windows Popen
+                    # text=True mac dinh doc theo codepage he thong (vd cp1252)
+                    # va se UnicodeDecodeError ngay khi worker in tieng Viet.
+                    proc = subprocess.Popen(cmd, text=True, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=dict(os.environ), bufsize=1)
                     rc, stderr = self._consume_worker(job_id, proc, "Đang xóa chữ / icon")
                     if rc != 0:
                         raise RuntimeError((stderr or "Inpaint thất bại")[-1600:])

@@ -248,10 +248,17 @@
           <button class="btn accent wide" id="eraseDrawBtn">▧ CHỌN VÙNG CẦN XÓA</button>
           <div id="eraseRectInfo" class="selected-card section-gap"><strong>Chưa chọn vùng</strong><small>Kéo một khung quanh chữ / logo / vật thể</small></div>
           <details class="advanced-box"><summary>Nâng cao</summary>
-            <div class="field section-gap"><label>Cách lấp nền</label><select id="eraseMethod"><option value="delogo" selected>Nhanh</option><option value="inpaint">AI Inpaint · sạch hơn</option></select></div>
+            <div class="field section-gap"><label>Cách lấp nền</label><select id="eraseMethod"><option value="delogo" selected>Nhanh</option><option value="inpaint">Inpaint · sạch hơn, không blur</option></select></div>
             <div class="field"><label>Nới vùng <span id="erasePaddingLabel">4 px</span></label><input id="erasePadding" type="range" min="0" max="40" value="4"></div>
+            <div class="field"><label>Mềm mép <span id="eraseFeatherLabel">6 px</span></label><input id="eraseFeather" type="range" min="0" max="10" value="6"></div>
           </details>
-          <div class="action-grid"><button class="btn" id="eraseClearBtn">Chọn lại</button><button class="btn primary primary-action" id="eraseApplyBtn" disabled>⌫ XÓA NGAY</button></div>
+          <div class="action-grid"><button class="btn" id="eraseClearBtn">Chọn lại</button><button class="btn" id="erasePreviewBtn" disabled>👁 XEM TRƯỚC</button><button class="btn primary primary-action" id="eraseApplyBtn" disabled>⌫ XÓA NGAY</button></div>
+          <div id="erasePreviewGrid" class="preview-grid-2x2 hidden section-gap">
+            <div class="preview-cell"><small>Gốc</small><img id="erasePreviewOriginal" alt="Frame gốc"></div>
+            <div class="preview-cell"><small>Mask</small><img id="erasePreviewMask" alt="Mask"></div>
+            <div class="preview-cell"><small>Đã inpaint</small><img id="erasePreviewInpaint" alt="Đã inpaint"></div>
+            <div class="preview-cell"><small>Final</small><img id="erasePreviewFinal" alt="Final"></div>
+          </div>
         </div>
       </div>
 

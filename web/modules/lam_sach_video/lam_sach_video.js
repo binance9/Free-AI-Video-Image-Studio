@@ -87,12 +87,14 @@
     return {x:x1,y:y1,w:Math.max(.002,x2-x1),h:Math.max(.002,y2-y1)};
   }
   function renderRect() {
-    const mask=$('cleanupMask'), info=$('eraseRectInfo'), apply=$('eraseApplyBtn');
+    const mask=$('cleanupMask'), info=$('eraseRectInfo'), apply=$('eraseApplyBtn'), preview=$('erasePreviewBtn');
     if (!mask) return;
     if (!state.rect) {
       mask.classList.add('hidden');
       if (info) info.innerHTML='<strong>Chưa chọn vùng</strong><small>Kéo một khung quanh chữ / icon cần xóa</small>';
       if (apply) apply.disabled=true;
+      if (preview) preview.disabled=true;
+      hidePreviewGrid();
       return;
     }
     const r=state.rect;
@@ -100,12 +102,14 @@
     mask.style.left=(r.x*100)+'%'; mask.style.top=(r.y*100)+'%'; mask.style.width=(r.w*100)+'%'; mask.style.height=(r.h*100)+'%';
     if (info) info.innerHTML=`<strong>Đã chọn vùng xóa</strong><small>x ${(r.x*100).toFixed(1)}% · y ${(r.y*100).toFixed(1)}% · rộng ${(r.w*100).toFixed(1)}% · cao ${(r.h*100).toFixed(1)}%</small>`;
     if (apply) apply.disabled=!S.hasVideo();
+    if (preview) preview.disabled=!S.hasVideo();
   }
   function stopDrawing() {
     state.drawing=false; state.start=null; $('videoBox')?.classList.remove('cleanup-drawing');
     if ($('eraseDrawBtn')) $('eraseDrawBtn').textContent='▧ CHỌN LẠI VÙNG';
   }
   function clearRect() { stopDrawing(); state.rect=null; renderRect(); }
+  function hidePreviewGrid() { $('erasePreviewGrid')?.classList.add('hidden'); }
 
   $('eraseDrawBtn')?.addEventListener('click', () => {
     if (!S.hasVideo()) return S.setStatus('Tải video lên trước.', true);
@@ -115,6 +119,7 @@
   });
   $('eraseClearBtn')?.addEventListener('click', clearRect);
   $('erasePadding')?.addEventListener('input', e => { $('erasePaddingLabel').textContent=e.target.value+' px'; });
+  $('eraseFeather')?.addEventListener('input', e => { $('eraseFeatherLabel').textContent=e.target.value+' px'; });
 
   const box=$('videoBox');
   box?.addEventListener('pointerdown', ev => {
@@ -136,8 +141,7 @@
     if (!S.hasVideo()) return S.setStatus('Tải video lên trước.', true);
     if (!state.rect) return S.setStatus('Vẽ vùng cần xóa trước.', true);
     const method=$('eraseMethod').value;
-    if (method==='inpaint' && !ready()) return S.setStatus('Inpaint cần SETUP_VIDEO_CLEANUP_AI.bat. Hoặc chọn FFmpeg nhanh.', true);
-    const payload={...state.rect,padding:Number($('erasePadding').value||4),method};
+    const payload={...state.rect,padding:Number($('erasePadding').value||4),feather:Number($('eraseFeather').value||6),method};
     try {
       const created=await S.jsonRequest(`/api/cleanup/overlay/${S.state.sessionId}`, {
         method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
@@ -145,6 +149,26 @@
       await poll(created.job_id, method==='inpaint'?'Xóa chữ / icon · Inpaint':'Xóa chữ / icon · FFmpeg');
       clearRect();
     } catch(e) { if(e.cancelled) S.setStatus('Đã dừng xóa chữ/icon.'); else S.setStatus('Lỗi xóa chữ/icon: '+e.message,true); }
+  });
+
+  $('erasePreviewBtn')?.addEventListener('click', async () => {
+    if (!S.hasVideo()) return S.setStatus('Tải video lên trước.', true);
+    if (!state.rect) return S.setStatus('Vẽ vùng cần xóa trước.', true);
+    const btn=$('erasePreviewBtn');
+    btn.disabled=true; btn.textContent='ĐANG DỰNG XEM TRƯỚC…';
+    const payload={...state.rect,padding:Number($('erasePadding').value||4),feather:Number($('eraseFeather').value||6),method:$('eraseMethod').value};
+    try {
+      const data=await S.jsonRequest(`/api/cleanup/preview/${S.state.sessionId}`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+      });
+      $('erasePreviewOriginal').src='data:image/jpeg;base64,'+data.original_jpg_b64;
+      $('erasePreviewMask').src='data:image/jpeg;base64,'+data.mask_jpg_b64;
+      $('erasePreviewInpaint').src='data:image/jpeg;base64,'+data.inpainted_jpg_b64;
+      $('erasePreviewFinal').src='data:image/jpeg;base64,'+data.final_jpg_b64;
+      $('erasePreviewGrid').classList.remove('hidden');
+      S.setStatus('Đã dựng xem trước 1 khung hình: gốc → mask → inpaint → final.');
+    } catch(e) { S.setStatus('Lỗi xem trước: '+e.message, true); }
+    finally { btn.disabled=!state.rect || !S.hasVideo(); btn.textContent='👁 XEM TRƯỚC'; }
   });
 
   window.AIVFVideoCleanup = { onVideoChanged(){ clearRect(); }, refreshStatus };

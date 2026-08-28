@@ -1,4 +1,17 @@
-"""Frame-by-frame OpenCV inpaint for fixed text/logo/icon rectangles."""
+"""Worker xoa chu/logo/icon that su bang pipeline:
+
+    mask (video_mask) -> track mask qua frame (video_tracking) ->
+    inpaint tung frame (video_inpaint) -> on dinh theo thoi gian +
+    tron mep + sharpen nhe (temporal_blend)
+
+KHONG dung blur/mosaic de "che" vung xoa - vung mask duoc VE LAI bang
+cv2.inpaint (cau truc that, tu vien anh xung quanh), sau do moi on dinh
+theo thoi gian de giam nhap nhay va tron mep de khong bi duong vien cung.
+
+Giu nguyen hop dong CLI cu (--input --output --ffmpeg --x --y --w --h
+--radius) de job_manager.py khong can doi cach goi subprocess; --feather la
+tham so moi, co gia tri mac dinh an toan neu khong duoc truyen.
+"""
 from __future__ import annotations
 
 import argparse
@@ -6,6 +19,18 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+# Tren Windows, stdout/stderr cua tien trinh con mac dinh dung codepage ANSI
+# (vd cp1252) khong ma hoa duoc tieng Viet co dau - ep utf-8 de emit() JSON
+# (co chua tieng Viet) khong bao gio bi UnicodeEncodeError khi job_manager
+# doc qua pipe.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 
 def emit(progress: int, stage: str, detail: str = "") -> None:
@@ -22,10 +47,15 @@ def main() -> int:
     parser.add_argument("--w", type=int, required=True)
     parser.add_argument("--h", type=int, required=True)
     parser.add_argument("--radius", type=float, default=5.0)
+    parser.add_argument("--feather", type=int, default=6)
     args = parser.parse_args()
 
     import cv2
-    import numpy as np
+
+    from video_inpaint import inpaint_frame
+    from video_mask import build_rect_mask, feather_mask, dilate_mask
+    from video_tracking import MaskTracker
+    from temporal_blend import TemporalStabilizer, blend_edges, sharpen_region
 
     src = Path(args.input).resolve()
     out = Path(args.output).resolve()
@@ -37,10 +67,13 @@ def main() -> int:
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
-    x = max(0, min(width - 2, args.x)); y = max(0, min(height - 2, args.y))
-    w = max(2, min(width - x, args.w)); h = max(2, min(height - y, args.h))
-    mask = np.zeros((height, width), dtype=np.uint8)
-    mask[y:y+h, x:x+w] = 255
+    x = max(0, min(width - 2, args.x))
+    y = max(0, min(height - 2, args.y))
+    w = max(2, min(width - x, args.w))
+    h = max(2, min(height - y, args.h))
+
+    tracker = MaskTracker((x, y, w, h), (height, width))
+    stabilizer = TemporalStabilizer(ema_alpha=0.55)
 
     cmd = [
         args.ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
@@ -52,20 +85,29 @@ def main() -> int:
     ff = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     if ff.stdin is None:
         raise RuntimeError("Không mở được FFmpeg pipe")
-    emit(12, "Chuẩn bị vùng xóa", f"x={x}, y={y}, {w}×{h}")
+    emit(12, "Chuẩn bị vùng xóa", f"x={x}, y={y}, {w}×{h} · track+inpaint")
     index = 0
     try:
         while True:
             ok, frame = cap.read()
             if not ok:
                 break
-            cleaned = cv2.inpaint(frame, mask, max(1.0, args.radius), cv2.INPAINT_TELEA)
+            bx, by, bw, bh = tracker.update(frame)
+            mask = build_rect_mask((height, width), (bx, by, bw, bh), padding=0)
+            alpha = feather_mask(mask, feather_px=args.feather)
+
+            inpainted = inpaint_frame(frame, mask, radius=args.radius, method="telea")
+            inpainted = stabilizer.stabilize(inpainted, (bx, by, bw, bh))
+            blended = blend_edges(frame, inpainted, alpha)
+            sharp_mask = dilate_mask(mask, pixels=2)
+            cleaned = sharpen_region(blended, sharp_mask, amount=0.5)
+
             ff.stdin.write(cleaned.tobytes())
             index += 1
             if index == 1 or index % max(1, int(fps)) == 0:
                 ratio = (index / total) if total > 0 else 0.0
                 pct = 15 + int(min(1.0, ratio) * 75) if total > 0 else min(88, 15 + index // max(1, int(fps * 2)))
-                emit(pct, "Đang xóa chữ / icon", f"{index} / {total or '?'} frame · inpaint")
+                emit(pct, "Đang xóa chữ / icon", f"{index} / {total or '?'} frame · track+inpaint")
     finally:
         cap.release()
         try:
