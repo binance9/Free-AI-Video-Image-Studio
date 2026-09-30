@@ -116,7 +116,7 @@ pip install -r requirements.txt
 START_VIDEO_FACTORY.bat
 ```
 
-The app opens at `http://127.0.0.1:8000`. Pick any tool card on the home screen and start.
+The app opens at `http://127.0.0.1:8123`. Pick any tool card on the home screen and start.
 First use of each AI tool downloads its model once — be patient, it only happens once.
 
 *(Optional sanity check: `pytest -q tests/smoke/` — every test runs in seconds.)*
