@@ -45,7 +45,10 @@ def _inference_heartbeat(stop: threading.Event, gpu_name: str) -> None:
     started = time.monotonic()
     while not stop.wait(12):
         elapsed = int(time.monotonic() - started)
-        progress(50, "Dựng hình khối HD", f"{elapsed}s · {gpu_name} đang suy luận CUDA")
+        # Hunyuan's shape call is opaque, so this is elapsed-time progress rather
+        # than a fake step counter. Keep it below the next real stage (62%).
+        pct = min(60, 50 + elapsed // 30)
+        progress(pct, "Dựng hình khối HD · suy luận CUDA", f"{elapsed}s · {gpu_name} đang tính mesh")
 
 
 def _texture_load_heartbeat(stop: threading.Event) -> None:

@@ -135,3 +135,36 @@ def prepare_image_for_3d(src_path: str | Path, out_path: str | Path, canvas_size
 
     canvas.save(out_path)
     return out_path
+
+
+def prepare_character_hd_reference(src_path: str | Path, out_path: str | Path, canvas_size: int = 1024) -> Path:
+    """Identity-safe Character-HD framing.
+
+    No denoise, sharpen, color, contrast, or generative processing is applied.
+    The function only honors EXIF orientation, preserves aspect ratio, adds a
+    safety margin around an existing alpha silhouette, and caps enlargement at
+    1.5x so facial pixels are not aggressively invented by interpolation.
+    """
+    src = Path(src_path)
+    dst = Path(out_path)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    with Image.open(src) as raw:
+        image = ImageOps.exif_transpose(raw).convert("RGBA")
+    alpha = image.getchannel("A")
+    bbox = alpha.point(lambda p: 255 if p > 8 else 0).getbbox()
+    if bbox and bbox != (0, 0, image.width, image.height):
+        left, top, right, bottom = bbox
+        pad_x = max(8, int((right - left) * 0.06))
+        pad_y = max(8, int((bottom - top) * 0.06))
+        image = image.crop((max(0, left - pad_x), max(0, top - pad_y),
+                            min(image.width, right + pad_x), min(image.height, bottom + pad_y)))
+    available_w, available_h = canvas_size * 0.84, canvas_size * 0.90
+    scale = min(available_w / max(1, image.width), available_h / max(1, image.height), 1.5)
+    resized = image.resize((max(1, round(image.width * scale)), max(1, round(image.height * scale))),
+                           Image.Resampling.LANCZOS)
+    canvas = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
+    x = (canvas_size - resized.width) // 2
+    y = max(0, canvas_size - resized.height - int(canvas_size * 0.05))
+    canvas.alpha_composite(resized, (x, y))
+    canvas.save(dst)
+    return dst

@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AI Video Factory · Free Local Studio 0.8.9.3.3</title>
+<link rel="stylesheet" href="/static/style.css?v=08933ui1"/>
+<link rel="stylesheet" href="/static/modules/nhan_vat_game_ready/nhan_vat_game_ready.css?v=0893"/>
+<link rel="stylesheet" href="/static/modules/do_vat_3d/do_vat_3d.css?v=0161"/>
+  <link rel="stylesheet" href="/static/modules/ban_do_3d/ban_do_3d.css?v=200">
+  <link rel="stylesheet" href="/static/core/realtime_preview.css?v=001">
+<link rel="stylesheet" href="/static/core/ga_owner.css?v=v9-9-intent-guard">
+<link rel="stylesheet" href="/static/core/ga_brain.css?v=005-autofix">
+<link rel="stylesheet" href="/static/core/persistent_shell.css?v=001">
+<link rel="stylesheet" href="/static/core/home_layout_pro.css?v=007">
+<link rel="stylesheet" href="/static/core/workspace_layout_pro.css?v=007">
+<link rel="stylesheet" href="/static/core/chat_terminal_theme.css?v=007">
+<link rel="stylesheet" href="/static/core/scrollbar_pro.css?v=007">
+</head>
+<!-- compatibility history: 0.8.6. Character HD / texture viewer -->
+<body class="home-mode video-ui">
+<button class="btn danger kill-bot-floating" id="killBotBtn" title="Tắt toàn bộ AI Video Factory: dừng job, FFmpeg, model worker, đóng server">⏻ TẮT BOT</button>
+<div class="app-shell" id="appShell">
+  <aside class="chat-col" id="chatCol" aria-label="Khung chat AI (luôn hiện)">
+    <section class="ga-owner" id="gaOwner" aria-label="Gà AI Owner">
+      <div class="ga-owner-head">
+        <div class="ga-owner-avatar">G</div>
+        <div class="ga-owner-title"><b>GÀ AI OWNER</b><small id="gaOwnerSub">Đang kiểm tra não...</small></div>
+        <span class="ga-owner-state" id="gaOwnerState">● NGỦ</span>
+      </div>
+      <div class="ga-owner-chat" id="gaOwnerChat"></div>
+      <div class="ga-owner-attach" id="gaOwnerAttach"></div>
+      <div class="ga-owner-progress" id="gaOwnerProgress">Sẵn sàng.</div>
+      <div class="ga-owner-compose">
+        <div id="gaOwnerAttachPreview" class="ga-owner-attach-preview hidden"></div>
+        <textarea id="gaOwnerInput" placeholder="gà ơi dậy đi..."></textarea>
+        <button id="gaOwnerSend" title="Gửi">➤</button>
+      </div>
+      <div class="ga-owner-tools">
+        <button id="gaOwnerAttachBtn">📎 ẢNH</button>
+        <button id="gaOwnerVoice">🎤 MIC</button>
+        <button id="gaOwnerEnroll">🔐 ĐK GIỌNG</button>
+        <button id="gaOwnerClearAttach">✖ BỎ ẢNH</button>
+      </div>
+      <input class="ga-owner-file" id="gaOwnerFile" type="file" accept="image/png,image/jpeg,image/webp">
+    </section>
+    <div class="chat-col-resize" id="chatColResize" title="Kéo để đổi chiều cao khung chat" role="separator" aria-orientation="horizontal"></div>
+  </aside>
+  <div class="app" id="appMain">
+  <section class="home-screen" id="homeScreen" aria-label="Trang chủ AI Video Factory">
+    <aside class="home-sidebar">
+      <div class="home-brand"><div class="home-logo">▶</div><div><strong>AI Video Factory</strong><small>v0.8.9.3.3</small></div></div>
+      <nav class="home-nav">
+        <button class="home-nav-item active" data-home-action="home"><span>⌂</span>Home</button>
+        <button class="home-nav-item" data-home-action="projects"><span>▱</span>Dự án</button>
+        <button class="home-nav-item" data-home-action="templates"><span>▧</span>Mẫu</button>
+        <button class="home-nav-item" data-home-action="cloud"><span>☁</span>Cloud</button>
+        <button class="home-nav-item" data-home-action="publish"><span>⇧</span>Xuất bản</button>
+      </nav>
+
+      <div class="home-side-section">
+        <div class="home-side-title">GẦN ĐÂY</div>
+        <div class="home-recent-empty" id="homeRecent">Tệp gần đây sẽ hiện ở đây sau khi bạn mở video/ảnh.</div>
+      </div>
+      <button class="home-settings" id="homeSettingsBtn"><span>⚙</span>Cài đặt AI Local</button>
+    </aside>
+
+    <main class="home-main">
+      <div class="home-heading"><div><h1>AI Video Factory</h1><p>Chọn video/ảnh hoặc mở một công cụ bên dưới.</p></div></div>
+      <div class="home-create-grid">
+        <label class="home-create-card home-video-card" for="videoFile">
+          <span class="home-create-icon">＋</span><strong>Tạo dự án video</strong><small>Chọn video hoặc kéo thả file vào đây</small><span class="home-create-art">▶</span>
+        </label>
+        <button class="home-create-card home-photo-card" id="homePhotoBtn">
+          <span class="home-create-icon">＋</span><strong>Tạo dự án ảnh</strong><small>Chọn ảnh tham chiếu hoặc tạo ảnh bằng AI</small><span class="home-create-art">▧</span>
+        </button>
+      </div>
+
+      <div class="home-section-head"><h2>CÔNG CỤ PHỔ BIẾN</h2><button id="homeAllToolsBtn">Tất cả công cụ ›</button></div>
+      <div class="home-tool-grid" id="homePopularTools">
+        <button class="home-tool-card" data-tool-open="cut"><b>✂</b><strong>Cắt video</strong><small>Cắt chính xác theo thời gian</small></button>
+        <button class="home-tool-card" data-tool-open="merge"><b>⧉</b><strong>Ghép video</strong><small>Nối clip nhanh</small></button>
+        <button class="home-tool-card" data-tool-open="caption"><b>CC</b><strong>Phụ đề AI</strong><small>Whisper local tự tạo phụ đề</small></button>
+        <button class="home-tool-card" data-tool-open="bgremove"><b>✦</b><strong>Dọn video AI</strong><small>Xóa nền · chữ/logo · vật thể trong một chỗ</small></button>
+        <button class="home-tool-card" data-tool-open="aiimage"><b>AI</b><strong>AI Ảnh</strong><small>Tạo và sửa ảnh local</small></button>
+        <button class="home-tool-card" data-tool-open="music"><b>♫</b><strong>Thêm nhạc</strong><small>Nhạc local và ghép audio</small></button>
+        <button class="home-tool-card" data-tool-open="sticker"><b>😊</b><strong>Emoji & Sticker</strong><small>Bảng emoji kiểu chat</small></button>
+        <button class="home-tool-card" data-tool-open="facebook"><b>FB</b><strong>Tải Facebook</strong><small>Đưa video công khai vào editor</small></button>
+        <button class="home-tool-card" data-tool-open="taivideoweb"><b>↓</b><strong>Tải Video Web</strong><small>YouTube và các trang phổ biến qua yt-dlp</small></button>
+      </div>
+
+      <div class="home-all-tools hidden" id="homeAllTools">
+        
+        <button class="home-tool-card" data-tool-open="text"><b>T</b><strong>Văn bản</strong><small>Chèn chữ và tiêu đề</small></button>
+        <button class="home-tool-card" data-tool-open="image"><b>▧</b><strong>Ảnh / Overlay</strong><small>Chèn ảnh và GIF</small></button>
+        <button class="home-tool-card" data-tool-open="facebook"><b>↓</b><strong>Video Facebook</strong><small>Tải thẳng vào editor</small></button>
+      </div>
+      <div class="home-section-head asset-section-head"><h2>NHÂN VẬT & GAME ASSET</h2><span>2D → 3D · local pipeline</span></div>
+      <div class="studio-feature-grid">
+        <button class="studio-feature-card studio-feature-2d" data-tool-open="character2d">
+          <span class="studio-feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><path d="M32 10c8 0 14 6 14 14 0 5-2 9-6 12 8 3 13 10 14 20H10c1-10 6-17 14-20-4-3-6-7-6-12 0-8 6-14 14-14Z"/><path d="M16 18 8 11m40 7 8-7M13 44l-5 8m43-8 5 8"/></svg>
+          </span>
+          <span class="studio-feature-copy"><strong>Nhân vật 2D</strong><small>Tạo mới · giữ form · đổi màu · làm nét</small><em>Ảnh mẫu + Prompt → PASS</em></span>
+          <span class="studio-feature-arrow">→</span>
+        </button>
+        <button class="studio-feature-card studio-feature-3d" data-tool-open="ai3d">
+          <span class="studio-feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><path d="M32 7 53 19v26L32 57 11 45V19L32 7Z"/><path d="m12 19 20 12 20-12M32 31v25"/></svg>
+          </span>
+          <span class="studio-feature-copy"><strong>Nhân vật 3D</strong><small>Nhận thẳng ảnh PASS từ 2D</small><em>2D → GLB · texture · viewer</em></span>
+          <span class="studio-feature-arrow">→</span>
+        </button>
+        <button class="studio-feature-card studio-feature-3d" data-tool-open="dovat3d">
+          <span class="studio-feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><path d="M32 8v20M20 44l12-16 12 16M20 44v10h24V44"/><circle cx="32" cy="8" r="4"/></svg>
+          </span>
+          <span class="studio-feature-copy"><strong>Đồ vật 3D</strong><small>Cây · Đá · Nhà · Props</small><em>Asset cho game, dùng chung engine 3D</em></span>
+          <span class="studio-feature-arrow">→</span>
+        </button>
+        <button class="studio-feature-card studio-feature-3d" data-tool-open="bandohd">
+          <span class="studio-feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><path d="M8 16 24 8l16 8 16-8v40l-16 8-16-8-16 8Z"/><path d="M24 8v40M40 16v40"/></svg>
+          </span>
+          <span class="studio-feature-copy"><strong>Bản đồ HD</strong><small>Khóa bố cục · chia tile HD · ghép liền mạch</small><em>Tile gốc thật, không upscale</em></span>
+          <span class="studio-feature-arrow">→</span>
+        </button>
+        <button class="studio-feature-card studio-feature-3d" disabled title="Bản đồ 3D (terrain GLB thật) chưa triển khai">
+          <span class="studio-feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><path d="M8 16 24 8l16 8 16-8v40l-16 8-16-8-16 8Z"/><path d="M24 8v40M40 16v40"/></svg>
+          </span>
+          <span class="studio-feature-copy"><strong>Bản đồ 3D</strong><small>Sắp triển khai</small><em>Terrain GLB · đặt prop 3D runtime</em></span>
+          <span class="studio-feature-arrow">→</span>
+        </button>
+      </div>
+
+    </main>
+  </section>
+  <header class="topbar">
+    <div class="brand"><div class="logo">G</div><div>AI Video Factory<small>FREE LOCAL STUDIO · 0.8.9.3.3</small></div><span class="badge">100% FREE · LOCAL AI</span></div>
+    <div class="top-actions"><button class="btn" id="homeBtn">⌂ Home</button>
+      <button class="btn secondary-action" id="apiSettingsBtn">⚙ AI LOCAL</button>
+      <button class="btn danger hidden" id="stopAllBtn" title="Dừng các tác vụ AI đang chạy">⏹ DỪNG TẤT CẢ</button>
+      <button class="btn" id="undoBtn" disabled>↶ Hoàn tác</button>
+      <button class="btn" id="newBtn">Video mới</button>
+      <button class="btn secondary-action" id="facebookQuickBtn">↓ VIDEO FACEBOOK</button>
+      <label class="btn accent" for="videoFile">＋ ĐỔI VIDEO</label>
+      <button class="btn" id="openResultsBtn">📂 KẾT QUẢ</button>
+      <button class="btn primary" id="exportBtn" disabled>💾 LƯU VIDEO</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="canvas-wrap">
+      <div class="preview-head"><div><h2>Khung xem trước</h2><span id="videoMeta">Chưa có video</span></div><div class="preview-head-actions"><span>Kéo layer trực tiếp trên video để đặt vị trí</span><button class="preview-expand-btn" id="previewExpandBtn" title="Phóng to / thu nhỏ khung xem trước">⛶</button></div></div>
+      <div class="stage" id="stage">
+        <div class="empty" id="empty"><div class="empty-card"><div class="empty-icon">▶</div><h3>Tải video lên để bắt đầu</h3><p>Cắt, ghép, phụ đề local, dịch local, nhạc, văn bản, hình ảnh, nhãn dán và AI ảnh miễn phí trong một khung.</p><label class="btn accent" for="videoFile">＋ CHỌN VIDEO</label></div></div>
+        <div class="video-box hidden" id="videoBox"><video id="video" controls playsinline></video><div class="overlay-surface" id="overlaySurface"></div><div class="cleanup-mask hidden" id="cleanupMask"><span>VÙNG XÓA</span></div></div>
+        <div class="realtime-preview hidden" id="realtimePreview"><div class="realtime-preview-empty" id="realtimePreviewEmpty">Thêm ảnh hoặc nhập mô tả để bắt đầu.</div><img class="hidden" id="realtimePreviewImage" alt="Realtime preview"><video class="hidden" id="realtimePreviewVideo" controls playsinline></video><button type="button" class="realtime-preview-clear hidden" id="realtimePreviewClear" title="Bỏ ảnh đã chọn">✖</button><div class="realtime-preview-progress"><div><strong id="realtimePreviewStage">Sẵn sàng</strong><b id="realtimePreviewPct">0%</b></div><div class="realtime-preview-track"><i id="realtimePreviewBar"></i></div><small id="realtimePreviewMessage">Preview sẽ cập nhật tại đây.</small></div></div>
+        <div class="ai3d-source-preview hidden" id="ai3dSourcePreview"><img id="ai3dSourcePreviewImage" alt="Ảnh nguồn 3D"><button type="button" class="realtime-preview-clear" id="ai3dSourcePreviewClear" title="Bỏ ảnh đã chọn">✖</button><div class="ai3d-source-preview-label">ẢNH NGUỒN · FAST PREVIEW / HD FINAL</div></div>
+        <div class="ai3d-stage-viewer hidden" id="ai3dStageViewer">
+          <canvas id="ai3dCanvas"></canvas>
+          <div class="ai3d-viewer-toolbar">
+            <button id="ai3dViewerReset" title="Đưa camera về vị trí ban đầu">⌂ Reset</button>
+            <button id="ai3dViewerWire" title="Xem lưới tam giác">▦ Wireframe</button>
+            <button id="ai3dViewerAuto" title="Tự động xoay model">⟳ Tự xoay</button>
+            <button id="ai3dViewerRotXm" title="Xoay trục X -90°">X−90°</button>
+            <button id="ai3dViewerRotXp" title="Xoay trục X +90°">X+90°</button>
+            <button id="ai3dViewerRotZm" title="Xoay trục Z -90°">Z−90°</button>
+            <button id="ai3dViewerRotZp" title="Xoay trục Z +90°">Z+90°</button>
+            <button id="ai3dViewerMode" title="Chuyển giữa texture màu và shading cơ bản">🎨 Texture ON</button>
+            <button id="ai3dViewerAnimIdle" class="hidden" title="Phát animation idle">▶ Idle</button>
+            <button id="ai3dViewerAnimRun" class="hidden" title="Phát animation chạy">🏃 Run</button>
+            <button id="ai3dViewerAnimAttack" class="hidden" title="Phát animation tấn công">⚔ Attack</button>
+            <button id="ai3dViewerAnimStop" class="hidden" title="Dừng animation">■ Stop</button>
+            <button id="ai3dViewerFull" title="Toàn màn hình">⛶ Fullscreen</button>
+          </div>
+          <div class="ai3d-viewer-hint">Chuột trái: xoay · Con lăn: zoom · Chuột phải: pan · Double-click: reset</div>
+          <div class="ai3d-viewer-state" id="ai3dViewerState">Viewer 3D local</div>
+          <div class="ai3d-viewer-debug hidden" id="ai3dViewerDebug"></div>
+        </div>
+        <div class="map-hd-stage-viewer hidden" id="mapHdStageViewer">
+          <div class="map-hd-empty" id="mapHdEmpty">Tạo Bản đồ HD ở sidebar bên phải - map sẽ hiện ngay tại đây.</div>
+          <div class="map-hd-viewport" id="mapHdViewport">
+            <div class="map-hd-canvas" id="mapHdCanvas"></div>
+          </div>
+          <div class="map-hd-toolbar">
+            <button id="mapHdZoomOut" title="Thu nhỏ">− Thu</button>
+            <button id="mapHdZoomReset" title="Về 100%">100%</button>
+            <button id="mapHdZoomIn" title="Phóng to">＋ Phóng</button>
+            <span class="map-hd-zoom-text" id="mapHdZoomText">100%</span>
+          </div>
+          <div class="map-hd-hint">Kéo chuột: pan · Con lăn: zoom</div>
+          <div class="map-hd-state" id="mapHdState"></div>
+        </div>
+        <div class="busy hidden" id="busy">
+          <div class="spinner"></div>
+          <div class="busy-copy">
+            <div class="busy-head"><strong id="busyText">Đang xử lý…</strong><b id="busyPct">0%</b></div>
+            <div class="busy-progress-track"><i id="busyBar"></i></div>
+            <div class="busy-meta"><span id="busyDetail">Tiến trình đang được cập nhật…</span><span id="busyElapsed">00:00</span></div>
+            <button class="busy-stop-btn" id="busyStopBtn">⏹ DỪNG</button>
+          </div>
+        </div>
+      </div>
+      <div class="transport hidden" aria-hidden="true"><button id="backBtn">−1s</button><button id="playBtn">▶</button><span class="time" id="timeText">00:00 / 00:00</span><input id="seek" type="range" min="0" max="1000" value="0"/><button id="forwardBtn">+1s</button></div>
+      <div class="status" id="status">Sẵn sàng</div>
+    </section>
+
+    <aside class="inspector">
+      <div class="inspect-head"><h3 id="inspectTitle">CẮT VIDEO</h3><p id="inspectDesc">Giữ lại đúng đoạn bạn muốn.</p></div>
+
+      <div id="panel-facebook" class="panel toolpanel hidden">
+        <div class="panel-title">TẢI VIDEO TỪ FACEBOOK</div>
+        <div class="notice">Dán link video / Reel Facebook công khai. Studio dùng yt-dlp local, tải xong sẽ tự đưa video thẳng vào trình chỉnh sửa. Không dùng cookie đăng nhập và không vượt quyền riêng tư.</div>
+        <div id="facebookStatus" class="selected-card"><strong>Đang kiểm tra bộ tải Facebook…</strong><small>yt-dlp + FFmpeg local</small></div>
+        <div class="field section-gap"><label>Link video Facebook</label><textarea id="facebookUrl" placeholder="https://www.facebook.com/.../videos/... hoặc https://fb.watch/..."></textarea></div>
+        <button class="btn accent wide" id="facebookDownloadBtn">⬇ TẢI VIDEO TỪ FACEBOOK VÀO EDITOR</button>
+        <div id="facebookProgress" class="ai3d-progress hidden">
+          <div class="ai3d-progress-head"><strong id="facebookProgressStage">Chuẩn bị tải Facebook</strong><b id="facebookProgressPct">0%</b></div>
+          <div class="ai3d-progress-track"><i id="facebookProgressBar"></i></div>
+          <div id="facebookProgressDetail" class="hint">Đang chuẩn bị…</div>
+        </div>
+        <div id="facebookResult" class="selected-card hidden">
+          <strong id="facebookResultTitle">Video Facebook đã tải</strong>
+          <small id="facebookResultMeta">Đã đưa vào editor</small>
+          <a class="btn primary wide center-link" id="facebookOriginalDownload" download>TẢI FILE FACEBOOK GỐC ↓</a>
+        </div>
+        <div class="hint section-gap">0.8.7.6: module Facebook tách riêng. Chỉ dùng với video công khai / nội dung bạn có quyền tải và sử dụng.</div>
+      </div>
+
+      <!-- MODULE: tai_video_web BEGIN (JS o web/modules/tai_video_web/) -->
+      <div id="panel-taivideoweb" class="panel toolpanel hidden">
+        <div class="panel-title">TẢI VIDEO TỪ WEB</div>
+        <div class="notice">Dán URL YouTube hoặc các trang phổ biến khác. Dùng yt-dlp local, không dùng cookie đăng nhập. Tiến trình hiện ngay trong khung video lớn - không có ô xem trước nhỏ ở đây.</div>
+        <div id="taiVideoWebStatus" class="selected-card"><strong>Đang kiểm tra bộ tải video…</strong><small>yt-dlp + FFmpeg local</small></div>
+        <div class="field section-gap"><label>URL video</label><textarea id="taiVideoWebUrl" placeholder="https://www.youtube.com/watch?v=... hoặc URL trang hỗ trợ yt-dlp khác"></textarea></div>
+        <div class="row">
+          <div class="field"><label>Chất lượng</label><select id="taiVideoWebQuality">
+            <option value="360p">360p</option>
+            <option value="720p" selected>720p</option>
+            <option value="1080p">1080p</option>
+            <option value="best">Tốt nhất</option>
+          </select></div>
+          <div class="field"><label>Định dạng</label><select id="taiVideoWebMode">
+            <option value="video" selected>Video (vào editor)</option>
+            <option value="audio">Chỉ audio (MP3)</option>
+          </select></div>
+        </div>
+        <button class="btn accent wide" id="taiVideoWebDownloadBtn">⬇ TẢI VIDEO</button>
+        <div id="taiVideoWebProgress" class="ai3d-progress hidden">
+          <div class="ai3d-progress-head"><strong id="taiVideoWebProgressStage">Chuẩn bị tải video</strong><b id="taiVideoWebProgressPct">0%</b></div>
+          <div class="ai3d-progress-track"><i id="taiVideoWebProgressBar"></i></div>
+          <div id="taiVideoWebProgressDetail" class="hint">Đang chuẩn bị…</div>
+        </div>
+        <div id="taiVideoWebAudioResult" class="selected-card hidden">
+          <strong>Audio đã tải xong</strong>
+          <small id="taiVideoWebAudioMeta"></small>
+          <a class="btn primary wide center-link" id="taiVideoWebAudioDownload" download>TẢI FILE MP3 ↓</a>
+        </div>
+        <div class="hint section-gap">Chỉ tải nội dung công khai / nội dung bạn có quyền tải và sử dụng.</div>
+      </div>
+      <!-- MODULE: tai_video_web END -->
+
+      <div id="panel-bgremove" class="panel toolpanel hidden">
+        <div class="panel-title">DỌN VIDEO AI</div>
+        <div class="notice">Chọn đúng việc cần làm rồi bấm một nút. Video gốc luôn giữ để Hoàn tác.</div>
+        <div class="cleanup-mode-tabs">
+          <button class="active" id="cleanupModeBg">✦ Xóa nền</button>
+          <button id="cleanupModeErase">⌫ Xóa chữ / logo / vật thể</button>
+        </div>
+        <div id="cleanupBgSection">
+          <div id="cleanupStatus" class="selected-card"><strong>Đang kiểm tra Video Cleanup AI…</strong><small>rembg + ONNX Runtime + OpenCV</small></div>
+          <button class="btn wide advanced-only" id="cleanupSetupHint">CÀI VIDEO CLEANUP AI</button>
+          <div class="field section-gap"><label>Giữ lại</label><select id="bgRemoveModel"><option value="u2net_human_seg" selected>Người / nhân vật</option><option value="isnet-general-use">Vật thể tổng quát</option></select></div>
+          <div class="field"><label>Nền sau khi xóa</label><select id="bgRemoveMode"><option value="transparent" selected>Trong suốt</option><option value="solid">Màu nền</option></select></div>
+          <div class="field hidden" id="bgColorField"><label>Màu nền</label><input id="bgRemoveColor" type="color" value="#00ff00"></div>
+          <button class="btn accent wide primary-action" id="bgRemoveBtn">✨ XÓA NỀN NGAY</button>
+        </div>
+        <div id="cleanupEraseSection" class="hidden">
+          <div class="selected-card"><strong>1. Khoanh vùng cần xóa</strong><small>Kéo trực tiếp trên preview, sau đó bấm XÓA NGAY.</small></div>
+          <button class="btn accent wide" id="eraseDrawBtn">▧ CHỌN VÙNG CẦN XÓA</button>
+          <div id="eraseRectInfo" class="selected-card section-gap"><strong>Chưa chọn vùng</strong><small>Kéo một khung quanh chữ / logo / vật thể</small></div>
+          <details class="advanced-box"><summary>Nâng cao</summary>
+            <div class="field section-gap"><label>Cách lấp nền</label><select id="eraseMethod"><option value="delogo" selected>Nhanh</option><option value="inpaint">Inpaint · sạch hơn, không blur</option></select></div>
+            <div class="field"><label>Nới vùng <span id="erasePaddingLabel">4 px</span></label><input id="erasePadding" type="range" min="0" max="40" value="4"></div>
+            <div class="field"><label>Mềm mép <span id="eraseFeatherLabel">6 px</span></label><input id="eraseFeather" type="range" min="0" max="10" value="6"></div>
+          </details>
+          <div class="action-grid"><button class="btn" id="eraseClearBtn">Chọn lại</button><button class="btn" id="erasePreviewBtn" disabled>👁 XEM TRƯỚC</button><button class="btn primary primary-action" id="eraseApplyBtn" disabled>⌫ XÓA NGAY</button></div>
+          <div id="erasePreviewGrid" class="preview-grid-2x2 hidden section-gap">
+            <div class="preview-cell"><small>Gốc</small><img id="erasePreviewOriginal" alt="Frame gốc"></div>
+            <div class="preview-cell"><small>Mask</small><img id="erasePreviewMask" alt="Mask"></div>
+            <div class="preview-cell"><small>Đã inpaint</small><img id="erasePreviewInpaint" alt="Đã inpaint"></div>
+            <div class="preview-cell"><small>Final</small><img id="erasePreviewFinal" alt="Final"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-erase" class="panel toolpanel hidden" aria-hidden="true"></div>
+
+      <div id="panel-cut" class="panel toolpanel">
+        <div class="panel-title">Mốc thời gian</div>
+        <div class="row"><div class="field"><label>Điểm đầu (giây)</label><input id="cutStart" type="number" step="0.01" value="0"></div><div class="field"><label>Điểm cuối (giây)</label><input id="cutEnd" type="number" step="0.01" value="0"></div></div>
+        <div class="action-grid"><button class="btn" id="markStart">Lấy vị trí đang xem</button><button class="btn" id="markEnd">Lấy vị trí đang xem</button></div>
+        <button class="btn primary wide" id="cutBtn" disabled>CẮT VIDEO</button>
+      </div>
+
+      <div id="panel-merge" class="panel toolpanel hidden">
+        <div class="panel-title">Thêm clip</div>
+        <div class="ai-ref-row"><label class="dropzone"><strong id="mergeName">＋ Chọn video để ghép</strong><span>MP4, MOV, MKV, WEBM, AVI</span><input id="mergeFile" type="file" accept="video/*" hidden></label><button class="btn" id="mergeClear" hidden>✖ Bỏ video</button></div>
+        <div class="segmented"><button id="mergeBefore">Ghép vào đầu</button><button id="mergeAfter" class="active">Ghép vào cuối</button></div>
+        <button class="btn primary wide" id="mergeBtn" disabled>GHÉP VIDEO</button>
+      </div>
+
+      <div id="panel-text" class="panel toolpanel hidden">
+        <div class="panel-title">Mẫu văn bản</div>
+        <div class="preset-grid" id="textPresetGrid"><div class="hint">Đang tải mẫu…</div></div>
+        <div class="panel-title section-gap">Chèn chữ</div>
+        <div class="field"><label>Nội dung</label><textarea id="textInput">Chữ mẫu</textarea></div>
+        <div class="row"><div class="field"><label>Font</label><select id="fontFamily"><option value="segoe">Segoe UI</option><option value="arial">Arial</option><option value="impact">Impact</option><option value="georgia">Georgia</option></select></div><div class="field"><label>Cỡ chữ</label><input id="fontSizeRatio" type="number" step="0.005" min="0.02" max="0.15" value="0.05"></div></div>
+        <div class="row"><div class="field"><label>Màu chữ</label><input id="textColor" type="color" value="#ffffff"></div><div class="field"><label>Màu viền</label><input id="outlineColor" type="color" value="#000000"></div></div>
+        <div class="row"><div class="field"><label>Độ dày viền</label><input id="outlineWidth" type="number" min="0" max="20" value="3"></div><div class="field"><label>Nền chữ</label><input id="backgroundColor" type="color" value="#000000"></div></div>
+        <div class="field"><label>Độ đậm nền <span id="bgOpacityLabel">0%</span></label><input id="backgroundOpacity" type="range" min="0" max="100" value="0"></div>
+        <div class="row"><div class="field"><label>Màu bóng</label><input id="shadowColor" type="color" value="#000000"></div><div class="field"><label>Độ mờ bóng</label><input id="shadowOpacity" type="number" min="0" max="100" value="0"></div></div>
+        <div class="field"><label>Độ blur bóng</label><input id="shadowBlur" type="range" min="0" max="30" value="0"></div>
+        <button class="btn accent wide" id="addText">＋ CHÈN CHỮ</button>
+        <div class="panel-title section-gap">Lời bài hát / Karaoke</div>
+        <div class="notice">Dán lời bạn có quyền sử dụng hoặc lời tự viết. Studio không tự lấy nguyên lời bài hát có bản quyền từ Internet.</div>
+        <div class="field"><label>Mỗi dòng = một câu</label><textarea id="lyricsInput" placeholder="Dòng 1&#10;Dòng 2&#10;Dòng 3"></textarea></div>
+        <div class="row"><div class="field"><label>Từ giây</label><input id="lyricsStart" type="number" step="0.1" value="0"></div><div class="field"><label>Đến giây</label><input id="lyricsEnd" type="number" step="0.1" value="15"></div></div>
+        <button class="btn wide" id="addLyrics">＋ TẠO LỚP KARAOKE</button>
+      </div>
+
+      <div id="panel-caption" class="panel toolpanel hidden">
+        <div class="panel-title">Chú thích tự động</div>
+        <div class="notice">Miễn phí: dùng Whisper chạy local trên máy. Lần đầu có thể tải model về máy, sau đó dùng lại không tính phí theo lượt.</div>
+        <button class="btn accent wide" id="captionTranscribe">✨ TẠO PHỤ ĐỀ AI</button>
+        <div class="field section-gap"><label>Dịch sang ngôn ngữ</label><div class="inline"><select id="captionLanguage"><option value="Vietnamese">Tiếng Việt</option><option value="English">English</option><option value="Japanese">日本語</option><option value="Korean">한국어</option><option value="Chinese">中文</option><option value="Thai">ไทย</option><option value="Spanish">Español</option><option value="French">Français</option></select><button class="btn" id="captionTranslate">Dịch</button></div></div>
+        <div class="field"><label>Mẫu chữ</label><select id="captionPreset"><option value="caption_clean">Caption sạch</option><option value="caption_bold">Caption đậm</option><option value="karaoke_gold">Karaoke vàng</option><option value="karaoke_neon">Karaoke neon</option></select></div>
+        <div id="captionList" class="caption-list"><div class="hint">Chưa có phụ đề.</div></div>
+        <button class="btn primary wide" id="captionApply" disabled>ĐƯA PHỤ ĐỀ LÊN VIDEO</button>
+      </div>
+
+      <div id="panel-music" class="panel toolpanel hidden">
+        <div class="panel-title">Tìm nhạc local theo mô tả</div>
+        <div class="notice">AI local gợi ý trong kho nhạc trên máy. Nhạc bạn tải lên sẽ được lưu vào kho local để lần sau tìm theo từ khóa.</div>
+        <div class="field"><label>Mô tả nhạc muốn tìm</label><div class="inline"><input id="musicWish" placeholder="Ví dụ: vui, gaming, nhanh, 15 giây"><button class="btn accent" id="musicSearch">Tìm</button></div></div>
+        <div id="musicResults" class="music-results"><div class="hint">Kho có sẵn vài loop miễn phí. Tải nhạc của bạn lên để mở rộng thư viện.</div></div>
+        <div class="panel-title section-gap">Hoặc tải nhạc của bạn</div>
+        <label class="dropzone"><strong id="musicLocalName">＋ Chọn file nhạc</strong><span>MP3 / WAV / M4A / AAC / OGG / FLAC</span><input id="musicLocalFile" type="file" accept="audio/*" hidden></label>
+        <div id="musicSelected" class="selected-card hidden"></div>
+        <div class="row section-gap"><div class="field"><label>Đoạn nhạc (giây)</label><select id="musicDuration"><option>5</option><option>10</option><option selected>15</option><option>20</option><option>30</option><option>60</option></select></div><div class="field"><label>Chèn từ giây</label><input id="musicInsertAt" type="number" min="0" step="0.1" value="0"></div></div>
+        <div class="field"><label>Âm lượng nhạc <span id="musicVolumeLabel">35%</span></label><input id="musicVolume" type="range" min="0" max="100" value="35"></div>
+        <label class="checkrow"><input id="musicKeepOriginal" type="checkbox" checked> Giữ tiếng gốc của video</label>
+        <label class="checkrow"><input id="musicSmart" type="checkbox" checked> Tự chọn đoạn nổi bật bằng phân tích năng lượng</label>
+        <button class="btn primary wide" id="musicApply" disabled>♫ THÊM NHẠC VÀO VIDEO</button>
+      </div>
+
+      <div id="panel-image" class="panel toolpanel hidden">
+        <div class="panel-title">Chèn hình ảnh</div>
+        <label class="dropzone"><strong>＋ Tải ảnh lên</strong><span>PNG / JPG / WebP / GIF</span><input id="imageFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden></label>
+        <p class="hint">Ảnh tải lên sẽ thành một layer riêng, kéo được tới mọi vị trí trên video.</p>
+      </div>
+
+      <div id="panel-sticker" class="panel toolpanel hidden">
+        <div class="panel-title">Emoji & Nhãn dán</div>
+        <div class="sticker-tabs emoji-main-tabs">
+          <button class="active" data-sticker-tab="emoji">😊 EMOJI</button>
+          <button data-sticker-tab="custom">🐥 BỘ RIÊNG</button>
+          <button data-sticker-tab="local">★ STICKER</button>
+          <button data-sticker-tab="giphy">GIF</button>
+        </div>
+        <div id="stickerEmoji">
+          <div class="emoji-search-row"><span>⌕</span><input id="emojiSearch" type="search" placeholder="Tìm: cười, khóc, tim, tay…" autocomplete="off"></div>
+          <div class="emoji-categories" id="emojiCategories" aria-label="Danh mục emoji"></div>
+          <div class="emoji-grid" id="emojiGrid"></div>
+          <div class="hint emoji-hint">Bấm emoji để chèn vào video như sticker PNG trong suốt. Emoji gần đây được nhớ trên máy.</div>
+        </div>
+        <div id="stickerCustom" class="hidden"><div class="custom-pack-head"><b>🐥 Gà Con Reaction Pack · V1</b><small>24 sticker riêng · PNG trong suốt · dùng local</small></div><div class="sticker-grid custom-sticker-grid" id="customStickerGrid"></div></div>
+        <div id="stickerLocal" class="hidden"><div class="sticker-grid" id="stickerGrid"></div><label class="btn wide upload-sticker">＋ Tải sticker riêng<input id="stickerFile" type="file" accept="image/png,image/webp,image/gif" hidden></label></div>
+        <div id="stickerGiphy" class="hidden"><div class="notice">GIPHY là tiện ích tùy chọn miễn phí; editor vẫn dùng đầy đủ khi không cấu hình.</div><div class="field"><label>GIPHY Developer Key miễn phí</label><div class="inline"><input id="giphyKey" type="password" placeholder="Dán API key của GIPHY"><button class="btn" id="saveGiphyKey">Lưu</button></div></div><div class="field"><label>Tìm GIF / Sticker</label><div class="inline"><input id="giphyQuery" maxlength="50" placeholder="Ví dụ: happy, gaming, cute"><button class="btn accent" id="giphySearch">Tìm</button></div></div><div class="segmented"><button id="giphyGif" class="active">GIF</button><button id="giphySticker">Sticker</button></div><div class="giphy-grid" id="giphyGrid"><div class="hint">Nhập API key rồi tìm. Nội dung được lọc mức G.</div></div><div class="giphy-credit">Powered by <strong>GIPHY</strong></div></div>
+      </div>
+
+      <div id="panel-character2d" class="panel toolpanel hidden character2d-panel">
+        <div class="character2d-hero">
+          <div class="character2d-hero-icon">2D</div>
+          <div><strong>NHÂN VẬT 2D</strong><small>Character Studio · v1.3.2</small></div>
+          <span class="character2d-local">LOCAL</span>
+        </div>
+        <div class="notice character2d-notice">Tạo nhân vật mới bằng prompt hoặc chọn ảnh mẫu để giữ form, đổi màu và làm nét. Bot tự chấm gate trước khi xuất.</div>
+
+        <label class="char2d-upload" for="char2dRefFile">
+          <span class="char2d-upload-icon">＋</span>
+          <span><strong id="char2dRefName">Ảnh mẫu · không bắt buộc</strong><small>PNG / JPG / WebP · nhân vật toàn thân rõ nét</small></span>
+          <input id="char2dRefFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+        </label>
+
+        <div class="field section-gap"><label>Yêu cầu</label><textarea id="char2dPrompt" class="char2d-prompt" placeholder="Ví dụ: keep the same female chibi elf archer, change armor to burgundy red and gold, keep one bow and one quiver..."></textarea></div>
+
+        <div class="char2d-mode-strip">
+          <span>⚡ Auto mode</span><span>🎯 Identity lock</span><span>🎨 Recolor gate</span>
+        </div>
+
+        <details class="advanced-box char2d-advanced"><summary>Nâng cao</summary>
+          <div class="row section-gap">
+            <div class="field"><label>Strength</label><input id="char2dStrength" type="number" min="0.16" max="0.42" step="0.01" value="0.28"></div>
+            <div class="field"><label>Chất lượng</label><select id="char2dQuality"><option value="fast">Nhanh</option><option value="medium" selected>Cân bằng</option><option value="high">Đẹp</option></select></div>
+          </div>
+          <div class="hint">Để mặc định là đủ. Khi đổi màu, engine tự chuyển sang recolor pipeline và khóa form.</div>
+        </details>
+
+        <button class="char2d-generate" id="char2dGenerate"><span>✦</span>TẠO NHÂN VẬT 2D</button>
+
+        <div id="char2dResult" class="char2d-result hidden">
+          <div class="char2d-result-head"><span id="char2dResultBadge" class="char2d-badge">PASS</span><strong id="char2dResultTitle">Ảnh đạt gate</strong><small id="char2dOperation">AUTO</small></div>
+          <div class="selected-card"><strong>Kết quả đang hiển thị trong khung lớn</strong></div>
+          <div class="char2d-score-grid">
+            <div><b id="char2dScore">--</b><span>Gate</span></div>
+            <div><b id="char2dIdentity">--</b><span>Identity</span></div>
+            <div><b id="char2dColor">--</b><span>Màu</span></div>
+            <div><b id="char2dWeapon">--</b><span>Weapon</span></div>
+          </div>
+          <div id="char2dBlockers" class="hint char2d-blockers hidden"></div>
+          <div class="char2d-actions">
+            <button class="btn" id="char2dAgain">↻ Tạo lại</button>
+            <a class="btn" id="char2dDownload" download="AI_Video_Factory_Character2D.png">↓ Lưu PNG</a>
+            <button class="btn char2d-to3d" id="char2dTo3D">◆ DÙNG ẢNH NÀY TẠO 3D</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-aiimage" class="panel toolpanel hidden">
+        <div class="panel-title">AI tạo / sửa ảnh HD</div>
+        <div class="notice">AI ảnh chạy local miễn phí. Lần đầu sẽ tải model Stable Diffusion về máy; tạo/sửa ảnh không dùng API trả phí.</div>
+        <div class="field"><label>Mô tả</label><textarea id="aiImagePrompt" placeholder="Ví dụ: tạo nhân vật hoạt hình 3D đứng trong rừng, ánh sáng điện ảnh"></textarea></div>
+        <div class="row"><div class="field"><label>Phong cách</label><select id="aiImageStyle"><option value="photo">Ảnh thật</option><option value="cartoon3d">Hoạt hình 3D</option><option value="anime">Anime</option><option value="cinematic">Cinematic</option><option value="illustration">Minh họa</option><option value="product">Sản phẩm</option><option value="fantasy">Fantasy</option></select></div><div class="field"><label>Chất lượng</label><select id="aiImageQuality"><option value="medium">Medium</option><option value="high" selected>High</option></select></div></div>
+        <div class="field"><label>Kích thước</label><select id="aiImageSize"><option value="1024x1024">1024×1024 · local</option><option value="1536x1024" selected>1536×1024 ngang · local + upscale</option><option value="1024x1536">1024×1536 dọc · local + upscale</option><option value="2048x1152">2K ngang · AI + upscale</option><option value="2048x2048">2K vuông · AI + upscale</option><option value="3840x2160">4K ngang · AI + upscale</option><option value="2160x3840">4K dọc · AI + upscale</option></select></div>
+        <label class="dropzone"><strong id="aiRefName">＋ Ảnh tham chiếu (không bắt buộc)</strong><span>PNG / JPG / WebP</span><input id="aiRefFile" type="file" accept="image/png,image/jpeg,image/webp" hidden></label>
+        <button class="btn accent wide" id="aiImageRun">✨ TẠO / SỬA ẢNH</button>
+        <div id="aiImageResult" class="ai-image-result hidden"><div class="selected-card"><strong>Ảnh final đang hiển thị trong khung lớn</strong></div><div class="action-grid"><button class="btn" id="aiImageAgain">Tạo lại</button><button class="btn primary" id="aiImageToVideo">ĐƯA VÀO VIDEO</button></div></div>
+      </div>
+
+      <div id="panel-ai3d" class="panel toolpanel hidden">
+        <div class="panel-title">TẠO MODEL 3D</div>
+        <div class="notice">Chọn nguồn, chọn chất lượng rồi bấm một nút. Các thiết lập kỹ thuật đã được đưa vào Nâng cao.</div>
+        <div class="segmented simple-source"><button id="ai3dSimpleImage" class="active">TỪ ẢNH</button><button id="ai3dSimplePrompt">TỪ MÔ TẢ</button></div>
+        <div id="ai3dSimpleImageBox">
+          <label class="dropzone"><strong id="ai3dImageName">＋ Chọn ảnh nhân vật / vật thể</strong><span>Ảnh toàn thân hoặc vật thể rõ nét cho kết quả tốt nhất</span><input id="ai3dImageFile" type="file" accept="image/png,image/jpeg,image/webp" hidden></label>
+        </div>
+        <div id="ai3dSimplePromptBox" class="hidden">
+          <div class="field"><label>Mô tả nhân vật / vật thể</label><textarea id="ai3dPrompt" placeholder="Ví dụ: nhân vật pháp sư fantasy toàn thân, phong cách game 3D, nền trơn"></textarea></div>
+          <div class="field"><label>Phong cách</label><select id="ai3dStyle"><option value="cartoon3d">Hoạt hình 3D</option><option value="fantasy">Fantasy</option><option value="anime">Anime</option><option value="photo">Realistic</option><option value="cinematic">Cinematic</option></select></div>
+        </div>
+        <div class="field section-gap"><label>Chất lượng</label><select id="ai3dSimpleQuality"><option value="fast">Nhanh · TripoSR · chỉ vật thể</option><option value="balanced" selected>Cân bằng · Character HD</option><option value="best">Đẹp · chi tiết cao</option></select></div>
+        <label class="checkrow"><input id="ai3dSimpleColor" type="checkbox"> Tự tô màu sau khi dựng xong <span class="muted">(nặng hơn)</span></label>
+        <button class="btn accent wide primary-action" id="ai3dSimpleRun">✨ TẠO MODEL 3D</button>
+
+        <details class="advanced-box section-gap" id="ai3dAdvanced"><summary>Nâng cao / cài đặt kỹ thuật</summary>
+          <div id="ai3dStatus" class="selected-card section-gap"><strong>Đang kiểm tra AI 3D…</strong></div>
+          <button class="btn wide" id="ai3dSetupHint">CÀI AI 3D NHANH: SETUP_FREE_3D.bat</button>
+          <div id="ai3dHdStatus" class="selected-card section-gap"><strong>Đang kiểm tra Character HD…</strong></div>
+          <button class="btn wide" id="ai3dHdSetupHint">CÀI NHÂN VẬT HD: SETUP_CHARACTER_HD.bat</button>
+          <div id="ai3dPaintStatus" class="selected-card section-gap"><strong>Đang kiểm tra Paint màu…</strong></div>
+          <button class="btn wide" id="ai3dPaintSetupHint">CÀI PAINT MÀU: SETUP_CHARACTER_HD_TEXTURE.bat</button>
+          <div class="field section-gap"><label>Preset 3D</label><select id="ai3dPreset"><option value="character_shape" selected>Nhân vật HD · Shape đẹp</option><option value="character_color">Nhân vật HD + màu</option><option value="quick_object">Vật thể nhanh · TripoSR</option><option value="custom">Tùy chỉnh</option></select></div>
+          <div class="field"><label>Backend 3D</label><select id="ai3dBackend"><option value="quick">Nhanh · TripoSR</option><option value="character_hd" selected>Nhân vật HD · Hunyuan3D-2mini</option></select></div>
+          <div id="ai3dPresetHint" class="hint">Mặc định dùng Character HD.</div>
+          <div class="field"><label>Độ chi tiết mesh</label><select id="ai3dResolution"><option value="192">Nhanh</option><option value="256" selected>Chuẩn</option><option value="320">Cao</option><option value="384">Rất cao</option></select></div>
+          <label class="checkrow"><input id="ai3dTexture" type="checkbox"> Bake texture màu 2K trong cùng job (Legacy)</label>
+          <div id="ai3dTextureHint" class="hint">Nên để TẮT. Tô màu riêng an toàn hơn.</div>
+          <label class="checkrow"><input id="ai3dOptimizeMesh" type="checkbox" checked> Tối ưu mesh Character HD</label>
+          <div class="field"><label>Mức mesh</label><select id="ai3dMeshProfile"><option value="hd" selected>HD · đẹp nhất</option><option value="medium">Medium · game</option><option value="light">Light · nhẹ</option></select></div>
+          <div id="ai3dMeshHint" class="hint">Preset đơn giản phía trên tự đặt các mục này.</div>
+          <button class="btn wide" id="ai3dFromPrompt">TẠO 3D TỪ MÔ TẢ · thủ công</button>
+          <button class="btn wide" id="ai3dFromImage">DỰNG 3D TỪ ẢNH · thủ công</button>
+          <div class="panel-title section-gap">Tô màu GLB đã có</div>
+          <div class="ai-ref-row"><label class="dropzone"><strong id="ai3dPaintMeshName">Dùng model vừa tạo · hoặc chọn GLB khác</strong><span>GLB trắng đã dựng xong</span><input id="ai3dPaintMeshFile" type="file" accept=".glb,model/gltf-binary" hidden></label><button class="btn" id="ai3dPaintMeshClear" hidden>✖ Bỏ file</button></div>
+          <button class="btn wide" id="ai3dColorizeCurrent">🎨 TÔ MÀU GLB HIỆN CÓ</button>
+        </details>
+
+        <div id="ai3dProgress" class="ai3d-progress hidden">
+          <div class="ai3d-progress-head"><strong id="ai3dProgressStage">Chuẩn bị AI 3D</strong><b id="ai3dProgressPct">0%</b></div>
+          <div class="ai3d-progress-track"><i id="ai3dProgressBar"></i></div>
+          <div id="ai3dProgressDetail" class="hint">Đang chuẩn bị…</div>
+        </div>
+        <div id="ai3dResult" class="ai3d-result hidden">
+          <div class="selected-card"><strong>Model sẽ chuyển sang Viewer 3D trong khung lớn</strong></div>
+          <div class="selected-card"><strong id="ai3dResultTitle">Model 3D đã tạo</strong><span id="ai3dResultMeta"></span></div>
+          <button class="btn primary wide" id="ai3dOpenViewer">◉ XEM MODEL 3D</button>
+          <div class="turntable-box">
+            <div class="turntable-row"><select id="ai3dTurntableRatio"><option value="1:1" selected>1:1 · X / social</option><option value="16:9">16:9 · ngang</option></select><select id="ai3dTurntableDuration"><option value="8" selected>8 giây</option><option value="12">12 giây</option></select></div>
+            <button class="btn accent wide" id="ai3dTurntableExport">🎥 TẠO VIDEO XOAY 360°</button>
+            <div class="hint" id="ai3dTurntableHint">MP4 1080p · dùng model đang xem</div>
+            <a class="btn primary wide center-link hidden" id="ai3dTurntableDownload" download>💾 LƯU MP4</a>
+          </div>
+          <div class="action-grid"><a class="btn center-link" id="ai3dDownload" download>💾 LƯU GLB</a><button class="btn" id="ai3dOpenFolder">📂 MỞ THƯ MỤC</button></div>
+          <!-- MODULE: nhan_vat_game_ready BEGIN (JS/CSS đã tách riêng vào
+               web/modules/nhan_vat_game_ready/ — markup này vẫn nằm trong panel
+               ai3d vì đây là bước tiếp theo ngay sau khi dựng model 3D, xem
+               app/modules/nhan_vat_game_ready/README_MODULE.md) -->
+          <div class="game-ready-box" id="ai3dGameReadyBox">
+            <div class="game-ready-head"><span class="game-ready-icon">🦴</span><div><strong>GAME READY</strong><small>Optimize → Rig → Skin → Idle / Run / Attack</small></div></div>
+            <div class="game-ready-status" id="ai3dGameReadyStatus">Đang kiểm tra Blender local…</div><button class="btn wide game-ready-setup" id="ai3dGameReadySetup">CÀI BLENDER GAME READY · 1 LẦN</button>
+            <div class="game-ready-row"><label>Poly mục tiêu<select id="ai3dGameReadyFaces"><option value="30000">30K · nhẹ</option><option value="45000" selected>45K · cân bằng</option><option value="60000">60K · đẹp</option></select></label><label>Vũ khí tấn công<select id="ai3dGameReadyWeapon"><option value="bow" selected>Cung</option><option value="sword">Kiếm / Đao</option><option value="staff">Gậy / Trượng</option><option value="spear">Thương / Giáo</option></select></label><button class="btn game-ready-btn" id="ai3dMakeGameReady">🦴 TẠO GAME-READY GLB</button></div>
+            <div class="game-ready-progress hidden" id="ai3dGameReadyProgress"><div><span id="ai3dGameReadyStage">Chuẩn bị</span><b id="ai3dGameReadyPct">0%</b></div><div class="game-ready-track"><i id="ai3dGameReadyBar"></i></div><small id="ai3dGameReadyDetail">Đang chuẩn bị…</small></div>
+            <div class="game-ready-filename hidden" id="ai3dGameReadyFilename">File cuối: <b id="ai3dGameReadyFilenameValue">game_ready.glb</b></div>
+            <div class="game-ready-actions">
+              <a class="btn primary wide center-link hidden" id="ai3dGameReadyDownload" download>💾 LƯU GAME-READY GLB</a>
+              <button class="btn wide hidden" id="ai3dGameReadyOpenViewer">👁 MỞ TRONG VIEWER</button>
+            </div>
+            <div class="game-ready-debug hidden" id="ai3dGameReadyDebug"></div>
+          </div>
+          <!-- MODULE: nhan_vat_game_ready END -->
+        </div>
+      </div>
+
+      <!-- MODULE: do_vat_3d BEGIN (JS/CSS o web/modules/do_vat_3d/) -->
+      <div id="panel-dovat3d" class="panel toolpanel hidden">
+        <div class="panel-title">ĐỒ VẬT 3D</div>
+        <div class="notice">Tạo asset cho game: cây, đá, nhà, đồ trang trí… Dùng lại engine 3D local sẵn có (không tốn thêm dung lượng cài đặt).</div>
+        <div class="segmented simple-source"><button id="dovat3dSourceImage" class="active">TỪ ẢNH</button><button id="dovat3dSourcePrompt">TỪ MÔ TẢ</button></div>
+        <div id="dovat3dImageBox">
+          <label class="dropzone"><strong id="dovat3dImageName">＋ Upload ảnh đồ vật</strong><span>Ảnh nền sạch, thấy rõ toàn bộ vật thể (cành, mái, chân…)</span><input id="dovat3dImageFile" type="file" accept="image/png,image/jpeg,image/webp" hidden></label>
+        </div>
+        <div id="dovat3dPromptBox" class="hidden">
+          <div class="field"><label>Mô tả đồ vật</label><textarea id="dovat3dPrompt" placeholder="Ví dụ: cây sồi già, thân xoắn, tán lá rộng"></textarea></div>
+        </div>
+        <div class="field section-gap"><label>Loại</label><select id="dovat3dCategory">
+          <option value="cay">Cây</option><option value="da">Đá</option><option value="co_bui">Cỏ / bụi</option>
+          <option value="ruong">Rương</option><option value="thung">Thùng</option><option value="hang_rao">Hàng rào</option>
+          <option value="cot">Cột</option><option value="den">Đèn</option><option value="nha_nho">Nhà nhỏ</option>
+          <option value="cong">Cổng</option><option value="tuong">Tượng</option><option value="trang_tri">Trang trí</option>
+          <option value="tu_do" selected>Tự do</option>
+        </select></div>
+        <div class="row"><div class="field"><label>Chất lượng</label><select id="dovat3dQuality">
+          <option value="lite">Nháp nhanh</option><option value="standard" selected>Chuẩn</option><option value="final">Final</option>
+        </select></div><div class="field"><label>Tô màu</label><select id="dovat3dTexture">
+          <option value="none">Không tô màu</option><option value="lite" selected>Nhanh</option><option value="hd">Chất lượng</option>
+        </select></div></div>
+        <button class="btn accent wide primary-action" id="dovat3dRun">✨ TẠO ĐỒ VẬT 3D</button>
+        <div id="dovat3dStatus" class="selected-card section-gap"><strong>Đang kiểm tra engine 3D…</strong></div>
+
+        <div id="dovat3dProgress" class="hidden section-gap dovat3d-progress">
+          <div><span id="dovat3dProgressStage">Chuẩn bị</span><b id="dovat3dProgressPct">0%</b></div>
+          <div class="dovat3d-track"><i id="dovat3dProgressBar"></i></div>
+          <small id="dovat3dProgressDetail"></small>
+        </div>
+
+        <div id="dovat3dResult" class="ai-image-result hidden section-gap">
+          <div id="dovat3dStageViewerHost"></div>
+          <div class="selected-card"><strong id="dovat3dResultTitle">Đồ vật 3D đã tạo</strong><small id="dovat3dResultMeta"></small></div>
+          <div id="dovat3dPartialNotice" class="notice hidden">Shape 3D đã hoàn tất. Tô màu chưa hoàn tất.</div>
+          <div class="action-grid">
+            <a class="btn primary center-link" id="dovat3dDownload" download>💾 LƯU GLB</a>
+            <button class="btn" id="dovat3dAgain">↻ TẠO LẠI</button>
+          </div>
+          <button class="btn wide hidden" id="dovat3dRetryTexture">🎨 THỬ TÔ MÀU LẠI</button>
+          <button class="btn wide" id="dovat3dUseInMap" disabled title="Bản đồ 3D chưa triển khai">🗺 DÙNG TRONG MAP · sắp có</button>
+          <div id="dovat3dPerfInfo" class="selected-card section-gap hidden"></div>
+        </div>
+      </div>
+      <!-- MODULE: do_vat_3d END -->
+
+      <!-- MODULE: ban_do_3d BEGIN (JS/CSS o web/modules/ban_do_3d/) -->
+      <div id="panel-bandohd" class="panel toolpanel hidden">
+        <div class="panel-title">BẢN ĐỒ HD</div>
+        <div class="notice">Khóa bố cục tổng trước, sau đó chia tile HD gốc (không upscale từ ảnh nhỏ). Mỗi tile biết vị trí trong map và có overlap với hàng xóm để ghép liền mạch.</div>
+        <div id="mapHdStatus" class="selected-card"><strong>Đang kiểm tra Bản đồ HD…</strong></div>
+        <label class="dropzone"><strong id="mapHdImageName">＋ Ảnh mẫu (khuyên dùng)</strong><span>Dùng để khóa bố cục tổng - map sẽ bám sát bố cục này</span><input id="mapHdImageFile" type="file" accept="image/png,image/jpeg,image/webp" hidden></label>
+        <div class="field section-gap"><label>Mô tả map</label><textarea id="mapHdPrompt" placeholder="Ví dụ: thành chính ở giữa, rừng phía tây, sông chảy xuyên map, bờ biển phía đông"></textarea></div>
+        <div class="field"><label>Chất lượng</label><div class="segmented map-hd-quality"><button data-q="lite">NHẸ</button><button data-q="standard" class="active">TRUNG BÌNH</button><button data-q="final">ĐẸP</button></div></div>
+        <div class="field"><label>Số tile</label><select id="mapHdTiles"><option value="">Tự tính theo chất lượng</option><option>4</option><option>6</option><option>8</option><option>10</option><option>12</option><option>16</option><option>20</option></select></div>
+        <button class="btn accent wide primary-action" id="mapHdCreate">✦ TẠO MAP HD</button>
+        <div id="mapHdProgress" class="hidden section-gap map-hd-progress">
+          <div><span id="mapHdStage">Chuẩn bị</span><b id="mapHdPct">0%</b></div>
+          <div class="map-hd-track"><i id="mapHdBar"></i></div>
+          <small id="mapHdDetail"></small>
+        </div>
+        <div id="mapHdResult" class="ai-image-result hidden section-gap">
+          <div class="selected-card"><strong id="mapHdResultTitle">Map HD đã tạo</strong><small id="mapHdResultMeta"></small></div>
+          <div class="action-grid">
+            <button class="btn primary" id="mapHdOpenFull">🗺 MỞ MAP FULL</button>
+            <a class="btn" id="mapHdManifest" target="_blank">📄 MANIFEST</a>
+          </div>
+          <label class="map-hd-grid-toggle"><input type="checkbox" id="mapHdGridToggle"> Bật lưới tile</label>
+        </div>
+      </div>
+      <!-- MODULE: ban_do_3d END -->
+
+      <div class="panel" id="selectedPanel">
+        <div class="panel-title">Đối tượng đang chọn</div>
+        <div id="noSelection" class="hint">Chọn một chữ / ảnh / sticker trên preview hoặc Layers.</div>
+        <div id="selectionControls" class="hidden"><div class="field"><label>Kích thước <span id="sizeLabel">100%</span></label><input id="sizeRange" type="range" min="20" max="300" value="100"></div><div class="field"><label>Độ trong suốt <span id="opacityLabel">100%</span></label><input id="opacityRange" type="range" min="5" max="100" value="100"></div><div class="field"><label>Xoay <span id="rotationLabel">0°</span></label><input id="rotationRange" type="range" min="-180" max="180" value="0"></div><div class="row"><div class="field"><label>Hiện từ giây</label><input id="showFrom" type="number" step=".1" value="0"></div><div class="field"><label>Đến giây</label><input id="showTo" type="number" step=".1" value="10"></div></div><div class="action-grid"><button class="btn" id="layerDown">Xuống lớp</button><button class="btn" id="layerUp">Lên lớp</button></div><div class="action-grid top-gap"><button class="btn" id="duplicateBtn">Nhân bản</button><button class="btn danger" id="deleteBtn">Xoá</button></div></div>
+      </div>
+      <div class="panel"><div class="panel-title">Layers</div><div class="layers" id="layers"></div></div>
+    </aside>
+  </main>
+
+  <section class="timeline"><div class="timeline-left">TIMELINE</div><div class="timeline-main"><div class="ruler" id="ruler"></div><div class="tracks" id="tracks"></div></div></section>
+  </div>
+  <section class="job-terminal hidden" id="jobTerminal" aria-live="polite"><div class="job-terminal-resize" id="jobTerminalResize" title="Kéo để đổi chiều cao terminal" role="separator" aria-orientation="horizontal"></div><header><strong id="jobTerminalTitle">⚙ ĐANG XỬ LÝ</strong><b id="jobTerminalPct">0%</b><select id="jobTerminalMode" aria-label="Chế độ log"><option value="normal">NORMAL</option><option value="debug">DEBUG</option></select><button id="jobTerminalCollapse">Thu gọn</button><button id="jobTerminalExpand">Mở rộng</button><button id="jobTerminalClear">Xóa log</button><button id="jobTerminalCopy">Sao chép log</button></header><div class="job-terminal-body" id="jobTerminalBody"></div></section>
+</div>
+
+<div class="modal hidden" id="apiModal"><div class="modal-card"><div class="modal-head"><div><h3>AI LOCAL MIỄN PHÍ</h3><p>Không cần OpenAI key, không có phí theo ảnh/token/video.</p></div><button class="btn" id="apiModalClose">✕</button></div><div class="notice">Editor cơ bản luôn chạy ngay. Phụ đề, dịch và AI ảnh cần bộ thư viện local cài một lần. Model sẽ tải miễn phí ở lần dùng đầu và lưu trên máy.</div><div id="localAiStatus" class="selected-card section-gap"><strong>Đang kiểm tra…</strong></div><button class="btn accent wide" id="installLocalAi">CÀI BỘ AI LOCAL MIỄN PHÍ</button><div class="hint section-gap">Nếu cài trong trình duyệt không thành công, đóng app và double-click SETUP_FREE_AI.bat.</div></div></div>
+
+<input id="videoFile" type="file" accept="video/*" hidden/>
+<!-- web/core: shared shell/runtime, load first -->
+<script src="/static/core/task_progress.js?v=0878"></script>
+<script src="/static/core/realtime_preview.js?v=001"></script>
+<script src="/static/core/realtime_progress.js?v=001"></script>
+<script src="/static/core/job_terminal.js?v=003"></script>
+<script src="/static/core/persistent_shell.js?v=001"></script>
+<script src="/static/core/image_prompt_input.js?v=001"></script>
+<script src="/static/core/app.js?v=0892ui1"></script>
+<script src="/static/core/kill_bot.js?v=001"></script>
+<script src="/static/core/home_screen.js?v=0891"></script>
+<!-- web/modules: per-feature UI, load order preserved from before the module split
+     (some depend on globals from earlier scripts: TextTemplates -> captions,
+     AIVF3DViewer/AIVF3DPresets -> ai_3d, ai_3d -> character_2d) -->
+<script src="/static/modules/chinh_sua_video/emoji_picker.js?v=0890"></script>
+<script src="/static/modules/tai_video/tai_video.js?v=0890"></script>
+<script src="/static/modules/tai_video_web/tai_video_web.js?v=001"></script>
+<script src="/static/modules/lam_sach_video/lam_sach_video.js?v=0890"></script>
+<script src="/static/core/settings.js?v=0890"></script>
+<script src="/static/modules/cong_cu_van_ban/cong_cu_van_ban.js?v=0890"></script>
+<script src="/static/modules/phu_de/phu_de.js?v=0890"></script>
+<script src="/static/modules/am_nhac/am_nhac.js?v=0890"></script>
+<script src="/static/modules/tao_anh_ai/tao_anh_ai.js?v=0890"></script>
+<script src="/static/modules/nhan_vat_3d/ai_3d_viewer.js?v=08934"></script>
+<script src="/static/modules/nhan_vat_3d/ai_3d_presets.js?v=0890"></script>
+<script src="/static/modules/nhan_vat_3d/nhan_vat_3d.js?v=v6-3-fix-stale-assetid"></script>
+<script src="/static/modules/nhan_vat_game_ready/nhan_vat_game_ready.js?v=0893-weapon"></script>
+<script src="/static/modules/do_vat_3d/do_vat_3d.js?v=0161"></script>
+<script src="/static/modules/nhan_vat_2d/nhan_vat_2d.js?v=0132"></script>
+  <script src="/static/modules/ban_do_3d/ban_do_3d.js?v=200"></script>
+  <script src="/static/js/ai_3d_library.js?v=08934lib1"></script>
+<script src="/static/core/ga_brain.js?v=v9-9-intent-guard-gameready-weapon"></script>
+<script src="/static/core/ga_owner.js?v=v9-9-intent-guard-selfheal-patch"></script>
+</body>
+</html>

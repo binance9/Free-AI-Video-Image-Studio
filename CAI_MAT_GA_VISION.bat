@@ -1,0 +1,1 @@
+@echo off\r\ntitle CAI MAT GA VISION\r\ncd /d "%~dp0"\r\nwhere ollama >nul 2>nul || (echo Khong tim thay Ollama.& pause & exit /b 1)\r\necho Se tai qwen3-vl:8b. Model co the rat lon. Ctrl+C de huy.\r\npause\r\nollama pull qwen3-vl:8b\r\necho Xong. Mo lai AI Video Factory.\r\npause\r\n

@@ -8,6 +8,7 @@ import uuid
 from pathlib import Path
 
 from app.core.shared_services import JobCancelled, heavy_gpu_job_lock
+from app.core.job_log_broker import job_log_broker
 
 
 class Model3DJobManager:
@@ -54,6 +55,7 @@ class Model3DJobManager:
             if log:
                 job["log"].append(str(log)[-1200:])
                 job["log"] = job["log"][-30:]
+                job_log_broker.publish("character_3d", job_id, str(log), "stdout")
             job.update(extra)
             job["updated_at"] = time.time()
 
@@ -62,7 +64,7 @@ class Model3DJobManager:
             self._update(job_id, progress=progress, stage=stage, detail=detail, log=detail)
         return cb
 
-    def start_image(self, image_path: str | Path, *, resolution=256, texture=False, preview=False, backend="quick", optimize_mesh=True, mesh_profile="hd") -> str:
+    def start_image(self, image_path: str | Path, *, prompt="", style="cartoon3d", resolution=256, texture=False, preview=False, backend="quick", optimize_mesh=True, mesh_profile="hd") -> str:
         job_id, folder = self._new("image")
         src = Path(image_path)
         saved = folder / ("input" + (src.suffix.lower() or ".png"))
@@ -75,8 +77,14 @@ class Model3DJobManager:
                     owner="character_3d", cancel_event=self._cancel_events[job_id],
                     on_wait=lambda _w: self._update(job_id, stage="Đang chờ GPU", detail="Đồ vật 3D đang dùng GPU…"),
                 ):
+                    input_for_3d=saved
+                    if prompt.strip() and self.service.image_service is not None:
+                        self._update(job_id,progress=10,stage="Kết hợp ảnh + mô tả",detail="Refine concept trước khi dựng shape")
+                        combined=folder/"combined_input.png"
+                        combined.write_bytes(self.service.image_service.edit(saved,prompt,style,"1024x1024","high",cancel_event=self._cancel_events[job_id],progress=self._progress_cb(job_id)))
+                        input_for_3d=combined
                     result = self.service.from_image(
-                        saved,
+                        input_for_3d,
                         folder / "out",
                         resolution=resolution,
                         texture=texture,
@@ -92,6 +100,7 @@ class Model3DJobManager:
                     result.get("preview_path"),
                     {
                         "source": "image",
+                        "prompt": prompt or None,
                         "resolution": int(resolution),
                         "texture": bool(result.get("texture_applied", texture)),
                         "backend": result.get("backend", "triposr"),
@@ -101,15 +110,20 @@ class Model3DJobManager:
                         "faces_before": result.get("faces_before"),
                         "faces_after": result.get("faces_after"),
                         "mesh_profile": result.get("mesh_profile", mesh_profile if optimize_mesh else "original"),
+                        "normalization": result.get("normalization"),
+                        "visual_qa": result.get("visual_qa"), "source_image": result.get("source_image"),
+                        "attempt_count": result.get("attempt_count", 1), "retry_count": result.get("retry_count", 0),
+                        "selected_candidate": result.get("selected_candidate", 1),
+                        "ready_for_rig": bool(result.get("ready_for_rig", False)), "quality_stage": result.get("quality_stage", "DRAFT"),
                     },
                 )
                 self._update(job_id, status="done", progress=100, stage="Hoàn tất", detail="GLB đã tạo xong", result=payload)
             except JobCancelled as exc:
                 self._update(job_id, status="cancelled", stage="Đã dừng", detail=str(exc), error=None)
             except Exception as exc:
-                self._update(job_id, status="error", stage="Lỗi", detail=str(exc), error=str(exc))
+                self._update(job_id, status="error", stage="Lỗi", detail=str(exc), error=str(exc), log=str(exc))
 
-        threading.Thread(target=worker, daemon=True, name=f"aivf3d-{job_id[:8]}").start()
+        threading.Thread(target=job_log_broker.bound("character_3d",job_id,worker), daemon=True, name=f"aivf3d-{job_id[:8]}").start()
         return job_id
 
     def start_prompt(self, prompt: str, *, style="cartoon3d", resolution=256, texture=False, preview=False, backend="quick", optimize_mesh=True, mesh_profile="hd") -> str:
@@ -156,15 +170,20 @@ class Model3DJobManager:
                         "faces_before": result.get("faces_before"),
                         "faces_after": result.get("faces_after"),
                         "mesh_profile": result.get("mesh_profile", mesh_profile if optimize_mesh else "original"),
+                        "normalization": result.get("normalization"),
+                        "visual_qa": result.get("visual_qa"), "source_image": result.get("source_image"),
+                        "attempt_count": result.get("attempt_count", 1), "retry_count": result.get("retry_count", 0),
+                        "selected_candidate": result.get("selected_candidate", 1),
+                        "ready_for_rig": bool(result.get("ready_for_rig", False)), "quality_stage": result.get("quality_stage", "DRAFT"),
                     },
                 )
                 self._update(job_id, status="done", progress=100, stage="Hoàn tất", detail="Concept + GLB đã tạo xong", result=payload)
             except JobCancelled as exc:
                 self._update(job_id, status="cancelled", stage="Đã dừng", detail=str(exc), error=None)
             except Exception as exc:
-                self._update(job_id, status="error", stage="Lỗi", detail=str(exc), error=str(exc))
+                self._update(job_id, status="error", stage="Lỗi", detail=str(exc), error=str(exc), log=str(exc))
 
-        threading.Thread(target=worker, daemon=True, name=f"aivf3dp-{job_id[:8]}").start()
+        threading.Thread(target=job_log_broker.bound("character_3d",job_id,worker), daemon=True, name=f"aivf3dp-{job_id[:8]}").start()
         return job_id
 
     def start_colorize(self, mesh_path: str | Path, image_path: str | Path) -> str:
@@ -203,9 +222,9 @@ class Model3DJobManager:
             except JobCancelled as exc:
                 self._update(job_id, status="cancelled", stage="Đã dừng", detail=str(exc), error=None)
             except Exception as exc:
-                self._update(job_id, status="error", stage="Lỗi Paint", detail=str(exc), error=str(exc))
+                self._update(job_id, status="error", stage="Lỗi Paint", detail=str(exc), error=str(exc), log=str(exc))
 
-        threading.Thread(target=worker, daemon=True, name=f"aivf3dpaint-{job_id[:8]}").start()
+        threading.Thread(target=job_log_broker.bound("character_3d",job_id,worker), daemon=True, name=f"aivf3dpaint-{job_id[:8]}").start()
         return job_id
 
     def cancel(self, job_id: str) -> bool:

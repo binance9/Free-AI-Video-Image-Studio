@@ -1,0 +1,15 @@
+GÀ BRAIN V9 - GENERAL AI CORE
+
+STATIC VALIDATION:
+- Changed Python compile: PASS
+- General Core modes present: CHAT / ANSWER / ADVISE / ANALYZE / PLAN / ACT / DEBUG / EDIT
+- Owner policy memory: PASS
+- Active goal / pending context memory: PASS
+- Frontend DEBUG/EDIT gating: PASS
+- Brain build version: v9-general-ai-core
+- Launcher strict version: v9-general-ai-core
+
+IMPORTANT:
+This is static/integration validation against the uploaded AI Video Factory source.
+The full local-model quality still depends on the installed Ollama model.
+Current main/fast model remains qwen3:8b; architecture is ready for a later 14B/32B upgrade.

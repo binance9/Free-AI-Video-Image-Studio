@@ -1,0 +1,14 @@
+AI VIDEO DIRECTOR V6.2 SPEED + ETA
+
+NEW:
+- Live ETA + elapsed time
+- ETA self-adjusts from actual progress speed
+- Voice/music prep parallel with GPU generation
+- HIGH skips redundant second 1080p encode
+- NVENC HIGH p5 CQ18
+- Character Lock / QA / Repair preserved
+
+TESTS:
+- Python compile: PASS
+- JavaScript syntax: PASS
+- Director + quality tests: 8 PASS

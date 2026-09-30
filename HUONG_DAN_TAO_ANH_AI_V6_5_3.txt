@@ -1,0 +1,29 @@
+﻿AI VIDEO FACTORY V6.5.3 - TAO ANH AI ANTI SHEET FIX
+
+DAY LA BAN VA CHI SUA 1 MODULE:
+- app/modules/tao_anh_ai/service.py
+
+FIX CHINH
+- Chong manh hon loi sinh ra nhieu nhan vat / lineup / character sheet / front-side-back.
+- Ep manh hon: exactly one character, one scene, one camera view, visible sword, full body.
+- Them negative prompt chong truot: lineup, character sheet, model sheet, turnaround, front view, side view, back view.
+- Retry prompt cung bo sung anti-sheet neu QA thay sai chu de.
+
+CACH CAI
+1. Giai nen TOAN BO ZIP nay truc tiep vao thu muc goc:
+   C:/Users/BAOAN/OneDrive/Máy tính/ai_video_factory
+2. Chay file:
+   INSTALL_TAO_ANH_AI_V6_5_3.bat
+3. Cho den khi thay:
+   TAO_ANH_AI_V6_5_3_VERIFY: PASS
+   TAO ANH AI V6.5.3: PASS
+4. Khoi dong lai AI Video Factory.
+
+TEST GOI Y
+- tao 1 nữ kiếm hiệp cầm 1 thanh kiếm, toàn thân, ảnh thật
+
+KY VONG
+- 1 nhan vat duy nhat
+- khong con lineup / 4 pose / character sheet
+- thay ro thanh kiem
+- bo cuc full body

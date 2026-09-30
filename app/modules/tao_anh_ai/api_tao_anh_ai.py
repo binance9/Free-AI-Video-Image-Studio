@@ -7,6 +7,7 @@ from tempfile import NamedTemporaryFile
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
+from .service import generation_mode
 
 router = APIRouter(prefix="/api", tags=["ai-image-local"])
 
@@ -20,6 +21,7 @@ class GenerateRequest(BaseModel):
     style: str = "photo"
     size: str = "1536x1024"
     quality: str = "high"
+    backend: str = "auto"
 
 
 def _validate(style: str, size: str, quality: str):
@@ -27,18 +29,26 @@ def _validate(style: str, size: str, quality: str):
         raise ValueError("Tùy chọn AI ảnh không hợp lệ")
 
 
+def _validate_backend(backend: str):
+    if backend not in {"auto", "sdxl", "dreamshaper", "sd15"}:
+        raise ValueError("Invalid AI image backend")
+
+
 @router.post("/ai-image/generate")
 def generate_image(payload: GenerateRequest, request: Request):
     try:
         _validate(payload.style, payload.size, payload.quality)
-        data = request.app.state.ai_image_service.generate(payload.prompt, payload.style, payload.size, payload.quality)
-        return request.app.state.ai_image_workspace.save(data)
+        _validate_backend(payload.backend)
+        data = request.app.state.ai_image_service.generate(
+            payload.prompt, payload.style, payload.size, payload.quality, backend=payload.backend
+        )
+        return {**request.app.state.ai_image_workspace.save(data), "mode": "TEXT2IMG", "input_image_used": False}
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.post("/ai-image/edit")
-def edit_image(request: Request, file: UploadFile = File(...), prompt: str = Form(...), style: str = Form("photo"), size: str = Form("1536x1024"), quality: str = Form("high")):
+def edit_image(request: Request, file: UploadFile = File(...), prompt: str = Form(...), mask: UploadFile | None = File(None), style: str = Form("photo"), size: str = Form("1536x1024"), quality: str = Form("high")):
     temp_path = None
     try:
         _validate(style, size, quality)
@@ -48,8 +58,15 @@ def edit_image(request: Request, file: UploadFile = File(...), prompt: str = For
         with NamedTemporaryFile(delete=False, suffix=suffix, dir=request.app.state.ai_image_workspace.root) as target:
             shutil.copyfileobj(file.file, target, length=1024 * 1024)
             temp_path = target.name
-        data = request.app.state.ai_image_service.edit(temp_path, prompt, style, size, quality)
-        return request.app.state.ai_image_workspace.save(data)
+        mask_path = _save_optional_mask(mask, request) if mask else None
+        try:
+            mode = generation_mode(has_image=True, prompt=prompt, has_mask=mask_path is not None)
+            data = request.app.state.ai_image_service.edit(temp_path, prompt, style, size, quality, mask_path=mask_path, mode=mode)
+            return {**request.app.state.ai_image_workspace.save(data), "mode": mode, "pipeline_mode": "INPAINT" if mask_path else "PRESERVE_IMG2IMG", "input_image_used": True}
+        finally:
+            if mask_path:
+                from pathlib import Path
+                Path(mask_path).unlink(missing_ok=True)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     finally:
@@ -78,16 +95,18 @@ def import_ai_image(session_id: str, image_id: str, request: Request):
 def start_generate_image_job(payload: GenerateRequest, request: Request):
     try:
         _validate(payload.style, payload.size, payload.quality)
+        _validate_backend(payload.backend)
         job_id = request.app.state.ai_image_jobs.start_generate(
-            prompt=payload.prompt, style=payload.style, size=payload.size, quality=payload.quality
+            prompt=payload.prompt, style=payload.style, size=payload.size, quality=payload.quality,
+            backend=payload.backend,
         )
-        return {"job_id": job_id, "status_url": f"/api/ai-image/jobs/{job_id}"}
+        return {"job_id": job_id, "status_url": f"/api/ai-image/jobs/{job_id}", "mode": "TEXT2IMG", "input_image_used": False}
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.post("/ai-image/jobs/edit")
-def start_edit_image_job(request: Request, file: UploadFile = File(...), prompt: str = Form(...),
+def start_edit_image_job(request: Request, file: UploadFile = File(...), prompt: str = Form(""), mask: UploadFile | None = File(None),
                          style: str = Form("photo"), size: str = Form("1536x1024"), quality: str = Form("high")):
     temp_path = None
     try:
@@ -98,10 +117,17 @@ def start_edit_image_job(request: Request, file: UploadFile = File(...), prompt:
         with NamedTemporaryFile(delete=False, suffix=suffix, dir=request.app.state.ai_image_workspace.root) as target:
             shutil.copyfileobj(file.file, target, length=1024 * 1024)
             temp_path = target.name
-        job_id = request.app.state.ai_image_jobs.start_edit(
-            temp_path, prompt=prompt, style=style, size=size, quality=quality
-        )
-        return {"job_id": job_id, "status_url": f"/api/ai-image/jobs/{job_id}"}
+        mask_path = _save_optional_mask(mask, request) if mask else None
+        try:
+            job_id = request.app.state.ai_image_jobs.start_edit(
+                temp_path, prompt=prompt.strip() or "Improve this image while preserving its visible subject and composition", style=style, size=size, quality=quality, mask_path=mask_path
+            )
+        finally:
+            if mask_path:
+                from pathlib import Path
+                Path(mask_path).unlink(missing_ok=True)
+        mode = generation_mode(has_image=True, prompt=prompt, has_mask=mask is not None)
+        return {"job_id": job_id, "status_url": f"/api/ai-image/jobs/{job_id}", "mode": mode, "pipeline_mode": "INPAINT" if mask else "PRESERVE_IMG2IMG", "input_image_used": True}
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     finally:
@@ -118,6 +144,23 @@ def ai_image_job(job_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Không tìm thấy job AI ảnh") from exc
 
 
+@router.get("/ai-image/jobs/{job_id}/preview")
+def ai_image_job_preview(job_id: str, request: Request):
+    try:
+        return FileResponse(request.app.state.ai_image_jobs.preview_path(job_id))
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Preview chưa sẵn sàng") from exc
+
+
 @router.post("/ai-image/jobs/{job_id}/cancel")
 def cancel_ai_image_job(job_id: str, request: Request):
     return {"cancelled": request.app.state.ai_image_jobs.cancel(job_id)}
+
+
+def _save_optional_mask(mask: UploadFile, request: Request) -> str:
+    suffix = ".png" if not mask.filename or "." not in mask.filename else "." + mask.filename.rsplit(".", 1)[-1].lower()
+    if suffix not in {".png", ".jpg", ".jpeg", ".webp"}:
+        raise ValueError("Mask phải là PNG, JPG hoặc WebP")
+    with NamedTemporaryFile(delete=False, suffix=suffix, dir=request.app.state.ai_image_workspace.root) as target:
+        shutil.copyfileobj(mask.file, target, length=1024 * 1024)
+        return target.name

@@ -1,0 +1,12 @@
+V9.5 STUDIO READY + ATTACH UI FIX
+no_early_return: PASS
+ensure_studio: PASS
+execute_waits_studio: PASS
+render_has_x: PASS
+render_has_clear_text: PASS
+clear_toolbar_button_html: PASS
+clear_toolbar_button_js: PASS
+preview_full_width_css: PASS
+new_cache_bust: PASS
+JS syntax: PASS
+Python compile: PASS

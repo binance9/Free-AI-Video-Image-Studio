@@ -82,6 +82,32 @@ def _output(job: dict, scope: str):
     return job.get("overview_url") or job.get("preview_url")
 
 
+@router.get("/system/startup/stream")
+async def stream_system_log(request: Request, mode: str = "normal", since: int = 0):
+    """Rieng cho terminal he thong (khong phai 1 job cu the): phat lai +
+    tiep tuc phat RAW stdout/stderr da duoc job_log_broker ghi nhan cho
+    scope co dinh ("system","startup") - vd log tu luc launcher P duoc
+    nhan, backend khoi dong, server bind cong, den khi health san sang.
+    Khong dung chung ham stream_job_log() ben duoi vi do can 1 "job" that
+    co status/progress/ket thuc (getter(job_id)) - "system" khong phai
+    1 job nhu vay, no ton tai suot vong doi server. Day la BO SUNG log
+    sink moi, KHONG sua logic SSE job hien co (route nay dang ky TRUOC
+    route "/{scope}/{job_id}/stream" o duoi nen khong bi route do bat
+    nham)."""
+    debug = mode.lower() == "debug"
+
+    async def generate():
+        cursor = max(0, int(since))
+        while not await request.is_disconnected():
+            for raw in job_log_broker.after("system", "startup", cursor):
+                cursor = max(cursor, raw["seq"])
+                if debug or raw["level"] in {"warning", "error", "success"}:
+                    yield _event("log", {"scope": "system", "job_id": "startup", "status": "running", "stage": raw["channel"], "message": raw["message"], "level": raw["level"], "raw": True, "seq": raw["seq"]})
+            await asyncio.sleep(0.5)
+
+    return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
 @router.get("/{scope}/{job_id}/stream")
 async def stream_job_log(request: Request, scope: str, job_id: str, mode: str = "normal", since: int = 0):
     if not job_id or len(job_id) > 128 or not job_id.replace("-", "").replace("_", "").isalnum():

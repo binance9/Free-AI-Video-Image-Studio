@@ -1,0 +1,25 @@
+GÀ BRAIN V5.2 - NO SPAM / RECOVERY WEB
+
+Ưu tiên số 1: AI Video Factory phải mở được web.
+
+V5.2 không dùng cơ chế tự tắt/mở lại Windows ở launcher.
+Không mở tiến trình server con. Không quét source lúc startup.
+Một process server duy nhất.
+
+Startup:
+1) Thử app Gà Brain đầy đủ.
+2) Nếu PASS -> chạy Gà Brain.
+3) Nếu app Gà có lỗi môi trường -> ghi:
+   data\ga_maintenance\startup_error.log
+   rồi tự chạy backend recovery gốc để web vẫn mở.
+4) Xem:
+   data\ga_maintenance\startup_mode.txt
+   GA_BRAIN = đầy đủ
+   RECOVERY_WEB = web đã được cứu, gửi startup_error.log cho Gà.
+
+Cài:
+- Đóng các cửa sổ AI Video Factory hiện đang nhấp nháy.
+- Giải nén ZIP vào thư mục gốc ai_video_factory.
+- Replace All.
+- Mở bằng shortcut/BAT cũ.
+- Không chạy các FIX_GA cũ.

@@ -13,12 +13,12 @@ class GameReadyJobManager:
         self._jobs: dict[str, dict] = {}
         self._lock = threading.Lock()
 
-    def start(self, asset_id: str, target_faces: int = 45000) -> str:
+    def start(self, asset_id: str, target_faces: int = 45000, weapon_type: str = "bow") -> str:
         source = self.workspace.model_path(asset_id)
         job_id = uuid.uuid4().hex
         with self._lock:
             self._jobs[job_id] = {"job_id": job_id, "status": "queued", "progress": 2, "stage": "Xếp hàng", "detail": "Chuẩn bị Game Ready…", "created": time.time()}
-        t = threading.Thread(target=self._run, args=(job_id, source, asset_id, target_faces), daemon=True)
+        t = threading.Thread(target=self._run, args=(job_id, source, asset_id, target_faces, weapon_type), daemon=True)
         t.start()
         return job_id
 
@@ -33,15 +33,20 @@ class GameReadyJobManager:
             if job_id in self._jobs:
                 self._jobs[job_id].update(values)
 
-    def _run(self, job_id: str, source: Path, asset_id: str, target_faces: int):
+    def _run(self, job_id: str, source: Path, asset_id: str, target_faces: int, weapon_type: str = "bow"):
         try:
             self._set(job_id, status="running", progress=10, stage="Tối ưu mesh", detail="Blender đang giảm poly…")
             out = self.service.root / "jobs" / job_id
             self._set(job_id, progress=25, stage="Tạo xương + Gắn skin", detail="Blender đang tạo skeleton và bind skin weight…")
-            result = self.service.convert(source, out, target_faces=target_faces)
+            result = self.service.convert(source, out, target_faces=target_faces, weapon_type=weapon_type)
             self._set(job_id, progress=80, stage="Validate", detail="Đang kiểm tra skin/joints/weights/animation thật…")
             validation = result.get("validation") or {}
             animation_ok = bool(validation.get("animation_ok"))
+            # 'talk' is experimental (jaw bone position is a heuristic, never
+            # visually confirmed) and NOT a required clip - report what the
+            # same real-evidence check the validator uses actually found,
+            # instead of silently claiming or silently hiding it either way.
+            talk_has_motion = bool(validation.get("clip_has_motion", {}).get("talk"))
             meta = {
                 "source": "game_ready",
                 "parent_asset_id": asset_id,
@@ -50,6 +55,8 @@ class GameReadyJobManager:
                 "rigged": bool(result.get("rigged", True)),
                 "skin_method": result.get("skin_method"),
                 "animations": result.get("animations", ["idle", "run", "attack_01"]),
+                "talk_has_motion": talk_has_motion,
+                "weapon_type": result.get("weapon_type", weapon_type),
                 "faces_before": result.get("faces_before"),
                 "faces_after": result.get("faces_after"),
                 "bones": result.get("bones"),
@@ -73,8 +80,13 @@ class GameReadyJobManager:
                     result=payload,
                 )
             else:
+                talk_note = (
+                    "clip 'talk' (thử nghiệm) có chuyển động thật ở vùng hàm - CHƯA xác nhận trông có tự nhiên không, cần tự xem hình."
+                    if talk_has_motion else
+                    "clip 'talk' (thử nghiệm) KHÔNG phát hiện chuyển động thật - có thể mesh này không có vùng cằm/hàm rõ để gắn."
+                )
                 self._set(job_id, status="done", progress=100, stage="Game Ready xong",
-                           detail="GLB đã có skeleton + skin thật + idle/run/attack_01 có chuyển động thật",
+                           detail=f"GLB đã có skeleton + skin thật + idle/run/attack_01 có chuyển động thật. {talk_note}",
                            result=payload)
         except Exception as exc:
             self._set(job_id, status="error", progress=100, stage="Game Ready lỗi", detail=str(exc), error=str(exc))

@@ -1,0 +1,33 @@
+CÁCH DÙNG
+=========
+1. Giải nén 3 file trong ZIP này vào THƯ MỤC GỐC AI Video Factory.
+   Đó là thư mục chứa source/app đang chạy 127.0.0.1:8123.
+
+2. Chạy:
+   TAO_ZIP_NHE_GUI_GA.bat
+
+3. Nó tạo:
+   AI_VIDEO_FACTORY_SOURCE_NHE_GUI_GA.zip
+
+4. Gửi đúng ZIP vừa tạo đó cho Gà.
+
+NÓ KHÔNG LẤY:
+- model AI / checkpoints / weights
+- .venv
+- node_modules
+- video / ảnh / render / output
+- cache
+- .env thật
+- credentials/secrets
+
+NÓ CÓ LẤY:
+- Python backend
+- JS/TS frontend
+- HTML/CSS
+- config JSON/YAML/TOML
+- package.json / requirements
+- file BAT/PowerShell liên quan
+- cây danh sách source
+
+Mục tiêu: đủ để Gà tìm đúng frontend sidebar, API backend, 3D pipeline,
+rồi viết patch nhúng Gà trực tiếp vào AI Video Factory mà không cần gửi project nặng.

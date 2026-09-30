@@ -1,0 +1,29 @@
+AI VIDEO DIRECTOR V5 QUALITY-FIRST - TEST REPORT
+
+Python compile: PASS
+JavaScript syntax: PASS
+Unit/integration tests: 12 PASS
+Installer dry-run against AI Video Factory V10 source: PASS
+Synthetic real MP4 final-master test: PASS
+- input: 640x360 / 24fps / 2s
+- final: 1920x1080 / 30fps / H.264 / 2s
+- black-frame ratio: 0
+- Final technical QA: PASS
+
+V5 features:
+- Native web integration (no modal)
+- Character Lock toggle
+- Dedicated Character Anchor for character-led stories
+- Reuse anchor through tao_anh_ai.edit/img2img when supported
+- Technical Image QA
+- Technical Video QA
+- Per-scene bounded repair loop
+- Draft/Balanced/High/Final quality modes
+- High/Final target 1080p master
+- Lanczos scaling + controlled sharpening
+- NVENC preferred, x264 fallback
+- Final video must pass technical QA before job is marked done
+
+Honesty boundary:
+- Semantic beauty/identity is NOT assigned a fake score when no vision evaluator exists.
+- Anchor/reference materially improves continuity, but exact semantic identity still depends on the image/video models and reference capability.

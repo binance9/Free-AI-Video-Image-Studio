@@ -1,0 +1,29 @@
+GÀ BRAIN V6.2 - STRICT BACKEND + PAINT SELF-HEAL
+
+Sửa lỗi Brain: Not Found:
+- Backend Brain có build_version v6.2-strict-backend.
+- Launcher chỉ tái sử dụng đúng backend V6.2.
+- Nếu backend cũ giữ 8123: KHÔNG kill, KHÔNG reuse.
+  V6.2 tự chạy sang 8124/8125 và mở đúng tab mới.
+- Port đang chạy nằm ở data\ga_maintenance\active_port.txt.
+
+Self-heal:
+- Dùng /api/ga-brain/heal-job cùng router với Brain.
+- Không còn phụ thuộc route maintenance bị thiếu của backend cũ.
+- Đọc job error/detail và job log đúng ID.
+
+Nhân vật 3D:
+- Shape + Paint là một chuỗi.
+- Nếu yêu cầu tô màu: Shape PASS vẫn CHƯA FINAL.
+- Paint PASS mới FINAL.
+- Paint lỗi vẫn giữ Shape.
+- Nếu OOM/tài nguyên: retry đúng Paint 1 lần, không dựng lại Shape.
+- Nếu source lỗi chắc chắn: backup -> sửa -> test -> PASS mới giữ.
+
+Sau cài:
+Dòng dưới GÀ AI OWNER phải hiện:
+V6.2 BRAIN · READY
+hoặc
+V6.2 BRAIN · LOCAL
+
+Nếu thấy BACKEND CŨ, đừng dùng tab đó; dùng tab mới launcher vừa mở.

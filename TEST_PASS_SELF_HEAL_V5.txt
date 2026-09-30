@@ -1,0 +1,25 @@
+GÀ BRAIN V5 - SELF HEAL / HUNYUAN
+
+ĐÃ TEST TRÊN COPY SOURCE AI VIDEO FACTORY:
+- Python changed files: compile PASS
+- ga_brain.js: node --check PASS
+- ga_owner.js: node --check PASS
+- app.main import + routes Gà/Brain/Maintenance: PASS
+- Nhận diện đúng:
+  forrtl: error (200): program aborting due to window-CLOSE event
+  -> windows_console_close
+- Test repair trên source chưa vá:
+  error -> RuntimeSelfHealer.heal_job()
+  -> backup character_hd_backend.py
+  -> thêm CREATE_NO_WINDOW cho 2 Hunyuan subprocess
+  -> py_compile + compileall app + app smoke + static audit
+  -> PASS
+  -> restart_required=True
+
+HÀNH VI V5:
+- Job ERROR tự đọc đúng job log/error ngay; không lấy audit rác thay cho chữa lỗi.
+- "xem lỗi ở đâu tìm và khắc phục ngay" quay lại đúng job lỗi gần nhất.
+- Source repair chỉ được giữ nếu test PASS; test fail thì rollback.
+- Không sửa đoán khi thiếu bằng chứng.
+- OOM/VRAM: dọn tài nguyên an toàn, retry tối đa 1 lần với job do Gà tạo.
+- Không xóa model/project/output/assets.

@@ -7,7 +7,7 @@ from tempfile import NamedTemporaryFile
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 
-from app.modules.chinh_sua_video.schemas import EditorCutRequest, RenderRequest, VideoCutRequest, VideoMergeRequest
+from app.modules.chinh_sua_video.schemas import RenderRequest, VideoMergeRequest
 from app.modules.chinh_sua_video.errors import VideoEditorError
 
 router = APIRouter(prefix="/api")
@@ -59,17 +59,6 @@ def editor_media(session_id: str, request: Request):
     try:
         path = request.app.state.video_workspace.current_path(session_id)
         return FileResponse(path, media_type=_video_media_type(path))
-    except (VideoEditorError, ValueError) as exc:
-        raise _editor_error(exc) from exc
-
-
-@router.post("/editor/{session_id}/cut")
-def editor_cut(session_id: str, payload: EditorCutRequest, request: Request):
-    try:
-        workspace = request.app.state.video_workspace
-        output = workspace.next_output(session_id)
-        request.app.state.video_editor.cut(workspace.current_path(session_id), output, payload.start, payload.end)
-        return workspace.add_version(session_id, output, f"Cắt {payload.start:.2f}s → {payload.end:.2f}s")
     except (VideoEditorError, ValueError) as exc:
         raise _editor_error(exc) from exc
 
@@ -147,15 +136,6 @@ def editor_download(session_id: str, request: Request):
         path = workspace.current_path(session_id)
         stem = Path(info["original_name"]).stem or "video"
         return FileResponse(path, media_type=_video_media_type(path), filename=f"{stem}_edited{path.suffix.lower() or '.mp4'}")
-    except (VideoEditorError, ValueError) as exc:
-        raise _editor_error(exc) from exc
-
-
-@router.post("/video/cut")
-def cut_video(payload: VideoCutRequest, request: Request):
-    try:
-        output = request.app.state.video_editor.cut(payload.source, payload.output, payload.start, payload.end)
-        return {"status": "ok", "operation": "cut", "output": str(output)}
     except (VideoEditorError, ValueError) as exc:
         raise _editor_error(exc) from exc
 

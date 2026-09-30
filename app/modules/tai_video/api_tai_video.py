@@ -37,7 +37,11 @@ def start_facebook_download(payload: FacebookDownloadRequest, request: Request):
 @router.get("/jobs/{job_id}")
 def facebook_download_job(job_id: str, request: Request):
     try:
-        return request.app.state.facebook_video_jobs.get(job_id)
+        payload=request.app.state.facebook_video_jobs.get(job_id)
+        payload["message"]=payload.get("detail") or payload.get("stage") or ""
+        payload["preview_type"]="video"
+        payload["preview_url"]=f"/api/facebook-video/jobs/{job_id}/file" if payload.get("status")=="done" else None
+        return payload
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Không tìm thấy job tải Facebook") from exc
 

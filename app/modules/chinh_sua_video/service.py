@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .cut import cut_video as _cut_video
+from app.modules.cat_video.service import cut_video as _cut_video
 from .merge import merge_videos as _merge_videos
 from .render import render_layers as _render_layers
 

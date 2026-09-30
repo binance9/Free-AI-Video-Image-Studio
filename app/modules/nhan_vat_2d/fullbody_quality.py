@@ -23,10 +23,13 @@ def inspect_fullbody(image_path: str | Path) -> dict:
         feet_edges = _edge_mean(feet)
         mid_edges = _edge_mean(mid)
 
-    # Conservative: enough structure must survive near the bottom of the image.
+    # Relaxed: score threshold 20->15 and ratio 0.16->0.10.  Many good
+    # full-body renders with stylized 2D art (less edge detail in feet area)
+    # were wrongly rejected.  The real signal for "no body" is a near-zero
+    # score, not a borderline one.
     score = (lower_contrast * 0.35) + (feet_contrast * 0.25) + (lower_edges * 1.1) + (feet_edges * 1.4)
     ratio = feet_edges / max(0.1, mid_edges)
-    ok = score >= 20.0 and ratio >= 0.16
+    ok = score >= 15.0 and ratio >= 0.10
     return {
         "ok": bool(ok),
         "score": round(score, 2),

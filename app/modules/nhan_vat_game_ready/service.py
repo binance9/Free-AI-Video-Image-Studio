@@ -52,10 +52,10 @@ class GameReady3DService:
             "installed": bool(blender),
             "blender": str(blender) if blender else None,
             "message": "Blender headless sẵn sàng" if blender else "Chưa tìm thấy Blender 4.x. Chạy SETUP_GAME_READY_3D.bat một lần.",
-            "pipeline": ["optimize", "rig", "skin", "idle", "run", "attack_01", "export_glb"],
+            "pipeline": ["optimize", "rig", "skin", "idle", "talk", "run", "attack_01", "export_glb"],
         }
 
-    def convert(self, source: str | Path, output_dir: str | Path, *, target_faces: int = 45000) -> dict:
+    def convert(self, source: str | Path, output_dir: str | Path, *, target_faces: int = 45000, weapon_type: str = "bow") -> dict:
         source = Path(source).resolve()
         if source.suffix.lower() != ".glb" or not source.exists():
             raise ValueError("Model nguồn phải là file GLB hợp lệ")
@@ -67,11 +67,13 @@ class GameReady3DService:
         out_dir.mkdir(parents=True, exist_ok=True)
         out_glb = out_dir / "game_ready.glb"
         report = out_dir / "game_ready_report.json"
+        weapon_type = str(weapon_type or "bow").strip().lower()[:32]
         cmd = [
             str(blender), "--background", "--factory-startup",
             "--python", str(self.script), "--",
             "--input", str(source), "--output", str(out_glb),
             "--report", str(report), "--target-faces", str(target_faces),
+            "--weapon-type", weapon_type,
         ]
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=900, check=False)
         if proc.returncode != 0 or not out_glb.exists():

@@ -1,0 +1,39 @@
+FRAMEPACK. TOOL TẠO VIDEO AI CHẠY TRỰC TIẾP TRÊN MÁY TÍNH NHÀ, MIỄN PHÍ 100 PERCENT.
+
+Nói thật lòng. Toàn bộ video AI đang hot đều tính tiền theo giây. Tool này khác. Nó chạy ngay trên GPU của máy bạn, không trả ai đồng nào, không giới hạn số video, không đếm giây.
+
+CÔNG DỤNG THỰC TẾ.
+
+Bạn đưa vào 1 tấm ảnh và gõ mô tả hành động. Nó sinh ra video chuyển động từ chính tấm ảnh đó. Nhân vật cầm cốc nước lên uống. Gió thổi mái tóc. Camera quay quanh nhân vật. Mức dài tối đa tới 60 giây, trong khi các model mở miễn phí khác đa số chỉ 5 đến 10 giây là vỡ hình.
+
+Tổng cộng chi phí. 0 đồng. Không thuê AI đám mây. Không đăng ký tài khoản. Không gửi dữ liệu đi đâu.
+
+YÊU CẦU MÁY.
+
+Card NVIDIA tối thiểu 6GB VRAM là chạy được video 1 phút, kể cả card laptop. Máy 8 đến 16GB VRAM chạy thoải mái hơn. Không có card NVIDIA thì chưa chạy được. Cần khoảng 45GB ổ cứng cho model, chỉ tải 1 lần duy nhất. Windows có gói one click, giải nén là chạy.
+
+ĐÃ ĐƯỢC KIỂM CHỨNG CHƯA.
+
+Có. Hơn 17 nghìn sao trên GitHub, hàng nghìn người dùng thật từ tháng 4 năm 2025. Kết quả thực tế từ cộng đồng. Chất lượng bám mô tả tốt. Mạnh rõ ở anime, video 1 nhân vật, chuyển động camera chậm. Phần chưa hoàn hảo. Tốc độ chậm, tính bằng chục phút cho vài giây video trên card phổ thông. Video càng dài quality càng giảm dần ở các giây cuối, dễ bị nhòe và bóng ma. Vẫn chưa bằng các dịch vụ trả tiền kiểu Kling về độ sắc nét. Tác giả là lllyasviel, chính người tạo ControlNet, tên tuổi lớn nhất trong giới AI mở, nên dự án được maintenance nghiêm túc.
+
+BẢO MẬT.
+
+Mã nguồn mở 100 percent, license Apache 2.0, ai cũng đọc được từng dòng. Chạy hoàn toàn nội bộ máy, ảnh và video của bạn không bị gửi lên bất kỳ server nào. Đây là điểm cộng lớn so với các web tạo video AI.
+
+CẢNH BÁO KHI TẢI.
+
+Chỉ tải ở đúng link GitHub chính thức của tác giả. Các trang framepack.co, framepack.ai, framepack.pro đều là GIẢ MẠO, đừng đưa tiền hay dữ liệu cho chúng. Lần chạy đầu sẽ tự tải model khoảng 45GB từ Hugging Face, cần ổ cứng trống và mạng ổn định, kiên nhẫn 1 tiếng. Sau đó chạy lại mở ngay không tải nữa.
+
+ƯU ĐIỂM.
+
+Miễn phí trọn đời, chạy offline thoải mái. Video dài nhất trong giới miễn phí. Không cần biết code, có giao diện đồ họa sẵn. Máy yếu 6GB vẫn chạy. Mã nguồn mở, an toàn dữ liệu. Tác giả uy tín hàng đầu ngành.
+
+NHƯỢC ĐIỂM.
+
+Chậm, video vài giây chờ chục phút là bình thường. Cảnh nhiều người chuyển động nhanh là điểm yếu. Chỉ chạy tốt trên card NVIDIA. Model chiếm 45GB ổ cứng. Chất lượng vẫn thua dịch vụ trả phí.
+
+LINK GITHUB CHÍNH THỨC.
+
+https://github.com/lllyasviel/FramePack
+
+Ai đang có card NVIDIA rảnh rỗi thì thử. Mình đã cài và chạy thử trực tiếp trên máy RTX 5060 Ti 16GB, video sau khi sinh ra sẽ update ở bài sau.

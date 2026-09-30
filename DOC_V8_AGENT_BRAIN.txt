@@ -1,0 +1,22 @@
+GÀ BRAIN V8 - AGENT BRAIN
+
+Trí nhớ chung:
+- hội thoại gần đây
+- mục tiêu đang làm
+- lệnh đang chờ input
+- ảnh/file đang gắn
+- lỗi job gần nhất
+- nguyên tắc chủ nhân đã dặn
+
+Luồng:
+1. Hỏi -> trả lời, không mở module.
+2. Nguyên tắc/quy tắc -> lưu memory, không chạy module.
+3. Lệnh rõ -> chạy đúng module.
+4. 'ừ làm đi' -> tiếp đúng việc trước.
+5. 'ủa tao gửi rồi mà' -> kiểm tra attachment thật.
+6. Chỉ đòi ảnh khi công việc thật sự yêu cầu ảnh.
+7. Mơ hồ -> một lần AI intent, không đoán từ khóa.
+8. Qwen giữ nóng 90 giây sau chat để câu tiếp theo nhanh hơn.
+
+Giới hạn:
+Qwen3:8b local không ngang GPT-5.6 Sol. V8 làm nó linh hoạt hơn bằng kiến trúc hội thoại/memory/goal; capability app chưa có thì phải nói chưa có, không giả PASS.

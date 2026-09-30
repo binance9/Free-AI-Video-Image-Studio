@@ -503,7 +503,7 @@ void main(){
     _resize(){const dpr=Math.min(devicePixelRatio||1,2),w=this.captureSize?this.captureSize[0]:Math.max(2,Math.floor(this.canvas.clientWidth*dpr)),h=this.captureSize?this.captureSize[1]:Math.max(2,Math.floor(this.canvas.clientHeight*dpr));if(this.canvas.width!==w||this.canvas.height!==h){this.canvas.width=w;this.canvas.height=h;}this.gl.viewport(0,0,w,h);return w/h;}
     _frame(now=performance.now()){
       if(this.auto && !document.hidden) this.yaw+=0.004;
-      const gl=this.gl,aspect=this._resize();gl.clearColor(0.025,0.04,0.065,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(this.prog);
+      const gl=this.gl,aspect=this._resize();gl.clearColor(0.129,0.110,0.098,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(this.prog);
       gl.uniformMatrix4fv(this.loc.proj,false,perspective(Math.PI/4,aspect,.05,50));gl.uniform1f(this.loc.yaw,this.yaw);gl.uniform1f(this.loc.pitch,this.pitch);gl.uniform1f(this.loc.roll,this.roll);gl.uniform1f(this.loc.dist,this.distance);gl.uniform2f(this.loc.pan,this.pan[0],this.pan[1]);
       for(const m of this.meshes){
         if (m.doubleSided) gl.disable(gl.CULL_FACE); else gl.enable(gl.CULL_FACE);

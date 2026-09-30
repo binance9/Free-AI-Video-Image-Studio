@@ -23,6 +23,8 @@ class MapSpec:
     biomes: list[str] = field(default_factory=list)
     constraints: list[str] = field(default_factory=list)
     reference_used: bool = False
+    terrain_only: bool = True
+    excluded_assets: list[str] = field(default_factory=lambda: ["trees", "bushes", "loose rocks", "houses", "fences", "chests", "lamps", "statues", "furniture", "props"])
 
     def as_dict(self): return asdict(self)
 
@@ -34,7 +36,7 @@ def parse_prompt(prompt: str, quality: str, cfg: dict, tile_count: int | None, r
     low = text.lower()
     biomes = [k for k, keys in BIOMES.items() if any(x in low for x in keys)]
     constraints = []
-    for token in ("giữ nguyên", "không đổi", "sông", "đường", "thành chính", "trung tâm", "cầu", "bờ biển"):
+    for token in ("giữ nguyên", "không đổi", "sông", "đường", "thành chính", "trung tâm", "cầu", "bờ biển", "không chữ", "bỏ chữ", "không nhãn", "no text", "no labels", "no ui"):
         if token in low: constraints.append(token)
     n = int(tile_count or cfg["tiles"])
     seed_src = f"{text}|{quality}|{n}|{reference_used}".encode("utf-8")

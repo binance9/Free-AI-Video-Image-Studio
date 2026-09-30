@@ -23,3 +23,7 @@ KNOWN_LIMITATIONS:
 Module dùng chung nhiều nhất trong dự án — ffmpeg_tools.py/probe.py/errors.py/workspace.py bị
 import trực tiếp bởi am_nhac, phu_de, tai_video, lam_sach_video, tao_anh_ai, nhan_vat_3d. Sửa các
 file này ảnh hưởng nhiều module khác, cần đặc biệt cẩn trọng.
+
+2026-08-31: chức năng CẮT (cut) đã tách ra module độc lập app/modules/cat_video/ (đã có bản copy
+riêng ffmpeg_tools.py/probe.py/errors.py, không import từ module này). Xem
+app/modules/cat_video/MODULE_STATUS.md.

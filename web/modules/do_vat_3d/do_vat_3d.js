@@ -17,10 +17,14 @@
   $('dovat3dSourceImage')?.addEventListener('click', () => setSourceMode('image'));
   $('dovat3dSourcePrompt')?.addEventListener('click', () => setSourceMode('prompt'));
 
+  function clearDovat3dImage(){
+    sourceImage = null; $('dovat3dImageFile').value = '';
+    $('dovat3dImageName').textContent = '＋ Upload ảnh đồ vật';
+  }
   $('dovat3dImageFile') && ($('dovat3dImageFile').onchange = (e) => {
     sourceImage = e.target.files[0] || null;
     $('dovat3dImageName').textContent = sourceImage ? sourceImage.name : '＋ Upload ảnh đồ vật';
-    if(sourceImage) window.AIVFRealtimePreview?.showFile(sourceImage,'image');
+    if(sourceImage) window.AIVFRealtimePreview?.showFile(sourceImage,'image',clearDovat3dImage);
   });
 
   async function refreshStatus() {

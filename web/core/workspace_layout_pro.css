@@ -1,0 +1,97 @@
+#appMain.app{background:linear-gradient(180deg,#2b2521,#1c1815)}
+
+.topbar{background:linear-gradient(180deg,#332c27,#1c1815);border-bottom:1px solid #46392f}
+.topbar .logo{background:linear-gradient(135deg,#d9b876,#a9884f);color:#3a2c12}
+.topbar .brand{color:#fff6ee}
+.topbar .brand small{color:#d3ac95}
+.topbar .badge{background:rgba(255,255,255,.14);color:#ffd7ae}
+.topbar .btn{background:rgba(255,255,255,.09);border-color:#46392f;color:#f5ece4}
+.topbar .btn:hover{border-color:#8a7358;background:rgba(255,255,255,.15)}
+.topbar .btn.primary{background:linear-gradient(135deg,#e07a45,#c1502b);color:#fff}
+.topbar .btn.accent{background:linear-gradient(135deg,#d38a5e,#a85a34);color:#fff}
+.topbar .btn.danger{background:rgba(225,29,72,.16);border-color:#9f4a3a;color:#ffb4a8}
+.topbar .btn.danger:hover{background:rgba(225,29,72,.26)}
+.topbar .btn:disabled{opacity:.45}
+
+.inspector{background:rgba(255,255,255,.07);backdrop-filter:blur(10px);border-left:1px solid #46392f}
+.inspect-head{background:transparent;border-bottom:1px solid #46392f}
+.inspect-head h3{color:#fff6ee}
+.inspect-head p{color:#d3ac95}
+.panel{border-bottom:1px solid #3a322b}
+.panel-title{color:#e0b498}
+.field label{color:#d3ac95}
+.field input,.field select,.field textarea{background:rgba(0,0,0,.2);color:#f5ece4;border:1px solid #46392f}
+.field input:focus,.field textarea:focus{border-color:#d38a5e}
+.hint{color:#c9a68f}
+.status{color:#d3ac95}
+.status.error{color:#ff9c8c}
+
+.segmented button,.sticker-tabs button{background:rgba(0,0,0,.18);color:#d3ac95;border:1px solid #46392f}
+.segmented button.active,.sticker-tabs button.active{background:#d38a5e;color:#2b1810;border-color:#d38a5e}
+.dropzone{background:rgba(0,0,0,.14);border:1px dashed #a5613f;color:#f5ece4}
+.dropzone span{color:#d3ac95}
+.action-grid .btn,.inspector .btn,.field .btn,.inline .btn{background:rgba(255,255,255,.08);border:1px solid #46392f;color:#f5ece4}
+.action-grid .btn:hover,.inspector .btn:hover{background:rgba(255,255,255,.14);border-color:#8a7358}
+.action-grid .btn.primary,.inspector .btn.primary{background:linear-gradient(135deg,#e07a45,#c1502b);color:#fff;border:none}
+.action-grid .btn.accent,.inspector .btn.accent{background:linear-gradient(135deg,#d38a5e,#a85a34);color:#fff;border:none}
+
+.layers{gap:7px}
+.layer{background:rgba(0,0,0,.16);border:1px solid #3a322b}
+.layer.active{border-color:#d38a5e}
+.layer .thumb{background:rgba(255,255,255,.1)}
+.layer .meta b{color:#f5ece4}
+.layer .meta small{color:#c9a68f}
+.sticker-item,.giphy-item{background:rgba(0,0,0,.16);border:1px solid #3a322b}
+.sticker-item:hover,.giphy-item:hover{border-color:#d38a5e;background:rgba(255,255,255,.08)}
+.giphy-credit{color:#c9a68f}
+.giphy-credit strong{color:#f5ece4}
+
+.canvas-wrap .preview-head h2{color:#fff6ee}
+.canvas-wrap .preview-head span{color:#d3ac95}
+.preview-head-actions span{color:#d3ac95}
+.preview-expand-btn{background:rgba(255,255,255,.09);border:1px solid #46392f;color:#f5ece4}
+.transport{background:rgba(255,255,255,.07);border:1px solid #46392f}
+.transport button{background:rgba(255,255,255,.09);border:1px solid #46392f;color:#f5ece4}
+.transport .time{color:#e0b498}
+
+.stage{background:linear-gradient(180deg,#211c19,#14110f);border:1px solid #46392f}
+.video-box,.video-box video{background:#14110f}
+.empty-icon{background:rgba(255,255,255,.08);border:1px solid #46392f}
+.empty h3{color:#fff6ee}
+.empty p{color:#d3ac95}
+.busy{background:#1c1815db}
+
+.timeline{background:linear-gradient(180deg,#332c27,#1c1815);border-top:1px solid #46392f}
+.timeline-left{border-right:1px solid #46392f;color:#d3ac95}
+.ruler{color:#c9a68f}
+.track-name{color:#e0b498}
+.trackline{background:rgba(0,0,0,.2);border:1px solid #46392f}
+
+.modal{background:#00000082}
+.modal-card{background:#2b2521;border:1px solid #46392f}
+
+.ai3d-progress,.char2d-upload,.char2d-result,.ai3d-safe-note,.module-brain-strip{background:#241f1b;border-color:#46392f}
+.ai3d-viewer-hint,.ai3d-viewer-state,.ai3d-viewer-debug{background:rgba(28,24,21,.85);border-color:#46392f}
+.realtime-preview-progress{background:rgba(28,24,21,.92);border-color:#46392f}
+.game-ready-box{background:linear-gradient(145deg,#2c2622,#241f1b);border-color:#46392f}
+.game-ready-status,.game-ready-filename,.game-ready-debug,.game-ready-track,.dovat3d-track{background:#241f1b;border-color:#46392f}
+.game-ready-track,.dovat3d-track{background:#3a322b}
+.game-ready-setup{background:#241f1b!important;border-color:#46392f!important;color:#e0b498!important}
+
+/* ban_do_3d.css declares these with an #mapHdStageViewer / #panel-bandohd ID
+   prefix, which beats a same-file-later plain class override - match that
+   specificity here so the warm-graphite theme actually wins. */
+#panel-bandohd .map-hd-quality button{background:rgba(0,0,0,.18);border-color:#46392f;color:#d3ac95}
+#panel-bandohd .map-hd-progress{background:#241f1b;border-color:#46392f}
+#panel-bandohd .map-hd-progress>div:first-child{color:#f5ece4}
+#panel-bandohd .map-hd-track{background:#3a322b}
+#panel-bandohd .map-hd-actions a,#panel-bandohd .map-hd-actions button{background:rgba(255,255,255,.08);border-color:#46392f;color:#f5ece4}
+#mapHdStageViewer{background:radial-gradient(circle at 50% 45%,#332c27 0,#1c1815 55%,#14110f 100%)}
+#mapHdStageViewer .map-hd-viewport{background:linear-gradient(180deg,#211c19,#14110f)}
+#mapHdStageViewer .map-hd-chunk{background:#241f1b;border-color:#46392f}
+#mapHdStageViewer .map-hd-toolbar button{background:#241f1bee;border-color:#46392f;color:#f5ece4}
+#mapHdStageViewer .map-hd-hint,#mapHdStageViewer .map-hd-state{background:rgba(28,24,21,.85);border-color:#46392f}
+#mapHdStageViewer .map-hd-loading{background:radial-gradient(circle at center,#332c27,#14110f 65%)}
+#mapHdStageViewer .map-hd-loading-track{background:#3a322b}
+
+@media(max-width:850px){.inspector{position:fixed}}

@@ -1,0 +1,34 @@
+﻿AI VIDEO FACTORY V6.5.4 - TAO ANH AI SINGLE SUBJECT FIX
+
+V6.5.3 truoc do VERIFY FAIL vi cau anti-sheet nam sau word budget va installer da rollback dung.
+V6.5.4 sua ca verify va logic render.
+
+CHI SUA:
+- app/modules/tao_anh_ai/service.py
+
+FIX CHINH:
+- Anti-sheet nam ngay dau prompt: ONE PERSON / ONE POSE / ONE CAMERA VIEW.
+- Negative prompt rut gon de "character sheet / lineup / multi-view" khong bi CLIP cat mat.
+- Neu la 1 nhan vat + full body: render native vuong de giam bias tao 4 pose tren canvas ngang.
+- Sau render, mo rong background ra kich thuoc ngang/doc yeu cau ma khong crop chan/kiem.
+- Vision QA neu co se fail khi thay character_sheet_layout.
+- Neu user THUC SU yeu cau character sheet / multi-view thi khong ep anti-sheet.
+
+CAI DAT:
+1. Giai nen TOAN BO ZIP vao thu muc goc ai_video_factory.
+2. Chay INSTALL_TAO_ANH_AI_V6_5_4.bat
+3. Can thay:
+   TAO_ANH_AI_V6_5_4_VERIFY: PASS
+   TAO ANH AI V6.5.4: PASS
+4. Khoi dong lai AI Video Factory.
+
+TEST:
+tạo 1 nữ kiếm hiệp cầm 1 thanh kiếm, toàn thân, ảnh thật
+
+KY VONG:
+- 1 nguoi duy nhat
+- 1 pose / 1 goc may
+- khong lineup / character sheet / 4 view
+- thanh kiem nhin thay ro
+- full body khong mat chan
+- khong canh neu user khong yeu cau

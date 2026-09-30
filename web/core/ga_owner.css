@@ -1,0 +1,52 @@
+body.home-mode .home-screen{grid-template-columns:330px minmax(0,1fr)}
+.home-sidebar{padding:18px 14px;gap:12px;overflow:hidden}
+.ga-owner{border:1px solid #243956;border-radius:15px;background:linear-gradient(180deg,#101f32,#0b1726);min-height:300px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 34px #0003}
+.ga-owner-head{display:flex;align-items:center;gap:8px;padding:10px 11px;border-bottom:1px solid #21334d}
+.ga-owner-avatar{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,#35b6ff,#7050ff);font-weight:900}
+.ga-owner-title{min-width:0;flex:1}.ga-owner-title b{display:block;font-size:12px}.ga-owner-title small{display:block;color:#8395b1;font-size:9px;margin-top:2px}
+.ga-owner-state{font-size:9px;font-weight:900;color:#98a6ba}.ga-owner-state.awake{color:#52de8d}
+.ga-owner-chat{height:154px;overflow:auto;padding:9px;background:#08111d;font-size:10px;line-height:1.45}
+.ga-owner-msg{margin-bottom:8px;white-space:pre-wrap;word-break:break-word}.ga-owner-msg b{color:#65d99a}.ga-owner-msg.me b{color:#7ebcff}
+.ga-owner-progress{padding:6px 9px;border-top:1px solid #17283e;color:#8091aa;font-size:9px;min-height:26px}
+.ga-owner-attach{padding:5px 9px;font-size:9px;color:#70c5ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ga-owner-compose{display:grid;grid-template-columns:1fr auto;gap:5px;padding:7px}
+.ga-owner-compose textarea{resize:none;height:47px;border:1px solid #263b58;border-radius:9px;background:#07111e;color:#eaf2ff;padding:7px;font:10px/1.35 Segoe UI,Arial}
+.ga-owner-compose button,.ga-owner-tools button{border:1px solid #304765;background:#16263b;color:#dbe9fb;border-radius:8px;cursor:pointer}
+.ga-owner-compose button{width:42px;font-weight:900}
+.ga-owner-tools{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;padding:0 7px 8px}
+.ga-owner-tools button{padding:6px 4px;font-size:9px}.ga-owner-tools button:hover,.ga-owner-compose button:hover{background:#1d3552}
+.ga-owner-file{display:none}.home-side-section{padding:8px 7px;min-height:0}.home-settings{margin-top:0}
+@media(max-width:1050px){body.home-mode .home-screen{grid-template-columns:285px minmax(0,1fr)}}
+@media(max-width:760px){.ga-owner{display:none}body.home-mode .home-screen{grid-template-columns:80px 1fr}}
+
+.ga-owner-msg{white-space:pre-wrap;overflow-wrap:anywhere}
+
+.ga-owner-attach-preview{margin:7px 0}.ga-owner-attach-preview.hidden{display:none}.ga-owner-attach-card{display:flex;gap:8px;align-items:center;padding:6px;border:1px solid #33516f;border-radius:9px;background:#0a1725}.ga-owner-attach-thumb{width:58px;height:58px;object-fit:cover;border-radius:7px;border:1px solid #44627e}.ga-owner-attach-meta{min-width:0;flex:1}.ga-owner-attach-meta b,.ga-owner-attach-meta small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ga-owner-attach-meta b{font-size:10px}.ga-owner-attach-meta small{font-size:9px;color:#84a2c1;margin-top:3px}.ga-owner-attach-remove{width:24px;height:24px;border-radius:50%;border:1px solid #6a3c45;background:#311820;color:#ffc8cf;font-size:18px;cursor:pointer}#gaOwner.drag-image{outline:2px dashed #65d99a;outline-offset:-4px}
+
+
+/* V9.5 attachment UX fix */
+.ga-owner-attach-preview{grid-column:1 / -1;width:100%}
+.ga-owner-compose textarea{grid-column:1}
+.ga-owner-compose button#gaOwnerSend{grid-column:2}
+.ga-owner-tools{grid-template-columns:1fr 1fr 1fr 1fr}
+.ga-owner-attach-card{position:relative;align-items:flex-start;padding:8px 74px 8px 8px}
+.ga-owner-attach-remove{
+ position:absolute;top:6px;right:6px;z-index:3;
+ width:24px;height:24px;display:grid;place-items:center;
+ line-height:1;font-size:18px;font-weight:900;
+}
+.ga-owner-attach-clear-text{
+ position:absolute;right:6px;bottom:6px;
+ border:1px solid #445e7c;background:#13253a;color:#dbe9fb;
+ border-radius:6px;padding:3px 6px;font-size:9px;cursor:pointer;
+}
+#gaOwnerClearAttach{white-space:nowrap}
+
+/* V11 AI Core chat attachments: draft stays in composer; sent image becomes chat content. */
+.ga-owner-chat-image-wrap{margin-top:6px;display:flex;flex-direction:column;gap:3px;max-width:190px}
+.ga-owner-chat-image{display:block;max-width:190px;max-height:150px;object-fit:contain;border-radius:8px;border:1px solid #35516f;background:#050b13}
+.ga-owner-chat-image-wrap small{font-size:8px;color:#8298b4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ga-owner-msg.me .ga-owner-chat-image-wrap{margin-left:auto}
+.ga-owner-attach-preview{grid-column:1 / -1;width:100%}
+.ga-owner-attach-card{position:relative;padding-right:38px}
+.ga-owner-attach-remove{position:absolute;right:7px;top:7px;display:grid;place-items:center}

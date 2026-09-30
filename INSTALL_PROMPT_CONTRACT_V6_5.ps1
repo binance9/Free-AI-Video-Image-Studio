@@ -1,0 +1,130 @@
+﻿$ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest
+
+function Banner([string]$Text, [ConsoleColor]$Color = [ConsoleColor]::Cyan) {
+    Write-Host ""
+    Write-Host "============================================================" -ForegroundColor $Color
+    Write-Host ("  " + $Text) -ForegroundColor $Color
+    Write-Host "============================================================" -ForegroundColor $Color
+}
+function RP([string]$Base, [string]$Rel) {
+    Join-Path $Base ($Rel -replace '/', '\')
+}
+
+$Root = $PSScriptRoot
+$Payload = Join-Path $Root "_PATCH_PAYLOAD"
+
+Banner "AI VIDEO FACTORY V6.5 - SHARED PROMPT CONTRACT"
+
+if (-not (Test-Path -LiteralPath (Join-Path $Root "app") -PathType Container)) {
+    Write-Host "[LOI] Khong thay thu muc app." -ForegroundColor Red
+    Write-Host "Giai nen TOAN BO ZIP truc tiep vao thu muc goc ai_video_factory." -ForegroundColor Yellow
+    exit 2
+}
+if (-not (Test-Path -LiteralPath (Join-Path $Payload "app\core\prompt_contract.py") -PathType Leaf)) {
+    Write-Host "[LOI] Thieu _PATCH_PAYLOAD. Khong copy rieng BAT/PS1." -ForegroundColor Red
+    exit 3
+}
+
+$Targets = @(
+    "app/core/prompt_contract.py",
+    "app/modules/tao_anh_ai/service.py",
+    "app/modules/nhan_vat_2d/prompt_builder.py",
+    "app/modules/nhan_vat_2d/image_runtime.py",
+    "app/modules/nhan_vat_3d/service.py",
+    "app/modules/tao_video_ai/service.py",
+    "app/modules/ban_do_3d/khoa_bo_cuc.py",
+    "app/modules/ban_do_3d/tao_o_ban_do.py",
+    "app/modules/ai_video_director/service.py"
+)
+
+$Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
+$BackupRoot = Join-Path $Root ("_BACKUP_PROMPT_CONTRACT_V6_5_" + $Stamp)
+New-Item -ItemType Directory -Path $BackupRoot -Force | Out-Null
+$NewFiles = New-Object System.Collections.Generic.List[string]
+
+function Rollback([string]$Reason) {
+    Banner "ROLLBACK" Red
+    Write-Host $Reason -ForegroundColor Red
+    foreach ($Rel in $Targets) {
+        $Target = RP $Root $Rel
+        $Backup = RP $BackupRoot $Rel
+        if (Test-Path -LiteralPath $Backup -PathType Leaf) {
+            $Parent = Split-Path -Parent $Target
+            if (-not (Test-Path -LiteralPath $Parent)) {
+                New-Item -ItemType Directory -Path $Parent -Force | Out-Null
+            }
+            Copy-Item -LiteralPath $Backup -Destination $Target -Force
+        }
+    }
+    foreach ($Rel in $NewFiles) {
+        $Target = RP $Root $Rel
+        if (Test-Path -LiteralPath $Target -PathType Leaf) {
+            Remove-Item -LiteralPath $Target -Force -ErrorAction SilentlyContinue
+        }
+    }
+    Write-Host "Da khoi phuc source cu." -ForegroundColor Yellow
+    Write-Host ("Backup: " + $BackupRoot) -ForegroundColor Yellow
+    exit 10
+}
+
+Banner "1/4 - BACKUP"
+foreach ($Rel in $Targets) {
+    $Target = RP $Root $Rel
+    $Backup = RP $BackupRoot $Rel
+    if (Test-Path -LiteralPath $Target -PathType Leaf) {
+        $Parent = Split-Path -Parent $Backup
+        if (-not (Test-Path -LiteralPath $Parent)) {
+            New-Item -ItemType Directory -Path $Parent -Force | Out-Null
+        }
+        Copy-Item -LiteralPath $Target -Destination $Backup -Force
+        Write-Host ("BACKUP  " + $Rel)
+    } else {
+        $NewFiles.Add($Rel)
+        Write-Host ("NEW     " + $Rel)
+    }
+}
+
+Banner "2/4 - PATCH"
+try {
+    foreach ($Rel in $Targets) {
+        $Source = RP $Payload $Rel
+        $Target = RP $Root $Rel
+        if (-not (Test-Path -LiteralPath $Source -PathType Leaf)) {
+            Rollback ("Thieu payload: " + $Rel)
+        }
+        $Parent = Split-Path -Parent $Target
+        if (-not (Test-Path -LiteralPath $Parent)) {
+            New-Item -ItemType Directory -Path $Parent -Force | Out-Null
+        }
+        Copy-Item -LiteralPath $Source -Destination $Target -Force
+        Write-Host ("PATCH   " + $Rel) -ForegroundColor Green
+    }
+} catch {
+    Rollback ("Copy patch that bai: " + $_.Exception.Message)
+}
+
+Banner "3/4 - COMPILE + VERIFY"
+$Py = Get-Command python -ErrorAction SilentlyContinue
+if ($null -eq $Py) { Rollback "Khong tim thay python trong PATH." }
+
+$Compile = @()
+foreach ($Rel in $Targets) { $Compile += (RP $Root $Rel) }
+& $Py.Source -m py_compile @Compile
+if ($LASTEXITCODE -ne 0) { Rollback "PY_COMPILE FAIL." }
+Write-Host "PY_COMPILE: PASS" -ForegroundColor Green
+
+Push-Location $Root
+try {
+    & $Py.Source (Join-Path $Root "VERIFY_PROMPT_CONTRACT_V6_5.py")
+    if ($LASTEXITCODE -ne 0) { Rollback "PROMPT CONTRACT VERIFY FAIL." }
+} finally {
+    Pop-Location
+}
+
+Banner "4/4 - INSTALLED" Green
+Write-Host "PROMPT CONTRACT V6.5: PASS" -ForegroundColor Green
+Write-Host "Dong bo: Anh AI + 2D + 3D + Video + Map + AI Video Director" -ForegroundColor Cyan
+Write-Host ("Backup source cu: " + $BackupRoot) -ForegroundColor Yellow
+Write-Host "Khoi dong lai AI Video Factory roi test." -ForegroundColor Yellow
+exit 0

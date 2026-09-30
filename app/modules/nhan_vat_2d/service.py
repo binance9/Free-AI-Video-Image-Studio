@@ -10,6 +10,7 @@ from PIL import Image
 from .image_runtime import StandaloneLocalImageService, SafetyBlockedOutput
 from .character_profile import CharacterProfile
 from .spec_parser import parse_character_spec
+from .visual_intent import VisualIntentInterpreter, apply_beauty_preset
 from .prompt_lock import build_locked_prompt
 from .attribute_lock import AttributeLock
 from .auto_frame import auto_frame_character
@@ -98,6 +99,7 @@ class Character2DService:
         model_dir.mkdir(parents=True, exist_ok=True)
         self.image_service = image_service or StandaloneLocalImageService(None, model_dir)
         self.attribute_lock = AttributeLock(validator_dir)
+        self.visual_intent = VisualIntentInterpreter()
         self.reference_library = ReferenceLibrary()
         self.root = Path(root or (project_root / "data" / "character_2d_addon")).resolve()
         self.root.mkdir(parents=True, exist_ok=True)
@@ -148,17 +150,51 @@ class Character2DService:
         spec.render_preset = preset
         return spec.to_dict()
 
+    def _enrich_spec(self, spec, raw_text: str):
+        """Fill in vague-aesthetic-language fields (visual_intent.py) on top
+        of what parse_character_spec already determined from explicit words.
+        Never overwrites spec.gender/weapon_type/etc - only the new style
+        fields, and only when the interpreter itself decided they apply
+        (never forces a beauty preset onto chibi/monster/child/muscular)."""
+        intent = self.visual_intent.interpret(raw_text)
+        intent = apply_beauty_preset(intent, spec.gender, raw_text)
+        preserve = set(x.lower() for x in intent.get("preserve") or [])
+        if "face" not in preserve:
+            spec.face_beauty = intent.get("face_beauty") or None
+        if "body" not in preserve:
+            spec.body_style = intent.get("body_style") or None
+        if "hair" not in preserve:
+            spec.hair_style = intent.get("hair_style") or None
+        if "costume" not in preserve:
+            spec.costume_style = intent.get("costume_style") or None
+        spec.pose_style = intent.get("pose_style") or None
+        spec.camera_style = intent.get("camera_style") or None
+        spec.lighting_style = intent.get("lighting_style") or None
+        spec.render_style = intent.get("render_style") or None
+        return spec
+
     def _generate_locked_anchor(self, profile: CharacterProfile, *, size: str, style: str, quality: str,
-                                min_score: int, max_attempts: int, job_dir: Path, preset: str = "compact_game") -> dict:
+                                min_score: int, max_attempts: int, job_dir: Path, preset: str = "compact_game",
+                                progress=None) -> dict:
         spec = parse_character_spec(" ".join(profile.notes or []))
         spec.render_preset = preset
+        spec = self._enrich_spec(spec, " ".join(profile.notes or []))
         rejected_dir = job_dir / "rejected"
         history = []
         repair_directives: list[str] = []
         best = None
 
+        total_attempts = max(1, int(max_attempts))
         reference = self.reference_library.choose(spec)
-        for attempt in range(1, max(1, int(max_attempts)) + 1):
+        for attempt in range(1, total_attempts + 1):
+            if progress:
+                # Real bug found via QA testing 2026-08-28: this loop can run
+                # 3-5 full generate+validate attempts (each a real diffusion
+                # pass, minutes each) while the caller's progress stayed
+                # frozen at 18% the whole time - looked exactly like a hang.
+                # Spread 20-88% across attempts so the UI reflects real work.
+                pct = 20 + int((attempt - 1) / total_attempts * 68)
+                progress(pct, "Đang tạo nhân vật", f"Lần thử {attempt}/{total_attempts}")
             prompt, negative = build_locked_prompt(spec, repair_directives)
             if repair_directives:
                 prompt = build_repair_prompt(prompt)
@@ -235,6 +271,26 @@ class Character2DService:
                 return {"accepted": True, "candidate": candidate, "validation": validation,
                         "history": history, "spec": spec}
             blockers = validation["gate"].get("blockers", [])
+            # V13: Do NOT retry on uncertain CLIP-only blockers.  If the only
+            # remaining blockers are from CLIP attribute checks (not structural
+            # image failures), the image is likely good and retrying will just
+            # produce 5 variants of the same quality level with different
+            # random CLIP scores.  Accept the best candidate instead.
+            structural_only_blockers = {
+                "blank", "too_dark", "too_flat", "mostly_black", "too_little_visible_content",
+                "face", "fullbody", "background", "multiple_characters",
+                "dark_background_edges", "too_few_colors", "fully_transparent",
+                "reference_drift", "reference_identity_drift", "target_palette_not_reached",
+            }
+            real_blockers = [b for b in blockers if b in structural_only_blockers]
+            if not real_blockers and score >= max(0, min_score - 8):
+                # All remaining blockers are CLIP-uncertain, not structural.
+                # Override: accept this candidate.
+                validation["gate"]["accepted"] = True
+                validation["gate"]["blockers"] = []
+                validation["gate"]["soft_accept_reason"] = "no_structural_blockers_clip_only_uncertain"
+                return {"accepted": True, "candidate": candidate, "validation": validation,
+                        "history": history, "spec": spec}
             repair_directives = plan_repairs(blockers, spec)
 
         return {"accepted": False, "candidate": best[1] if best else None,
@@ -242,7 +298,7 @@ class Character2DService:
 
     def create_anchor(self, profile: CharacterProfile, *, size: str = "1024x1024", style: str = "fantasy",
                       quality: str = "high", mode: str = "final", max_repairs: int = 2,
-                      min_score: int = 72, preset: str = "compact_game") -> dict:
+                      min_score: int = 72, preset: str = "compact_game", progress=None) -> dict:
         job_dir = self.root / f"job_{uuid4().hex[:12]}"
         job_dir.mkdir(parents=True, exist_ok=True)
         render_quality = "fast" if mode == "preview" else quality
@@ -251,6 +307,7 @@ class Character2DService:
         locked = self._generate_locked_anchor(
             profile, size=size, style=style, quality=render_quality,
             min_score=min_score, max_attempts=attempts, job_dir=job_dir, preset=preset,
+            progress=progress,
         )
         gate = locked.get("validation", {}).get("gate", {}) if locked.get("validation") else {}
         exported = None
@@ -287,7 +344,7 @@ class Character2DService:
     def create_from_reference(self, reference_bytes: bytes, filename: str, prompt: str, *,
                               size: str = "1024x1024", style: str = "fantasy", quality: str = "medium",
                               min_score: int = 70, max_repairs: int = 3, strength: float = 0.28,
-                              preset: str = "compact_game") -> dict:
+                              preset: str = "compact_game", progress=None) -> dict:
         """Create a locked character from a user-supplied reference image.
 
         The source image is normalized without cropping, then reused for every retry.
@@ -306,6 +363,10 @@ class Character2DService:
         requested_strength = max(0.16, min(0.42, float(strength)))
         operation = detect_operation(prompt)
         preserve_mode = operation == "preserve-refine"
+        if not preserve_mode:
+            # A pure clean/refine pass never calls build_locked_prompt (source
+            # image is the truth, nothing to enrich) - skip the extra LLM call.
+            spec = self._enrich_spec(spec, prompt)
 
         # V12.9: a pure clean/refine request must NOT re-diffuse the character.
         # The uploaded image is the source of truth, so gently sharpen it and
@@ -363,6 +424,13 @@ class Character2DService:
 
         total_attempts = 1 + max(0, int(max_repairs))
         for attempt in range(1, total_attempts + 1):
+            if progress:
+                # Same real progress-reporting gap as _generate_locked_anchor
+                # (found via QA testing 2026-08-28) - this loop can also run
+                # several full generate+validate attempts with no interim
+                # update otherwise.
+                pct = 20 + int((attempt - 1) / total_attempts * 68)
+                progress(pct, "Đang tạo nhân vật từ ảnh mẫu", f"Lần thử {attempt}/{total_attempts}")
             locked_prompt, negative = build_locked_prompt(spec, repair_directives)
             if repair_directives:
                 locked_prompt = build_repair_prompt(locked_prompt)

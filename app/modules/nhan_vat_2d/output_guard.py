@@ -73,7 +73,10 @@ def inspect_image(image_path: str | Path) -> dict:
         issues.append("mostly_black")
     if unique_colors < 4 and contrast < 12:
         issues.append("too_few_colors")
-    if edge_brightness < 45 or dark_edge_ratio > 0.55:
+    # Relaxed: edge_brightness 45->28, dark_edge_ratio 0.55->0.75.  Many good
+    # 2D renders with light gray backgrounds measured edge_brightness 30-45
+    # (slightly darker edges from character shadow) and were wrongly rejected.
+    if edge_brightness < 28 or dark_edge_ratio > 0.75:
         issues.append("dark_background_edges")
 
     return {

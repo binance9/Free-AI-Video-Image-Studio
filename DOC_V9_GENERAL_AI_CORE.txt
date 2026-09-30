@@ -1,0 +1,33 @@
+GÀ BRAIN V9 - GENERAL AI CORE
+
+Mục tiêu:
+Gà là TRỢ LÝ AI TỔNG QUÁT trước. AI Video Factory chỉ là tool.
+
+Mode:
+CHAT    - nói chuyện
+ANSWER  - kiến thức / hỏi đáp
+ADVISE  - ý kiến / khuyến nghị
+ANALYZE - phân tích nhưng không sửa
+PLAN    - lập kế hoạch nhưng không chạy
+ACT     - chạy module thật
+DEBUG   - đọc lỗi/log rồi self-heal
+EDIT    - backup/sửa source/test
+
+Quyền:
+- CHAT/ANSWER/ADVISE/ANALYZE/PLAN không được bấm module.
+- ACT mới điều khiển app.
+- DEBUG/EDIT mới được đụng source, và phải theo chính sách an toàn.
+
+Trí nhớ:
+- hội thoại gần đây
+- active goal
+- pending input
+- attachment hiện tại
+- lỗi gần nhất
+- owner policies
+
+Model:
+- Hiện vẫn dùng qwen3:8b cho fast/main để ổn định trước.
+- Config đã tách fast_model/main_model/vision_model để sau này đổi main brain
+  sang model 14B/32B mà không phải viết lại kiến trúc.
+- Chat thường giữ model nóng 90s để hội thoại liên tục nhanh hơn.

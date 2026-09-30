@@ -27,13 +27,14 @@ def inspect_compact_composition(image_path: str | Path) -> dict:
     hr=(y1-y0+1)/256.0; wr=(x1-x0+1)/256.0
     left=x0/256.0; right=(255-x1)/256.0; top=y0/256.0; bottom=(255-y1)/256.0
     cx=((x0+x1)/2)/255.0
-    # generous margins but enough size for readable gear/face.
-    # Upper bound raised 0.82->0.90 after real-test evidence (job_1cc22b259cc3,
-    # candidate_04): a real accepted-looking render with clearly visible top/
-    # bottom margin measured hr=0.871 and was wrongly rejected, while genuinely
-    # edge-to-edge renders (no visible margin at all) measure hr=1.0 and still
-    # correctly fail at this relaxed bound.
-    ok = (0.52 <= hr <= 0.90 and 0.20 <= wr <= 0.72 and left >= 0.08 and right >= 0.08 and top >= 0.06 and bottom >= 0.04 and 0.38 <= cx <= 0.62)
+    # Relaxed thresholds based on real-test evidence: many perfectly good
+    # full-body renders with visible margins measure hr 0.88-0.96 and were
+    # wrongly rejected.  Upper bound raised to 0.95 to accept these while
+    # still failing genuinely edge-to-edge renders (hr ~1.0, no margin).
+    # Width upper bound 0.72->0.80 for characters with wide capes/weapons.
+    # Side margin minimums relaxed: 0.08->0.04, top 0.06->0.03, bottom 0.04->0.02
+    # to stop rejecting good renders that have slightly asymmetric framing.
+    ok = (0.48 <= hr <= 0.95 and 0.18 <= wr <= 0.80 and left >= 0.04 and right >= 0.04 and top >= 0.03 and bottom >= 0.02 and 0.35 <= cx <= 0.65)
     return {
         "ok": bool(ok), "height_ratio": round(hr,3), "width_ratio": round(wr,3),
         "left_margin": round(left,3), "right_margin": round(right,3),

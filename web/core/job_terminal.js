@@ -12,8 +12,9 @@
     Object.assign(state,{scope:scope||null,jobId:jobId||null});
     if(!preserve){state.started=performance.now();state.lines=[];state.lastSeq=0;state.ended=false;}
     $('jobTerminal')?.classList.remove('hidden','collapsed','expanded');
+    $('jobTerminalPct')?.classList.toggle('hidden',scope==='system');
     header(`⚙ ${String(title).toUpperCase()}`,preserve?undefined:0);
-    if(!preserve)append('Creating job...');
+    if(!preserve)append(scope==='system'?'Đang kết nối system log...':'Creating job...');
     if(!scope||!jobId)return;
     // "since=lastSeq": khi doi NORMAL/DEBUG giua chung 1 job (preserve=true),
     // EventSource cu bi dong va mo lai tu dau - truyen lastSeq de server chi

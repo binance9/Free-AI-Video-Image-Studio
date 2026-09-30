@@ -88,10 +88,11 @@
     $('ai3dGameReadyDebug')?.classList.add('hidden');
     $('ai3dGameReadyStatus').classList.remove('warn','ok');
     const target=Number($('ai3dGameReadyFaces')?.value||45000);
+    const weapon=String($('ai3dGameReadyWeapon')?.value||'bow');
     S.setBusy(true,'Đang tạo Game Ready…',STAGE_LABELS.join(' → '));
     setGameReadyProgress({progress:2,stage:'Chuẩn bị',detail:'Đang gửi model sang Blender local…'});
     try{
-      const d=await S.jsonRequest('/api/3d/game-ready/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({asset_id:lastAssetId,target_faces:target})});
+      const d=await S.jsonRequest('/api/3d/game-ready/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({asset_id:lastAssetId,target_faces:target,weapon_type:weapon})});
       pollGameReady(d.status_url);
     }catch(e){S.setBusy(false);S.setStatus('Không bắt đầu được Game Ready: '+e.message,true);$('ai3dGameReadyStatus').textContent='Không bắt đầu được: '+e.message;$('ai3dGameReadyStatus').classList.add('warn');}
   });

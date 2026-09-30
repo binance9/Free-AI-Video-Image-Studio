@@ -13,6 +13,8 @@ from pathlib import Path
 
 from PIL import Image
 
+from app.core.prompt_contract import build_priority_prompt
+
 MASTER_LAYOUT_SIZE = 1024  # PHAI la 1 trong cac size duoc phep cua LocalImageService
 # (xem app/modules/tao_anh_ai/upscale.py::_TARGET_SIZES - vd "1536x1536" se
 # raise "Kich thuoc AI anh khong hop le"). Luu y: model SD1.5 cuc bo LUON
@@ -40,13 +42,18 @@ def khoa_bo_cuc(*, jobdir: Path, spec: dict, reference_path: Path | None, ai_ima
     if ai_image_service is None:
         raise RuntimeError("Tạo map từ mô tả cần AI ảnh local đang hoạt động để khóa bố cục tổng trước khi chia tile")
 
-    master_prompt = (
-        "Top-down full overview of an ENTIRE seamless game world map, ONE single coherent composition "
-        "(not a single tile, the whole map at once). "
-        f"{spec.get('prompt') or 'a fantasy game world'}. Style: {spec['style']}; view: {spec['view']}. "
-        "Show the complete layout: all roads, rivers, coastlines, biome regions and major landmarks "
-        "positioned consistently across the whole map, so every part of it can later be cropped into tiles "
-        "that still connect correctly. Do not add labels, text, borders, UI or legends."
+    master_prompt = build_priority_prompt(
+        spec.get("prompt") or "fantasy terrain world",
+        mandatory=["terrain-only master layout for one coherent game world; preserve every requested biome and global route"],
+        composition=[
+            "top-down isometric layout; lock roads, rivers, lakes, coastlines, mountains, cliffs, ground biomes and gameplay zones",
+            "ground and water only; no trees, bushes, loose rocks, houses, buildings, fences, chests, lamps, statues, furniture or props",
+            "no text, labels, icons, compass, legend, UI, border or frame",
+        ],
+        quality=[spec.get("style") or "fantasy game map"],
+        max_words=62,
+        core_max_words=30,
+        core_label="MAP REQUIREMENT",
     )
     size_txt = f"{MASTER_LAYOUT_SIZE}x{MASTER_LAYOUT_SIZE}"
     raw = ai_image_service.generate(master_prompt, "fantasy", size_txt, "high")

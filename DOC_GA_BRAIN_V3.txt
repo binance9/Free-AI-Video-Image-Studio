@@ -1,0 +1,28 @@
+GÀ BRAIN V3 - 1 NÃO TRUNG TÂM + WATCHDOG + SAFE FILE AUDIT
+
+Cài: giải nén ZIP thẳng vào thư mục gốc ai_video_factory -> Replace All -> đóng bot -> mở lại như cũ.
+
+1) Một bộ não trung tâm:
+- Không có AI riêng khổng lồ trong từng module.
+- Mỗi module chỉ được điều khiển bằng form/nút native có sẵn.
+- Lệnh rõ ràng dùng router nhanh, không gọi Qwen.
+- Lệnh mơ hồ/tối ưu mới gọi qwen3:8b một lần.
+
+2) Watchdog job:
+- Nhân vật 2D/3D: tối đa 15:00.
+- Đồ vật 3D: tối đa 10:00.
+- Map HD: tối đa 10:00.
+- Thanh GÀ BRAIN trong module hiển thị thời gian, %, stage.
+- 70% thời gian -> cảnh báo; 90% -> critical.
+- Không đổi progress lâu -> chẩn đoán stage/GPU/VRAM/texture/mesh/map.
+- Chạm hard timeout -> yêu cầu cancel an toàn nếu Gà là người khởi chạy; KHÔNG chạy đè job mới nếu backend chưa xác nhận dừng.
+- Đồ vật partial texture -> tự retry texture đúng 1 lần.
+- Character 2D gate fail và Map validation fail -> báo CHƯA PASS, không coi là final.
+
+3) Kiểm tra file bot an toàn:
+Ra lệnh ví dụ: "gà, kiểm tra lại các file của bot, lỗi thì báo/sửa và dọn rác an toàn".
+- Kiểm Python syntax, JavaScript syntax (nếu Node có), JSON source, link /static trong index.
+- Tự dọn CHỈ __pycache__, .pyc/.pyo và đúng tên 3 file FIX_GA cũ do Gà từng tạo.
+- KHÔNG đụng data/models/weights/output/projects/assets/.venv/node_modules.
+- File nghi không dùng / backup / old / orphan chỉ LIỆT KÊ, tuyệt đối không xóa nếu chưa chắc.
+- Nếu source lỗi mà không có cách sửa xác định 100%, Gà giữ nguyên file và nói rõ trong chat; không tự ghi đè bằng phỏng đoán.

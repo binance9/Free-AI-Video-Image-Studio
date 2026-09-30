@@ -1,0 +1,24 @@
+﻿AI VIDEO FACTORY V6.5.5 - VIDEO CFR QA FIX
+
+Lỗi sửa:
+  VIDEO_QA_FAILED: VIDEO_FPS_TOO_LOW
+
+Nguyên nhân:
+- SVD thường sinh khoảng 25 frame cho một shot 2-6 giây, cadence model gốc có thể chỉ ~4-12 fps.
+- QA của AUTO PRODUCE không được chấm trực tiếp cadence model gốc.
+- Shot phải được đóng gói thành timeline CFR chuẩn trước, rồi mới QA file master.
+
+Bản V6.5.5:
+- tao_video_ai: encode MP4 CFR 30fps rõ ràng và ffprobe xác minh frame_count/duration.
+- AI Director: raw FPS chỉ là diagnostic; normalize 30fps trước VIDEO QA.
+- AI Director: có một pass sửa CFR timestamp trước khi tiêu tốn diffusion retry.
+- quality.py: dùng decoded frame count / duration làm effective FPS, tránh metadata avg_frame_rate sai.
+- Không hạ ngưỡng QA, không bỏ qua VIDEO_FPS_TOO_LOW.
+
+Cài:
+1. Giải nén TOÀN BỘ ZIP vào thư mục gốc ai_video_factory.
+2. Chạy INSTALL_VIDEO_CFR_QA_V6_5_5.bat
+3. Phải thấy:
+   VIDEO_CFR_QA_V6_5_5_VERIFY: PASS
+   VIDEO CFR QA V6.5.5: PASS
+4. Restart AI Video Factory, chạy lại AUTO PRODUCE.

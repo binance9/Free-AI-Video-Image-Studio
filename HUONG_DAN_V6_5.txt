@@ -1,0 +1,35 @@
+﻿AI VIDEO FACTORY V6.5 - SHARED PROMPT CONTRACT
+
+CAI DAT
+1. Giai nen TOAN BO ZIP truc tiep vao:
+   C:\Users\BAOAN\OneDrive\Máy tính\ai_video_factory
+2. Chay INSTALL_PROMPT_CONTRACT_V6_5.bat
+3. Cho den khi hien:
+   PROMPT_CONTRACT_V6_5_VERIFY: PASS
+   PROMPT CONTRACT V6.5: PASS
+4. Khoi dong lai AI Video Factory.
+
+DA DONG BO
+- Tao Anh AI
+- Nhan vat 2D
+- Nhan vat 3D
+- Tao Video AI
+- Ban do 3D / Map
+- AI Video Director
+
+NGUYEN TAC
+- 1 prompt nguoi dung la source of truth.
+- USER CORE: so luong + chu the + hanh dong + vat the bat buoc nam dau.
+- COMPOSITION nam sau.
+- QUALITY / STYLE nam cuoi.
+- CLIP/SDXL dung tokenizer limit THUC cua model; neu qua dai thi cat phan duoi truoc.
+- Khong ep cung gioi han CLIP 77 thanh 150/225.
+- Retry khong duoc chen quality text len truoc user core.
+- Map giu semantic map goc o moi tile.
+- T2V fit prompt theo tokenizer video.
+- SVD image-to-video khong text-conditioned nhu T2V; prompt duoc giu lam intent va tu khoa motion map sang motion_bucket_id neu backend ho tro.
+
+AN TOAN
+- Tu dong backup file cu vao _BACKUP_PROMPT_CONTRACT_V6_5_YYYYMMDD_HHMMSS
+- Compile/verify loi => tu dong rollback.
+- Khong dong model/checkpoint/data/output/venv/UI.

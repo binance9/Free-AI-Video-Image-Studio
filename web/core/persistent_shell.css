@@ -1,0 +1,140 @@
+/* Persistent left chat + bottom system terminal shell - UI/layout only.
+   Loaded last so its rules win over the older single-page .app grid without
+   having to touch every existing declaration. See persistent_shell.js for
+   the matching resize/persistence behavior and README notes in this file's
+   sibling job_terminal.js for the system-log auto-connect. */
+
+.app-shell{
+  display:grid;
+  grid-template-columns:var(--chat-w,340px) minmax(0,1fr);
+  grid-template-rows:minmax(0,1fr) auto;
+  height:100vh;
+  overflow:hidden;
+  background:#07101d;
+}
+
+/* Persistent chat column: always present regardless of Home vs workspace
+   mode, since it now lives OUTSIDE #homeScreen/.app's mutual-exclusive
+   toggling (body.home-mode only hides .topbar/.workspace/.timeline, and
+   #homeScreen is hidden by default outside home-mode - neither rule
+   touches .chat-col any more). */
+.chat-col{
+  grid-column:1;
+  grid-row:1;
+  align-self:start;
+  width:100%;
+  /* Default leaves real headroom below the row's full height so dragging
+     the divider up (taller) has somewhere to go, not just down (shorter) -
+     max-height still caps it at the row's actual available height. */
+  height:var(--chat-h,560px);
+  min-height:260px;
+  max-height:100%;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border-right:1px solid #1b2940;
+  background:linear-gradient(180deg,#091522,#07101a);
+  position:relative;
+}
+.chat-col .ga-owner{flex:1;min-height:0;margin:14px;margin-bottom:10px}
+.chat-col-resize{
+  flex:0 0 auto;
+  height:14px;
+  margin:0 14px 10px;
+  border-top:1px solid #1b2940;
+  cursor:ns-resize;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  touch-action:none;
+}
+.chat-col-resize:before{content:"";width:36px;height:4px;border-radius:99px;background:#26364c}
+.chat-col-resize:hover:before,.chat-col-resize.dragging:before{background:#4f6b94}
+
+/* The chat message area should actually grow when the panel is resized
+   taller, instead of staying a fixed 154px (original compact home-sidebar
+   sizing) - "kéo lên -> đọc được nhiều nội dung hơn" needs a flexible area. */
+.ga-owner{min-height:0!important}
+.ga-owner-chat{height:auto!important;flex:1;min-height:0}
+
+/* #appMain keeps the existing .app class/rules (topbar/workspace/timeline
+   grid, home-mode toggling) untouched; it just now has to fit its cell in
+   the outer .app-shell grid instead of assuming the full viewport. */
+#appMain.app{
+  grid-column:2;
+  grid-row:1;
+  min-width:0;
+  min-height:0;
+  height:100%;
+  overflow:auto;
+}
+body.home-mode #appMain.app{height:100%;min-height:0}
+.home-screen{height:100%;min-height:0!important}
+.home-sidebar{height:100%!important}
+
+/* System/job terminal now sits in its own full-width row spanning BOTH the
+   chat column and the workspace column (matches the required layout: chat +
+   workspace on top, terminal spanning the full width underneath) rather
+   than being a child of .app's own grid. .job-terminal{grid-column:1/-1}
+   (already set in style.css) places it correctly here since .app-shell also
+   has 2 columns. */
+.job-terminal{
+  grid-column:1/-1;
+  grid-row:2;
+  resize:none;
+  height:var(--terminal-h,220px);
+  min-height:120px;
+  max-height:60vh;
+}
+.job-terminal.collapsed{height:40px!important}
+.job-terminal.expanded{height:min(60vh,520px)!important}
+.job-terminal-resize{
+  height:10px;
+  flex:0 0 auto;
+  cursor:ns-resize;
+  background:#0b121c;
+  border-bottom:1px solid #26364c;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  touch-action:none;
+  order:-1;
+}
+.job-terminal-resize:before{content:"";width:44px;height:4px;border-radius:99px;background:#26364c}
+.job-terminal-resize:hover:before,.job-terminal-resize.dragging:before{background:#4f6b94}
+.job-terminal{display:flex;flex-direction:column}
+
+/* Never let any preview/fullscreen surface cover the persistent chat
+   column - these are already position:absolute scoped to .stage (a
+   descendant of the workspace column), so they naturally can't escape past
+   .app-shell's grid columns, but pin it down explicitly for safety. */
+.chat-col,.job-terminal{position:relative;z-index:5}
+.ai3d-stage-viewer:fullscreen,.stage:fullscreen{z-index:auto}
+
+@media(max-width:1150px){
+  .app-shell{grid-template-columns:min(300px,34vw) minmax(0,1fr)}
+}
+
+/* ga_owner.css sized #homeScreen's own sidebar column (330px) to fit the
+   chat widget that used to live inside it; the chat is now the persistent
+   .chat-col outside #homeScreen entirely, so the remaining home-sidebar
+   (nav + recent + settings only) can be narrower again. */
+body.home-mode .home-screen{grid-template-columns:210px minmax(0,1fr)!important}
+@media(max-width:1050px){body.home-mode .home-screen{grid-template-columns:210px minmax(0,1fr)!important}}
+@media(max-width:900px){body.home-mode .home-screen{grid-template-columns:80px 1fr!important}}
+
+/* Narrow screens: collapse instead of disappearing entirely (requirement:
+   chat must never auto-vanish when entering a module). */
+@media(max-width:880px){
+  .app-shell{grid-template-columns:56px minmax(0,1fr)}
+  .chat-col{min-height:0}
+  .chat-col .ga-owner,.chat-col-resize{display:none}
+  .chat-col:before{
+    content:"💬";
+    display:flex;align-items:center;justify-content:center;
+    width:100%;height:100%;font-size:20px;color:#77ceff;cursor:pointer;
+  }
+  body.chat-col-open .app-shell{grid-template-columns:min(88vw,340px) minmax(0,1fr)}
+  body.chat-col-open .chat-col .ga-owner,body.chat-col-open .chat-col-resize{display:flex}
+  body.chat-col-open .chat-col:before{display:none}
+}

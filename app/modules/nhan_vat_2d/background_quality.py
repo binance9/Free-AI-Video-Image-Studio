@@ -27,11 +27,15 @@ def inspect_background(image_path: str | Path) -> dict:
         center_edges = _edge_mean(center)
         corner_contrast = sum(ImageStat.Stat(c.convert("L")).stddev[0] for c in corners) / max(1, len(corners))
     clutter_ratio = corner_edges / max(1.0, center_edges)
-    plain_canvas = corner_edges < 9.0 and center_edges < 9.0 and corner_contrast < 8.0
-    # For game-ready sprites, corner activity should be relatively low.
-    ok = plain_canvas or (corner_edges < 28.0 and clutter_ratio < 0.62 and corner_contrast < 58.0)
-    penalty_ratio = 0.0 if plain_canvas else clutter_ratio * 20.0
-    score = max(0.0, 100.0 - (corner_edges * 2.1 + corner_contrast * 0.7 + penalty_ratio))
+    plain_canvas = corner_edges < 12.0 and corner_contrast < 10.0
+    # Relaxed: a plain white/gray background should pass even when the character
+    # has high edge detail in center (center_edges can be high for a well-drawn
+    # character).  The real signal for "bad background" is corner clutter and
+    # corner contrast, NOT center detail.  Raise corner_edges threshold 28->38,
+    # clutter_ratio 0.62->0.85, corner_contrast 58->72.
+    ok = plain_canvas or (corner_edges < 38.0 and clutter_ratio < 0.85 and corner_contrast < 72.0)
+    penalty_ratio = 0.0 if plain_canvas else clutter_ratio * 15.0
+    score = max(0.0, 100.0 - (corner_edges * 1.6 + corner_contrast * 0.5 + penalty_ratio))
     return {
         "ok": bool(ok),
         "score": round(score, 2),

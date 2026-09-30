@@ -260,3 +260,10 @@ Toàn bộ engine TripoSR/Hunyuan3D/Blender giữ nguyên logic. Thay đổi duy
 `image_preprocess.py::prepare_image_for_3d` để `do_vat_3d` dùng lại hàm tiền xử lý ảnh chung với
 giá trị `0.5` (canh giữa, không lệch xuống như nhân vật) — 100% tương thích ngược, không ảnh hưởng
 hành vi hiện tại của `nhan_vat_3d`/`nhan_vat_2d`.
+
+
+## Hotfix V1.1.1 — Object-only prompt guard
+- Bỏ gọi `Local3DService.from_prompt()` cho `do_vat_3d` vì hàm dùng chung này từng append cụm `single full body character or isolated object`, dễ kéo prompt sang hướng nhân vật.
+- `do_vat_3d` nay tự dựng concept 2D bằng prompt NGẮN, object-only, rồi mới gọi `from_image()` để dựng 3D.
+- Thêm guard chặn từ khóa người/nhân vật cho các category object nghiêm ngặt như `cay`, `da`, `co_bui`, `ruong`, `thung`, `hang_rao`, `cot`, `den`, `nha_nho`, `cong`, `trang_tri`.
+- Giảm nguy cơ CLIP bị cắt prompt do quá dài.

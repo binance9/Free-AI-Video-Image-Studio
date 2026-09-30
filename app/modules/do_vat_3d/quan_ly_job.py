@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import threading
+from app.core.job_log_broker import job_log_broker
 import time
 import uuid
 from pathlib import Path
@@ -55,6 +56,7 @@ class DoVat3DJobManager:
             if log:
                 job["log"].append(str(log)[-1200:])
                 job["log"] = job["log"][-30:]
+                job_log_broker.publish("object_3d", job_id, str(log), "stdout")
             job.update(extra)
             job["updated_at"] = time.time()
 
@@ -102,6 +104,7 @@ class DoVat3DJobManager:
                     "game_ready": False,
                     "source": "prompt" if prompt else "image",
                     "prompt": prompt,
+                    "concept_prompt_used": result.get("concept_prompt_used"),
                     "texture_preset": result["texture_preset"],
                     "texture_error": result["texture_error"],
                     "texture_timed_out": result.get("texture_timed_out", False),
@@ -148,7 +151,7 @@ class DoVat3DJobManager:
             except Exception as exc:  # noqa: BLE001
                 self._update(job_id, status="error", stage="Lỗi", detail=str(exc), error=str(exc))
 
-        threading.Thread(target=worker, daemon=True, name=f"aivf-dovat3d-{job_id[:8]}").start()
+        threading.Thread(target=job_log_broker.bound("object_3d",job_id,worker), daemon=True, name=f"aivf-dovat3d-{job_id[:8]}").start()
         return job_id
 
     def retry_texture(self, job_id: str, texture_mode: str) -> None:
@@ -208,7 +211,7 @@ class DoVat3DJobManager:
             except Exception as exc:  # noqa: BLE001
                 self._update(job_id, status="error", stage="Lỗi", detail=str(exc), error=str(exc))
 
-        threading.Thread(target=worker, daemon=True, name=f"aivf-dovat3d-retry-{job_id[:8]}").start()
+        threading.Thread(target=job_log_broker.bound("object_3d",job_id,worker), daemon=True, name=f"aivf-dovat3d-retry-{job_id[:8]}").start()
 
     def cancel(self, job_id: str) -> bool:
         with self._lock:

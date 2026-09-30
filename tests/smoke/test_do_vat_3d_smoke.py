@@ -73,7 +73,11 @@ def test_categories_endpoint_lists_13_categories(smoke_tmp_path):
 def test_assets_endpoint_empty_library_returns_200(smoke_tmp_path):
     from fastapi.testclient import TestClient
     from app.main import create_app
-    app = create_app(db_path=smoke_tmp_path / "db.sqlite", editor_dir=smoke_tmp_path / "editor")
+    app = create_app(
+        db_path=smoke_tmp_path / "db.sqlite",
+        editor_dir=smoke_tmp_path / "editor",
+        do_vat_3d_dir=smoke_tmp_path / "do_vat_3d",
+    )
     client = TestClient(app)
     resp = client.get("/api/do-vat-3d/assets")
     assert resp.status_code == 200

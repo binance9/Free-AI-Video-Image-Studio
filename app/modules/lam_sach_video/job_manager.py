@@ -13,6 +13,7 @@ from uuid import uuid4
 
 from app.modules.chinh_sua_video.ffmpeg_tools import ffmpeg_bin
 from app.core.shared_services import JobCancelled, terminate_process
+from app.core.job_log_broker import job_log_broker
 from app.modules.chinh_sua_video.probe import probe_video
 
 
@@ -77,6 +78,7 @@ class VideoCleanupJobManager:
             if line is None:
                 break
             if line:
+                job_log_broker.publish("video_cleanup", job_id, line, "stdout")
                 try:
                     data = json.loads(line)
                     p = int(data.get("progress", 0) or 0)
@@ -96,6 +98,8 @@ class VideoCleanupJobManager:
         stderr = ""
         if proc.stderr is not None:
             stderr = proc.stderr.read()
+            if stderr:
+                job_log_broker.publish("video_cleanup", job_id, stderr, "stderr")
         code = proc.wait()
         with self._lock:
             self._procs.pop(job_id, None)
@@ -140,7 +144,7 @@ class VideoCleanupJobManager:
                 self._update(job_id, status="cancelled", stage="Đã dừng", detail=str(exc), error=None)
             except Exception as exc:
                 self._update(job_id, status="error", stage="Lỗi xóa nền", detail=str(exc), error=str(exc))
-        threading.Thread(target=worker, daemon=True, name=f"aivf-bg-{job_id[:8]}").start()
+        threading.Thread(target=job_log_broker.bound("video_cleanup",job_id,worker), daemon=True, name=f"aivf-bg-{job_id[:8]}").start()
         return job_id
 
     def _rect_pixels(self, session_id: str, x: float, y: float, w: float, h: float, padding: int) -> tuple[Path, int, int, int, int, float]:
@@ -236,7 +240,7 @@ class VideoCleanupJobManager:
                 self._update(job_id, status="cancelled", stage="Đã dừng", detail=str(exc), error=None)
             except Exception as exc:
                 self._update(job_id, status="error", stage="Lỗi xóa vùng", detail=str(exc), error=str(exc))
-        threading.Thread(target=worker, daemon=True, name=f"aivf-erase-{job_id[:8]}").start()
+        threading.Thread(target=job_log_broker.bound("video_cleanup",job_id,worker), daemon=True, name=f"aivf-erase-{job_id[:8]}").start()
         return job_id
 
     def _run_delogo(self, job_id: str, source: Path, output: Path, x: int, y: int, w: int, h: int, duration: float) -> None:
@@ -255,6 +259,8 @@ class VideoCleanupJobManager:
                     self._procs.pop(job_id, None)
                 raise JobCancelled("Đã dừng xóa chữ / icon")
             line = raw.strip()
+            if line:
+                job_log_broker.publish("video_cleanup", job_id, line, "stdout")
             if line.startswith("out_time_ms="):
                 try:
                     seconds = int(line.split("=", 1)[1]) / 1_000_000
@@ -263,6 +269,8 @@ class VideoCleanupJobManager:
                 except ValueError:
                     pass
         stderr = proc.stderr.read() if proc.stderr else ""
+        if stderr:
+            job_log_broker.publish("video_cleanup", job_id, stderr, "stderr")
         code = proc.wait()
         with self._lock:
             self._procs.pop(job_id, None)

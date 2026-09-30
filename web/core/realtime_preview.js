@@ -5,8 +5,18 @@
       this.image = document.getElementById('realtimePreviewImage');
       this.video = document.getElementById('realtimePreviewVideo');
       this.empty = document.getElementById('realtimePreviewEmpty');
+      this.clearButton = document.getElementById('realtimePreviewClear');
       this.mode = null;
       this.objectUrl = null;
+      this._clearHandler = null;
+      if (this.clearButton) this.clearButton.onclick = () => {
+        const fn = this._clearHandler; this._clearHandler = null;
+        this.clearButton.hidden = true;
+        if (fn) fn();
+        this.image?.classList.add('hidden'); this.video?.classList.add('hidden');
+        this.empty?.classList.remove('hidden');
+        if (this.objectUrl) { URL.revokeObjectURL(this.objectUrl); this.objectUrl = null; }
+      };
     }
     _hideOthers() { ['empty','videoBox','ai3dSourcePreview','ai3dStageViewer','mapHdStageViewer'].forEach(id => document.getElementById(id)?.classList.add('hidden')); }
     activate(mode='image', title='XEM TRƯỚC REALTIME') {
@@ -14,9 +24,11 @@
       const heading=document.querySelector('.preview-head h2'); if(heading)heading.textContent=title;
     }
     deactivate(){this.root?.classList.add('hidden');}
-    showFile(file,type='image'){if(!file)return;if(this.objectUrl)URL.revokeObjectURL(this.objectUrl);this.objectUrl=URL.createObjectURL(file);this.show(type,this.objectUrl);}
-    show(type,url){
+    showFile(file,type='image',onClear=null){if(!file)return;if(this.objectUrl)URL.revokeObjectURL(this.objectUrl);this.objectUrl=URL.createObjectURL(file);this._clearHandler=onClear;this.show(type,this.objectUrl,true);}
+    show(type,url,clearable=false){
       if(!url)return;this.activate(type,type==='video'?'VIDEO':type==='map'?'BẢN ĐỒ / TILE':'ẢNH REALTIME');this.empty?.classList.add('hidden');
+      if(this.clearButton)this.clearButton.hidden=!clearable;
+      if(!clearable)this._clearHandler=null;
       if(type==='video'){this.image?.classList.add('hidden');this.video.src=url;this.video.classList.remove('hidden');this.video.load();}
       else{this.video?.classList.add('hidden');this.image.src=url;this.image.classList.remove('hidden');}
     }

@@ -44,6 +44,7 @@ def args_after_dash():
     p.add_argument("--output", required=True)
     p.add_argument("--report", required=True)
     p.add_argument("--target-faces", type=int, default=45000)
+    p.add_argument("--weapon-type", default="bow")
     return p.parse_args(argv)
 
 
@@ -137,6 +138,11 @@ def create_rig(mesh):
     chest = add_bone(arm_data, "chest", (cx, cy, z(.64)), (cx, cy, z(.77)), spine, True)
     neck = add_bone(arm_data, "neck", (cx, cy, z(.77)), (cx, cy, z(.83)), chest, True)
     head = add_bone(arm_data, "head", (cx, cy, z(.83)), (cx, cy, z(.97)), neck, True)
+    # Jaw hinge near the base of the head, tail pushed toward the front (lower
+    # y, same "front" convention feet already use below) and slightly down -
+    # this only ever needs to carry whatever chin/lower-face vertices the
+    # zone fallback assigns to it, not be anatomically exact.
+    jaw = add_bone(arm_data, "jaw", (cx, cy - w*.10, z(.855)), (cx, cy - w*.32, z(.835)), head)
 
     def arm(side, sign):
         upper = add_bone(arm_data, f"upper_arm.{side}", (cx + sign*shoulder*.65, cy, z(.74)), (cx + sign*elbow, cy, z(.67)), chest)
@@ -188,14 +194,22 @@ def _zone_fallback_weights(mesh, rig):
     mod = mesh.modifiers.get("AIVF_Armature") or mesh.modifiers.new("AIVF_Armature", "ARMATURE")
     mod.object = rig
     mesh.parent = rig
-    mn, mx = world_bbox(mesh); h = max(mx.z-mn.z, .001); cx=(mn.x+mx.x)*.5
+    mn, mx = world_bbox(mesh); h = max(mx.z-mn.z, .001); cx=(mn.x+mx.x)*.5; cy=(mn.y+mx.y)*.5
     groups = {b.name: mesh.vertex_groups.new(name=b.name) for b in rig.data.bones}
+    has_jaw = "jaw" in groups
     for v in mesh.data.vertices:
         co = mesh.matrix_world @ v.co
         t = (co.z-mn.z)/h
         x = co.x-cx
         name = "hips"
-        if t > .82: name = "head"
+        if t > .82:
+            # Lower-front slice of the head (same "front = lower y" convention
+            # feet already use below) goes to jaw instead of head, so a jaw
+            # rotation moves chin/mouth-area geometry without dragging the
+            # whole skull. Front-ness is a heuristic, not measured - if this
+            # mesh's forward axis differs, the jaw just ends up owning some
+            # other lower-head slice instead of failing outright.
+            name = "jaw" if (has_jaw and t < .90 and co.y < cy - h*.06) else "head"
         elif t > .68:
             name = "upper_arm.L" if x > h*.16 else ("upper_arm.R" if x < -h*.16 else "chest")
         elif t > .48:
@@ -264,67 +278,189 @@ def new_action(rig, name):
 
 
 def bake_run_cycle(rig):
-    """In-place run cycle built from one continuous phase function per limb
-    instead of hand-picked poses, so left/right legs are exact mirror
-    images at every sample and the last frame is mathematically identical
-    to the first (seamless loop). phase_l = t, phase_r = t+0.5 (mod 1) is
-    what guarantees the two legs are always in anti-phase - not just
-    "different", but the same curve shifted by half a cycle:
+    """Bake a visibly readable chibi run cycle on EVERY frame.
 
-      t=0.00 (frame 1 ): left thigh forward / right thigh back, right arm
-                          forward / left arm back (contact pose)
-      t=0.25 (frame 7 ): both thighs pass through neutral, hips dip once
-      t=0.50 (frame 13): mirror of t=0 (right thigh forward)
-      t=0.75 (frame 19): both thighs pass through neutral again, hips dip
-      t=1.00 (frame 25): identical to t=0 - loop seam
+    The old implementation keyed only five poses. Numerically it could be
+    anti-phase while still looking like a body wobble after interpolation on a
+    short-legged/chibi mesh. This version samples every frame and gives each
+    leg a clear contact -> down -> passing -> up -> contact path.
 
-    Knee bend is 0 through each leg's own stance half (phase 0..0.5, foot
-    planted/moving back under the body) and only bends through its swing
-    half (phase 0.5..1, leg off the ground recovering forward), peaking at
-    its own phase 0.75 - so at any instant exactly one leg is bent (airborne)
-    while the other is straight (planted), never both/neither.
+    The cycle is in-place: root never translates. Game code owns locomotion.
     """
-    a = new_action(rig, "run"); reset_pose(rig)
-    for i, t in enumerate((0.0, 0.25, 0.5, 0.75, 1.0)):
-        f = i * (RUN_CYCLE_FRAMES // 4) + 1
-        phase_l = t % 1.0
-        phase_r = (t + 0.5) % 1.0
+    action = new_action(rig, "run")
+    reset_pose(rig)
 
-        def thigh(phase):
-            return RUN_THIGH_AMP * math.cos(2 * math.pi * phase)
+    # Slightly stronger than the old values so motion is readable on a chibi
+    # silhouette, but still conservative enough to avoid self-intersection.
+    thigh_amp = 0.72       # ~41 deg forward/back from neutral
+    knee_amp = 1.02        # ~58 deg peak bend on airborne leg
+    ankle_amp = 0.42
+    arm_amp = 0.46
+    hip_bob = 0.026
+    hip_twist = 0.045
 
-        def knee(phase):
-            swing = math.sin(2 * math.pi * (phase - 0.5))
-            return -RUN_KNEE_AMP * max(0.0, swing)
+    total = RUN_CYCLE_FRAMES
+    for i in range(total + 1):
+        frame = i + 1
+        t = i / float(total)
+        phase_l = 2.0 * math.pi * t
+        phase_r = phase_l + math.pi
 
-        def foot(phase):
-            return -RUN_FOOT_AMP * math.sin(2 * math.pi * phase)
+        # Thighs are guaranteed exact anti-phase.
+        thigh_l = thigh_amp * math.cos(phase_l)
+        thigh_r = thigh_amp * math.cos(phase_r)
 
-        thigh_l, thigh_r = thigh(phase_l), thigh(phase_r)
-        arm_l, arm_r = -thigh_l * (RUN_ARM_AMP / RUN_THIGH_AMP), -thigh_r * (RUN_ARM_AMP / RUN_THIGH_AMP)
-        hips_rot_z = RUN_HIPS_ROT_AMP * math.cos(2 * math.pi * phase_l)
-        hips_z = -RUN_HIPS_DIP if t in (0.25, 0.75) else 0.0
-        head_x = RUN_HEAD_BOB_AMP * math.cos(4 * math.pi * phase_l)
+        # A leg bends mainly while it travels forward through its airborne
+        # half. max(0, -sin()) and the pi-shift guarantee alternating knees.
+        knee_l = -knee_amp * max(0.0, -math.sin(phase_l))
+        knee_r = -knee_amp * max(0.0, -math.sin(phase_r))
 
-        set_pose_rotation(rig, "thigh.L", (thigh_l, 0, 0), f)
-        set_pose_rotation(rig, "thigh.R", (thigh_r, 0, 0), f)
-        set_pose_rotation(rig, "shin.L", (knee(phase_l), 0, 0), f)
-        set_pose_rotation(rig, "shin.R", (knee(phase_r), 0, 0), f)
-        set_pose_rotation(rig, "foot.L", (foot(phase_l), 0, 0), f)
-        set_pose_rotation(rig, "foot.R", (foot(phase_r), 0, 0), f)
-        set_pose_rotation(rig, "upper_arm.L", (arm_l, 0, 0), f)
-        set_pose_rotation(rig, "upper_arm.R", (arm_r, 0, 0), f)
-        set_pose_rotation(rig, "forearm.L", (RUN_FOREARM_BEND, 0, 0), f)
-        set_pose_rotation(rig, "forearm.R", (RUN_FOREARM_BEND, 0, 0), f)
-        set_pose_rotation(rig, "hips", (0, 0, hips_rot_z), f)
-        set_pose_location(rig, "hips", (0, 0, hips_z), f)
-        set_pose_rotation(rig, "chest", (RUN_CHEST_LEAN, 0, 0), f)
-        set_pose_rotation(rig, "head", (head_x, 0, 0), f)
-    a.frame_range = (1, RUN_CYCLE_FRAMES + 1)
+        # Feet toe-up during recovery and toe-down shortly before contact.
+        foot_l = ankle_amp * math.sin(phase_l + 0.35)
+        foot_r = ankle_amp * math.sin(phase_r + 0.35)
+
+        # Arms counter-swing against the same-side leg. Keep forearm bend
+        # relaxed so held props stay nearer the body and intersect less.
+        arm_l = -arm_amp * math.cos(phase_l)
+        arm_r = -arm_amp * math.cos(phase_r)
+        elbow_l = RUN_FOREARM_BEND - 0.10 * max(0.0, -math.sin(phase_l))
+        elbow_r = RUN_FOREARM_BEND - 0.10 * max(0.0, -math.sin(phase_r))
+
+        # Two small vertical dips per cycle at passing phases, plus a tiny
+        # pelvis twist. Root remains fixed.
+        hips_z = -hip_bob * (0.5 - 0.5 * math.cos(2.0 * phase_l))
+        hips_rot_z = hip_twist * math.cos(phase_l)
+        chest_x = -0.11 + 0.018 * math.sin(2.0 * phase_l)
+        head_x = -0.012 * math.sin(2.0 * phase_l)
+
+        set_pose_rotation(rig, "thigh.L", (thigh_l, 0, 0), frame)
+        set_pose_rotation(rig, "thigh.R", (thigh_r, 0, 0), frame)
+        set_pose_rotation(rig, "shin.L", (knee_l, 0, 0), frame)
+        set_pose_rotation(rig, "shin.R", (knee_r, 0, 0), frame)
+        set_pose_rotation(rig, "foot.L", (foot_l, 0, 0), frame)
+        set_pose_rotation(rig, "foot.R", (foot_r, 0, 0), frame)
+        set_pose_rotation(rig, "upper_arm.L", (arm_l, 0, 0), frame)
+        set_pose_rotation(rig, "upper_arm.R", (arm_r, 0, 0), frame)
+        set_pose_rotation(rig, "forearm.L", (elbow_l, 0, 0), frame)
+        set_pose_rotation(rig, "forearm.R", (elbow_r, 0, 0), frame)
+        set_pose_rotation(rig, "hips", (0, 0, hips_rot_z), frame)
+        set_pose_location(rig, "hips", (0, 0, hips_z), frame)
+        set_pose_rotation(rig, "chest", (chest_x, 0, 0), frame)
+        set_pose_rotation(rig, "head", (head_x, 0, 0), frame)
+
+    # Linear interpolation makes planted/swing phases visually predictable;
+    # every frame is already baked so there is no loss of smoothness. This is
+    # set globally in main() via keyframe_new_interpolation_type before any
+    # keyframe_insert() call, so every curve is already linear at insertion
+    # time - no need to walk action.fcurves after the fact (that attribute
+    # moved under action.layers[...].strips[...].channelbags[...] on newer
+    # Blender's layered-action model and would raise AttributeError here).
+    action.frame_range = (1, total + 1)
+    return action
+
+BLADE_WEAPON_TYPES = {"sword", "blade", "katana", "dao", "kiem", "kiếm", "đao"}
+STAFF_WEAPON_TYPES = {"staff", "rod", "wand", "gay", "gậy", "truong", "trượng", "quyen truong", "quyền trượng"}
+SPEAR_WEAPON_TYPES = {"spear", "lance", "polearm", "giao", "giáo", "thuong", "thương"}
+
+
+def bake_sword_attack(rig):
+    """Right-hand blade combo: horizontal slash -> diagonal downcut -> overhead
+    chop, so 'vung theo mọi góc' is a representative multi-angle combo rather
+    than a single swing. Same action name/frame convention as the bow clip
+    (attack_01) so validate_game_ready.py's REQUIRED_CLIPS check needs no
+    change - only the pose content differs by weapon."""
+    a = new_action(rig, "attack_01"); reset_pose(rig)
+    # frame, chest_x, chest_z, arm_x(shoulder pitch), arm_z(shoulder swing), elbow_x, off_arm_x, off_arm_z, head_z
+    sword_poses = [
+        (1,  -0.05,  0.00, -0.20,  0.35, -0.35, -0.15,  0.10,  0.00),  # guard, blade raised right
+        (6,  -0.10,  0.30, -0.55,  0.85, -0.55, -0.20,  0.20,  0.10),  # wind-up for horizontal slash
+        (10, -0.15, -0.35, -0.30, -0.60, -0.20, -0.15, -0.10, -0.12),  # horizontal slash follow-through (right-to-left)
+        (16, -0.22, -0.05, -0.95, -0.15, -0.70, -0.10, -0.05, -0.05),  # wind-up high for diagonal downcut
+        (21, -0.02,  0.10, -0.10,  0.30, -0.15, -0.08,  0.08,  0.06),  # diagonal downcut follow-through
+        (27, -0.32,  0.00, -1.15,  0.05, -0.80, -0.05,  0.00, -0.16),  # raise overhead
+        (32,  0.08,  0.00, -0.05,  0.05, -0.10, -0.10,  0.00,  0.10),  # overhead chop straight down
+        (38,  0.00,  0.00, -0.20,  0.35, -0.35, -0.15,  0.10,  0.00),  # recover to guard
+    ]
+    for f, chest_x, chest_z, arm_x, arm_z, elbow_x, off_x, off_z, head_z in sword_poses:
+        set_pose_rotation(rig, "chest", (chest_x, 0, chest_z), f)
+        # Right arm holds the blade for every angle of the combo.
+        set_pose_rotation(rig, "upper_arm.R", (arm_x, 0, arm_z), f)
+        set_pose_rotation(rig, "forearm.R", (elbow_x, 0, 0), f)
+        # Left arm counter-balances rather than staying dead still.
+        set_pose_rotation(rig, "upper_arm.L", (off_x, 0, off_z), f)
+        set_pose_rotation(rig, "forearm.L", (-0.10, 0, 0), f)
+        set_pose_rotation(rig, "head", (0.0, 0.0, head_z), f)
+    a.frame_range = (1, 38)
     return a
 
 
-def bake_starter_actions(rig):
+def bake_staff_attack(rig):
+    """Two-handed staff/rod: both arms move together (gripping a long pole)
+    through a spin wind-up into an overhead downward strike - visually
+    distinct from the one-armed sword combo and the bow draw."""
+    a = new_action(rig, "attack_01"); reset_pose(rig)
+    # frame, chest_x, chest_z, armL_x, armL_z, armR_x, armR_z, elbowL, elbowR, head_z
+    staff_poses = [
+        (1,  -0.05,  0.00, -0.20,  0.15, -0.20, -0.15, -0.30, -0.30,  0.00),  # ready, staff held across body
+        (7,  -0.08,  0.55, -0.35,  0.65, -0.55, -0.60, -0.35, -0.55,  0.14),  # spin wind-up, staff sweeps right
+        (14, -0.08, -0.55, -0.55, -0.60, -0.35,  0.65, -0.55, -0.35, -0.14),  # spin continues, staff sweeps left
+        (20, -0.35,  0.00, -1.05,  0.05, -1.05,  0.05, -0.75, -0.75,  0.00),  # both arms raise staff overhead
+        (25,  0.10,  0.00, -0.10,  0.05, -0.10,  0.05, -0.15, -0.15,  0.10),  # overhead strike straight down
+        (32,  0.00,  0.00, -0.20,  0.15, -0.20, -0.15, -0.30, -0.30,  0.00),  # recover to ready
+    ]
+    for f, chest_x, chest_z, arm_lx, arm_lz, arm_rx, arm_rz, elbow_l, elbow_r, head_z in staff_poses:
+        set_pose_rotation(rig, "chest", (chest_x, 0, chest_z), f)
+        set_pose_rotation(rig, "upper_arm.L", (arm_lx, 0, arm_lz), f)
+        set_pose_rotation(rig, "forearm.L", (elbow_l, 0, 0), f)
+        set_pose_rotation(rig, "upper_arm.R", (arm_rx, 0, arm_rz), f)
+        set_pose_rotation(rig, "forearm.R", (elbow_r, 0, 0), f)
+        set_pose_rotation(rig, "head", (0.0, 0.0, head_z), f)
+    a.frame_range = (1, 32)
+    return a
+
+
+def bake_spear_attack(rig):
+    """Two-handed thrust: front (right) hand drives the spear straight
+    forward while the back (left) hand anchors near the torso, then both
+    retract - a linear thrust reads as distinct from the sword's arcing
+    slashes and the staff's spin."""
+    a = new_action(rig, "attack_01"); reset_pose(rig)
+    # frame, chest_x, front_arm_x(R), front_elbow(R), back_arm_x(L), back_elbow(L), head_z
+    spear_poses = [
+        (1,  -0.05, -0.15, -0.55, -0.10, -0.35,  0.00),  # ready, spear held level
+        (6,  -0.20, -0.65, -0.85, -0.05, -0.20,  0.05),  # draw back for thrust
+        (11,  0.05, -0.05, -0.05, -0.20, -0.45, -0.05),  # full thrust forward, arms extend
+        (16,  0.05, -0.05, -0.05, -0.20, -0.45, -0.05),  # brief hold at full extension
+        (22, -0.10, -0.40, -0.65, -0.12, -0.30,  0.02),  # retract
+        (28, -0.05, -0.15, -0.55, -0.10, -0.35,  0.00),  # recover to ready
+    ]
+    for f, chest_x, front_x, front_elbow, back_x, back_elbow, head_z in spear_poses:
+        set_pose_rotation(rig, "chest", (chest_x, 0, 0), f)
+        set_pose_rotation(rig, "upper_arm.R", (front_x, 0, 0), f)
+        set_pose_rotation(rig, "forearm.R", (front_elbow, 0, 0), f)
+        set_pose_rotation(rig, "upper_arm.L", (back_x, 0, 0), f)
+        set_pose_rotation(rig, "forearm.L", (back_elbow, 0, 0), f)
+        set_pose_rotation(rig, "head", (0.0, 0.0, head_z), f)
+    a.frame_range = (1, 28)
+    return a
+
+
+def bake_talk_cycle(rig):
+    """Cyclic jaw open/close, independent of weapon - a crude 'talking' loop,
+    not real lip-sync (no audio/viseme input exists anywhere in this app).
+    Whether this reads as a mouth opening or moves some other lower-head
+    geometry depends entirely on where the zone fallback's front-ness guess
+    actually landed on a given mesh - there is no way to confirm that without
+    looking at the render, only that SOME real motion exists (checked below
+    via the same has-motion evidence the validator already uses)."""
+    a = new_action(rig, "talk"); reset_pose(rig)
+    for f, jaw_x in [(1, 0.0), (6, -0.16), (11, -0.03), (16, -0.20), (21, -0.02), (26, -0.14), (30, 0.0)]:
+        set_pose_rotation(rig, "jaw", (jaw_x, 0, 0), f)
+    a.frame_range = (1, 30)
+    return a
+
+
+def bake_starter_actions(rig, weapon_type="bow"):
     actions=[]
     # Idle: tiny breathing/bob only.
     a=new_action(rig,"idle"); reset_pose(rig)
@@ -334,17 +470,45 @@ def bake_starter_actions(rig):
         set_pose_rotation(rig,"upper_arm.R",(0,0,-.04 if f==24 else 0),f)
     a.frame_range=(1,48); actions.append(a)
 
+    if rig.pose.bones.get("jaw"):
+        actions.append(bake_talk_cycle(rig))
+
     actions.append(bake_run_cycle(rig))
 
-    # Generic starter attack; later clips can replace it without re-rigging.
-    a=new_action(rig,"attack_01"); reset_pose(rig)
-    poses=[(1,0,0),(8,-.55,.8),(14,.35,-1.05),(22,.12,-.35),(30,0,0)]
-    for f,chest_z,arm_x in poses:
-        set_pose_rotation(rig,"chest",(0,0,chest_z),f)
-        set_pose_rotation(rig,"upper_arm.R",(arm_x,0,-.45),f)
-        set_pose_rotation(rig,"forearm.R",(-.55 if f in (8,14) else -.15,0,0),f)
-        set_pose_rotation(rig,"upper_arm.L",(-.25,0,.2),f)
-    a.frame_range=(1,30); actions.append(a)
+    weapon_key = str(weapon_type or "").strip().lower()
+    if weapon_key in BLADE_WEAPON_TYPES:
+        actions.append(bake_sword_attack(rig))
+    elif weapon_key in STAFF_WEAPON_TYPES:
+        actions.append(bake_staff_attack(rig))
+    elif weapon_key in SPEAR_WEAPON_TYPES:
+        actions.append(bake_spear_attack(rig))
+    else:
+        # Bow-oriented starter attack: raise bow -> draw string -> short aim
+        # hold -> release -> recover. The rig cannot physically simulate a bow
+        # string/arrow, but the body/arms now read as an archer shot instead of a
+        # generic melee swing. Weapon-specific meshes can replace this clip later.
+        a = new_action(rig, "attack_01"); reset_pose(rig)
+        bow_poses = [
+            # frame, chest_z, bow_arm_x, bow_arm_z, draw_arm_x, draw_arm_z, draw_elbow
+            (1,   0.00, -0.10,  0.15, -0.10, -0.10, -0.20),  # ready
+            (6,  -0.06, -0.55,  0.42, -0.42, -0.55, -0.75),  # raise bow
+            (12, -0.10, -0.72,  0.52, -0.30, -0.95, -1.20),  # full draw
+            (16, -0.10, -0.72,  0.52, -0.30, -0.95, -1.20),  # aim hold
+            (18, -0.04, -0.68,  0.48, -0.08, -0.25, -0.18),  # release
+            (24,  0.00, -0.30,  0.28, -0.15, -0.18, -0.20),  # follow-through
+            (30,  0.00, -0.10,  0.15, -0.10, -0.10, -0.20),  # recover
+        ]
+        for f, chest_z, bow_x, bow_z, draw_x, draw_z, draw_elbow in bow_poses:
+            set_pose_rotation(rig, "chest", (-0.04, 0, chest_z), f)
+            # Left arm acts as bow arm: mostly extended and raised forward.
+            set_pose_rotation(rig, "upper_arm.L", (bow_x, 0, bow_z), f)
+            set_pose_rotation(rig, "forearm.L", (-0.08, 0, 0), f)
+            # Right arm draws back toward the face, then snaps forward on release.
+            set_pose_rotation(rig, "upper_arm.R", (draw_x, 0, draw_z), f)
+            set_pose_rotation(rig, "forearm.R", (draw_elbow, 0, 0), f)
+            set_pose_rotation(rig, "head", (0.0, 0.0, chest_z * 0.25), f)
+        a.frame_range = (1, 30)
+        actions.append(a)
 
     # Put each action into its own NLA track; glTF exports tracks as clips.
     rig.animation_data.action = None
@@ -367,6 +531,13 @@ def main():
     a=args_after_dash(); src=Path(a.input); out=Path(a.output); report=Path(a.report)
     out_dir = out.parent
     out_dir.mkdir(parents=True, exist_ok=True)
+    # Every keyframe_insert() below picks up this interpolation at insertion
+    # time - a stable, version-safe way to get linear curves without touching
+    # Action.fcurves (data model changed under newer "layered actions").
+    try:
+        bpy.context.preferences.edit.keyframe_new_interpolation_type = "LINEAR"
+    except Exception:
+        pass
 
     # section 2: every intermediate stage saved under a fixed, predictable
     # name so a failed job still leaves inspectable checkpoints behind.
@@ -383,13 +554,13 @@ def main():
     rig=create_rig(mesh); skin_method=auto_skin(mesh,rig)
     export_glb(rigged_glb)  # bind pose only, no baked animation yet - isolates skin issues from animation issues
 
-    animations=bake_starter_actions(rig)
+    animations=bake_starter_actions(rig, a.weapon_type)
     export_glb(out)
     data={
         "ok": True, "rigged": True, "skin_method": skin_method, "animations": animations,
         "bones": len(rig.data.bones), "faces_before": before, "faces_after": after,
         "output": str(out), "source_glb": str(source_glb), "optimized_glb": str(optimized_glb),
-        "rigged_glb": str(rigged_glb),
+        "rigged_glb": str(rigged_glb), "weapon_type": a.weapon_type,
     }
     report.parent.mkdir(parents=True,exist_ok=True); report.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding="utf-8")
     print("AIVF_GAME_READY_REPORT="+json.dumps(data,ensure_ascii=False))

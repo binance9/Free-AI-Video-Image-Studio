@@ -1,0 +1,10 @@
+V9.6 FALLBACK BRAIN FIX
+fallback_brain_defined: PASS
+getBrainBridge_fallback: PASS
+fallback_interact_with_image: PASS
+fallback_native_run: PASS
+attachment_sync_uses_getBrainBridge: PASS
+cache_bust_v96: PASS
+clear_button_present: PASS
+JS syntax: PASS
+Python compile: PASS

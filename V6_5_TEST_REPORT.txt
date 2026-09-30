@@ -1,0 +1,26 @@
+AI VIDEO DIRECTOR V6.5 MODULE ISOLATION
+
+ROUTING TESTS:
+- tạo bụi hoa 3D cho game -> do_vat_3d | expected=do_vat_3d | PASS
+- tạo nhân vật nữ cung thủ 3D -> nhan_vat_3d | expected=nhan_vat_3d | PASS
+- tạo nhân vật cung thủ 3D cầm cung -> nhan_vat_3d | expected=nhan_vat_3d | PASS
+- tạo ảnh AI nữ cung thủ -> tao_anh_ai | expected=tao_anh_ai | PASS
+- tạo video AI 15 giây -> tao_video_ai | expected=tao_video_ai | PASS
+- ambiguous 3D -> fail closed | PASS
+
+INSTALLER SCOPE:
+- app/modules/ai_video_director/*
+- web/modules/ai_video_director/*
+- app/main.py router registration only if missing
+- web/index.html cache-bust only
+
+NOT MODIFIED:
+- tao_anh_ai
+- nhan_vat_2d
+- nhan_vat_3d
+- do_vat_3d
+- tao_video_ai
+- chinh_sua_video
+- phu_de
+- am_nhac
+- ga_maintenance

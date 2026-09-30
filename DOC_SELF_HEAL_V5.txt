@@ -1,0 +1,13 @@
+GÀ BRAIN V5 - AUTO SELF-HEAL
+
+- Job lỗi: tự đọc đúng error/detail + log của job ngay, không chuyển sang quét rác.
+- Câu "xem lỗi ở đâu, khắc phục ngay" quay lại đúng job lỗi gần nhất.
+- Đã vá sẵn lỗi Windows/Hunyuan:
+  forrtl: error (200): program aborting due to window-CLOSE event
+  bằng CREATE_NO_WINDOW cho Character HD worker.
+- Nếu sau này file này bị quay về bản cũ, self-healer nhận đúng signature:
+  backup -> patch xác định -> py_compile/compileall/app smoke/audit -> PASS mới giữ -> restart.
+- Traceback chỉ file source đã đổi so với Last Known Good:
+  rollback đúng file + test; FAIL thì hoàn tác.
+- OOM/VRAM: unload Ollama + GC/CUDA cache, retry job do Gà tạo tối đa 1 lần.
+- Không sửa đoán, không xóa model/project/output/assets.

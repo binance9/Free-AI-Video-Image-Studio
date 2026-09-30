@@ -19,6 +19,14 @@ class CharacterHDBackend:
         self.tool_dir = self.root / "tools" / "external" / "Hunyuan3D-2"
         self.runner = self.root / "app" / "modules" / "nhan_vat_3d" / "run_character_hd.py"
 
+
+    @staticmethod
+    def _windows_creationflags() -> int:
+        """Cô lập Hunyuan native worker khỏi console cha trên Windows."""
+        if os.name != "nt":
+            return 0
+        return int(getattr(subprocess, "CREATE_NO_WINDOW", 0))
+
     @property
     def python(self) -> Path:
         return self.runtime_dir / "venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
@@ -87,6 +95,7 @@ class CharacterHDBackend:
         proc = subprocess.Popen(
             cmd, cwd=str(self.tool_dir), env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             text=True, encoding="utf-8", errors="replace", bufsize=1,
+            creationflags=self._windows_creationflags(),
         )
         q = queue.Queue()
         threading.Thread(target=self._reader, args=(proc.stdout, q), daemon=True).start()
@@ -201,6 +210,7 @@ class CharacterHDBackend:
             encoding="utf-8",
             errors="replace",
             bufsize=1,
+            creationflags=self._windows_creationflags(),
         )
         q = queue.Queue()
         threading.Thread(target=self._reader, args=(proc.stdout, q), daemon=True).start()
@@ -209,6 +219,8 @@ class CharacterHDBackend:
         last_cache_gb = -1.0
         current_pct = 0
         current_stage = "Khởi động"
+        inference_started = None
+        last_parent_heartbeat = 0.0
         lines = []
         eof = False
         texture_applied = False
@@ -244,6 +256,20 @@ class CharacterHDBackend:
             except queue.Empty:
                 item = "__NO_LINE__"
 
+            if (
+                item == "__NO_LINE__"
+                and inference_started is not None
+                and current_pct < 62
+                and now - last_parent_heartbeat >= 12
+            ):
+                elapsed = int(now - inference_started)
+                visible_pct = min(60, 50 + elapsed // 30)
+                current_pct = max(current_pct, visible_pct)
+                current_stage = "Dựng hình khối HD · suy luận CUDA"
+                last_parent_heartbeat = now
+                if progress:
+                    progress(current_pct, current_stage, f"{elapsed}s · tiến trình Hunyuan vẫn đang tính mesh")
+
             if item is None:
                 eof = True
             elif item != "__NO_LINE__":
@@ -273,6 +299,9 @@ class CharacterHDBackend:
                         detail = parts[3] if len(parts) > 3 else ""
                         current_pct = pct
                         current_stage = stage
+                        if pct == 50 and inference_started is None:
+                            inference_started = time.monotonic()
+                            last_parent_heartbeat = inference_started
                         if "cache Character HD" in detail:
                             import re
                             match = re.search(r"cache Character HD\s+([0-9]+(?:\.[0-9]+)?)\s+GB", detail)

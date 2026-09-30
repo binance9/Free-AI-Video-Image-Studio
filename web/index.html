@@ -9,11 +9,46 @@
 <link rel="stylesheet" href="/static/modules/do_vat_3d/do_vat_3d.css?v=0161"/>
   <link rel="stylesheet" href="/static/modules/ban_do_3d/ban_do_3d.css?v=200">
   <link rel="stylesheet" href="/static/core/realtime_preview.css?v=001">
+<link rel="stylesheet" href="/static/core/ga_owner.css?v=v9-9-intent-guard">
+<link rel="stylesheet" href="/static/core/ga_brain.css?v=005-autofix">
+<link rel="stylesheet" href="/static/core/persistent_shell.css?v=001">
+<link rel="stylesheet" href="/static/core/home_layout_pro.css?v=007">
+<link rel="stylesheet" href="/static/core/workspace_layout_pro.css?v=007">
+<link rel="stylesheet" href="/static/core/chat_terminal_theme.css?v=007">
+<link rel="stylesheet" href="/static/core/scrollbar_pro.css?v=007">
+<link rel="stylesheet" href="/static/modules/ai_video_director/ai_video_director.css?v=650">
+<link rel="stylesheet" href="/static/modules/tao_video_ai/tao_video_ai.css?v=003">
 </head>
 <!-- compatibility history: 0.8.6. Character HD / texture viewer -->
 <body class="home-mode video-ui">
 <button class="btn danger kill-bot-floating" id="killBotBtn" title="Tắt toàn bộ AI Video Factory: dừng job, FFmpeg, model worker, đóng server">⏻ TẮT BOT</button>
-<div class="app">
+<div class="app-shell" id="appShell">
+  <aside class="chat-col" id="chatCol" aria-label="Khung chat AI (luôn hiện)">
+    <section class="ga-owner" id="gaOwner" aria-label="Gà AI Owner">
+      <div class="ga-owner-head">
+        <div class="ga-owner-avatar">G</div>
+        <div class="ga-owner-title"><b>GÀ AI OWNER</b><small id="gaOwnerSub">Đang kiểm tra não...</small></div>
+        <span class="ga-owner-state" id="gaOwnerState">● NGỦ</span>
+      </div>
+      <div class="ga-owner-chat" id="gaOwnerChat"></div>
+      <div class="ga-owner-attach" id="gaOwnerAttach"></div>
+      <div class="ga-owner-progress" id="gaOwnerProgress">Sẵn sàng.</div>
+      <div class="ga-owner-compose">
+        <div id="gaOwnerAttachPreview" class="ga-owner-attach-preview hidden"></div>
+        <textarea id="gaOwnerInput" placeholder="gà ơi dậy đi..."></textarea>
+        <button id="gaOwnerSend" title="Gửi">➤</button>
+      </div>
+      <div class="ga-owner-tools">
+        <button id="gaOwnerAttachBtn">📎 ẢNH</button>
+        <button id="gaOwnerVoice">🎤 MIC</button>
+        <button id="gaOwnerEnroll">🔐 ĐK GIỌNG</button>
+        <button id="gaOwnerClearAttach">✖ BỎ ẢNH</button>
+      </div>
+      <input class="ga-owner-file" id="gaOwnerFile" type="file" accept="image/png,image/jpeg,image/webp">
+    </section>
+    <div class="chat-col-resize" id="chatColResize" title="Kéo để đổi chiều cao khung chat" role="separator" aria-orientation="horizontal"></div>
+  </aside>
+  <div class="app" id="appMain">
   <section class="home-screen" id="homeScreen" aria-label="Trang chủ AI Video Factory">
     <aside class="home-sidebar">
       <div class="home-brand"><div class="home-logo">▶</div><div><strong>AI Video Factory</strong><small>v0.8.9.3.3</small></div></div>
@@ -24,6 +59,7 @@
         <button class="home-nav-item" data-home-action="cloud"><span>☁</span>Cloud</button>
         <button class="home-nav-item" data-home-action="publish"><span>⇧</span>Xuất bản</button>
       </nav>
+
       <div class="home-side-section">
         <div class="home-side-title">GẦN ĐÂY</div>
         <div class="home-recent-empty" id="homeRecent">Tệp gần đây sẽ hiện ở đây sau khi bạn mở video/ảnh.</div>
@@ -100,7 +136,6 @@
         </button>
       </div>
 
-      <div class="home-banner"><div><strong>100% FREE · LOCAL AI</strong><span>Model chạy trên máy, không phí API theo lượt</span></div><button id="homeAiLocalBtn">AI Local ⚙</button></div>
     </main>
   </section>
   <header class="topbar">
@@ -123,8 +158,8 @@
       <div class="stage" id="stage">
         <div class="empty" id="empty"><div class="empty-card"><div class="empty-icon">▶</div><h3>Tải video lên để bắt đầu</h3><p>Cắt, ghép, phụ đề local, dịch local, nhạc, văn bản, hình ảnh, nhãn dán và AI ảnh miễn phí trong một khung.</p><label class="btn accent" for="videoFile">＋ CHỌN VIDEO</label></div></div>
         <div class="video-box hidden" id="videoBox"><video id="video" controls playsinline></video><div class="overlay-surface" id="overlaySurface"></div><div class="cleanup-mask hidden" id="cleanupMask"><span>VÙNG XÓA</span></div></div>
-        <div class="realtime-preview hidden" id="realtimePreview"><div class="realtime-preview-empty" id="realtimePreviewEmpty">Thêm ảnh hoặc nhập mô tả để bắt đầu.</div><img class="hidden" id="realtimePreviewImage" alt="Realtime preview"><video class="hidden" id="realtimePreviewVideo" controls playsinline></video><div class="realtime-preview-progress"><div><strong id="realtimePreviewStage">Sẵn sàng</strong><b id="realtimePreviewPct">0%</b></div><div class="realtime-preview-track"><i id="realtimePreviewBar"></i></div><small id="realtimePreviewMessage">Preview sẽ cập nhật tại đây.</small></div></div>
-        <div class="ai3d-source-preview hidden" id="ai3dSourcePreview"><img id="ai3dSourcePreviewImage" alt="Ảnh nguồn 3D"><div class="ai3d-source-preview-label">ẢNH NGUỒN · FAST PREVIEW / HD FINAL</div></div>
+        <div class="realtime-preview hidden" id="realtimePreview"><div class="realtime-preview-empty" id="realtimePreviewEmpty">Thêm ảnh hoặc nhập mô tả để bắt đầu.</div><img class="hidden" id="realtimePreviewImage" alt="Realtime preview"><video class="hidden" id="realtimePreviewVideo" controls playsinline></video><button type="button" class="realtime-preview-clear hidden" id="realtimePreviewClear" title="Bỏ ảnh đã chọn">✖</button><div class="realtime-preview-progress"><div><strong id="realtimePreviewStage">Sẵn sàng</strong><b id="realtimePreviewPct">0%</b></div><div class="realtime-preview-track"><i id="realtimePreviewBar"></i></div><small id="realtimePreviewMessage">Preview sẽ cập nhật tại đây.</small></div></div>
+        <div class="ai3d-source-preview hidden" id="ai3dSourcePreview"><img id="ai3dSourcePreviewImage" alt="Ảnh nguồn 3D"><button type="button" class="realtime-preview-clear" id="ai3dSourcePreviewClear" title="Bỏ ảnh đã chọn">✖</button><div class="ai3d-source-preview-label">ẢNH NGUỒN · FAST PREVIEW / HD FINAL</div></div>
         <div class="ai3d-stage-viewer hidden" id="ai3dStageViewer">
           <canvas id="ai3dCanvas"></canvas>
           <div class="ai3d-viewer-toolbar">
@@ -274,7 +309,7 @@
 
       <div id="panel-merge" class="panel toolpanel hidden">
         <div class="panel-title">Thêm clip</div>
-        <label class="dropzone"><strong id="mergeName">＋ Chọn video để ghép</strong><span>MP4, MOV, MKV, WEBM, AVI</span><input id="mergeFile" type="file" accept="video/*" hidden></label>
+        <div class="ai-ref-row"><label class="dropzone"><strong id="mergeName">＋ Chọn video để ghép</strong><span>MP4, MOV, MKV, WEBM, AVI</span><input id="mergeFile" type="file" accept="video/*" hidden></label><button class="btn" id="mergeClear" hidden>✖ Bỏ video</button></div>
         <div class="segmented"><button id="mergeBefore">Ghép vào đầu</button><button id="mergeAfter" class="active">Ghép vào cuối</button></div>
         <button class="btn primary wide" id="mergeBtn" disabled>GHÉP VIDEO</button>
       </div>
@@ -441,7 +476,7 @@
           <button class="btn wide" id="ai3dFromPrompt">TẠO 3D TỪ MÔ TẢ · thủ công</button>
           <button class="btn wide" id="ai3dFromImage">DỰNG 3D TỪ ẢNH · thủ công</button>
           <div class="panel-title section-gap">Tô màu GLB đã có</div>
-          <label class="dropzone"><strong id="ai3dPaintMeshName">Dùng model vừa tạo · hoặc chọn GLB khác</strong><span>GLB trắng đã dựng xong</span><input id="ai3dPaintMeshFile" type="file" accept=".glb,model/gltf-binary" hidden></label>
+          <div class="ai-ref-row"><label class="dropzone"><strong id="ai3dPaintMeshName">Dùng model vừa tạo · hoặc chọn GLB khác</strong><span>GLB trắng đã dựng xong</span><input id="ai3dPaintMeshFile" type="file" accept=".glb,model/gltf-binary" hidden></label><button class="btn" id="ai3dPaintMeshClear" hidden>✖ Bỏ file</button></div>
           <button class="btn wide" id="ai3dColorizeCurrent">🎨 TÔ MÀU GLB HIỆN CÓ</button>
         </details>
 
@@ -468,7 +503,7 @@
           <div class="game-ready-box" id="ai3dGameReadyBox">
             <div class="game-ready-head"><span class="game-ready-icon">🦴</span><div><strong>GAME READY</strong><small>Optimize → Rig → Skin → Idle / Run / Attack</small></div></div>
             <div class="game-ready-status" id="ai3dGameReadyStatus">Đang kiểm tra Blender local…</div><button class="btn wide game-ready-setup" id="ai3dGameReadySetup">CÀI BLENDER GAME READY · 1 LẦN</button>
-            <div class="game-ready-row"><label>Poly mục tiêu<select id="ai3dGameReadyFaces"><option value="30000">30K · nhẹ</option><option value="45000" selected>45K · cân bằng</option><option value="60000">60K · đẹp</option></select></label><button class="btn game-ready-btn" id="ai3dMakeGameReady">🦴 TẠO GAME-READY GLB</button></div>
+            <div class="game-ready-row"><label>Poly mục tiêu<select id="ai3dGameReadyFaces"><option value="30000">30K · nhẹ</option><option value="45000" selected>45K · cân bằng</option><option value="60000">60K · đẹp</option></select></label><label>Vũ khí tấn công<select id="ai3dGameReadyWeapon"><option value="bow" selected>Cung</option><option value="sword">Kiếm / Đao</option><option value="staff">Gậy / Trượng</option><option value="spear">Thương / Giáo</option></select></label><button class="btn game-ready-btn" id="ai3dMakeGameReady">🦴 TẠO GAME-READY GLB</button></div>
             <div class="game-ready-progress hidden" id="ai3dGameReadyProgress"><div><span id="ai3dGameReadyStage">Chuẩn bị</span><b id="ai3dGameReadyPct">0%</b></div><div class="game-ready-track"><i id="ai3dGameReadyBar"></i></div><small id="ai3dGameReadyDetail">Đang chuẩn bị…</small></div>
             <div class="game-ready-filename hidden" id="ai3dGameReadyFilename">File cuối: <b id="ai3dGameReadyFilenameValue">game_ready.glb</b></div>
             <div class="game-ready-actions">
@@ -564,7 +599,8 @@
   </main>
 
   <section class="timeline"><div class="timeline-left">TIMELINE</div><div class="timeline-main"><div class="ruler" id="ruler"></div><div class="tracks" id="tracks"></div></div></section>
-  <section class="job-terminal hidden" id="jobTerminal" aria-live="polite"><header><strong id="jobTerminalTitle">⚙ ĐANG XỬ LÝ</strong><b id="jobTerminalPct">0%</b><select id="jobTerminalMode" aria-label="Chế độ log"><option value="normal">NORMAL</option><option value="debug">DEBUG</option></select><button id="jobTerminalCollapse">Thu gọn</button><button id="jobTerminalExpand">Mở rộng</button><button id="jobTerminalClear">Xóa log</button><button id="jobTerminalCopy">Sao chép log</button></header><div class="job-terminal-body" id="jobTerminalBody"></div></section>
+  </div>
+  <section class="job-terminal hidden" id="jobTerminal" aria-live="polite"><div class="job-terminal-resize" id="jobTerminalResize" title="Kéo để đổi chiều cao terminal" role="separator" aria-orientation="horizontal"></div><header><strong id="jobTerminalTitle">⚙ ĐANG XỬ LÝ</strong><b id="jobTerminalPct">0%</b><select id="jobTerminalMode" aria-label="Chế độ log"><option value="normal">NORMAL</option><option value="debug">DEBUG</option></select><button id="jobTerminalCollapse">Thu gọn</button><button id="jobTerminalExpand">Mở rộng</button><button id="jobTerminalClear">Xóa log</button><button id="jobTerminalCopy">Sao chép log</button></header><div class="job-terminal-body" id="jobTerminalBody"></div></section>
 </div>
 
 <div class="modal hidden" id="apiModal"><div class="modal-card"><div class="modal-head"><div><h3>AI LOCAL MIỄN PHÍ</h3><p>Không cần OpenAI key, không có phí theo ảnh/token/video.</p></div><button class="btn" id="apiModalClose">✕</button></div><div class="notice">Editor cơ bản luôn chạy ngay. Phụ đề, dịch và AI ảnh cần bộ thư viện local cài một lần. Model sẽ tải miễn phí ở lần dùng đầu và lưu trên máy.</div><div id="localAiStatus" class="selected-card section-gap"><strong>Đang kiểm tra…</strong></div><button class="btn accent wide" id="installLocalAi">CÀI BỘ AI LOCAL MIỄN PHÍ</button><div class="hint section-gap">Nếu cài trong trình duyệt không thành công, đóng app và double-click SETUP_FREE_AI.bat.</div></div></div>
@@ -575,6 +611,7 @@
 <script src="/static/core/realtime_preview.js?v=001"></script>
 <script src="/static/core/realtime_progress.js?v=001"></script>
 <script src="/static/core/job_terminal.js?v=003"></script>
+<script src="/static/core/persistent_shell.js?v=001"></script>
 <script src="/static/core/image_prompt_input.js?v=001"></script>
 <script src="/static/core/app.js?v=0892ui1"></script>
 <script src="/static/core/kill_bot.js?v=001"></script>
@@ -591,13 +628,17 @@
 <script src="/static/modules/phu_de/phu_de.js?v=0890"></script>
 <script src="/static/modules/am_nhac/am_nhac.js?v=0890"></script>
 <script src="/static/modules/tao_anh_ai/tao_anh_ai.js?v=0890"></script>
-<script src="/static/modules/nhan_vat_3d/ai_3d_viewer.js?v=08933"></script>
+<script src="/static/modules/nhan_vat_3d/ai_3d_viewer.js?v=08934"></script>
 <script src="/static/modules/nhan_vat_3d/ai_3d_presets.js?v=0890"></script>
-<script src="/static/modules/nhan_vat_3d/nhan_vat_3d.js?v=08933"></script>
-<script src="/static/modules/nhan_vat_game_ready/nhan_vat_game_ready.js?v=0893"></script>
+<script src="/static/modules/nhan_vat_3d/nhan_vat_3d.js?v=v6-3-fix-stale-assetid"></script>
+<script src="/static/modules/nhan_vat_game_ready/nhan_vat_game_ready.js?v=0893-weapon"></script>
 <script src="/static/modules/do_vat_3d/do_vat_3d.js?v=0161"></script>
 <script src="/static/modules/nhan_vat_2d/nhan_vat_2d.js?v=0132"></script>
   <script src="/static/modules/ban_do_3d/ban_do_3d.js?v=200"></script>
   <script src="/static/js/ai_3d_library.js?v=08934lib1"></script>
+<script src="/static/core/ga_brain.js?v=v9-9-intent-guard-gameready-weapon"></script>
+<script src="/static/core/ga_owner.js?v=v9-9-intent-guard-selfheal-patch"></script>
+<script src="/static/modules/tao_video_ai/tao_video_ai.js?v=003"></script>
+<script src="/static/modules/ai_video_director/ai_video_director.js?v=653"></script>
 </body>
 </html>

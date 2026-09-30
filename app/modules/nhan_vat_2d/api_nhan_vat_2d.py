@@ -8,8 +8,15 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 
 from app.modules.nhan_vat_2d import Character2DService, CharacterProfile
+from .jobs import Character2DJobs
 
 router = APIRouter(prefix="/api/character-2d", tags=["character-2d"])
+
+def _jobs(request: Request) -> Character2DJobs:
+    jobs = getattr(request.app.state, "character_2d_jobs", None)
+    if jobs is None:
+        jobs = Character2DJobs(); request.app.state.character_2d_jobs = jobs
+    return jobs
 
 
 def _service(request: Request) -> Character2DService:
@@ -41,6 +48,17 @@ def _decorate(payload: dict) -> dict:
         "blockers": gate.get("blockers", []),
     }
     return out
+
+
+def _create_impl(svc, prompt, raw, filename, preset, strength, quality, progress=None):
+    if progress: progress(18, "Khóa yêu cầu", "Phân tích nhân vật và operation")
+    if raw:
+        result = svc.create_from_reference(raw, filename or "reference.png", prompt, size="1024x1024", style="fantasy", quality=quality, min_score=70, max_repairs=3, strength=strength, preset=preset, progress=progress)
+    else:
+        result = svc.create_anchor(CharacterProfile.from_prompt(prompt), size="1024x1024", style="fantasy", quality=quality, mode="final", max_repairs=3, min_score=70, preset=preset, progress=progress)
+        result["operation"] = "generate-from-prompt"
+    if progress: progress(92, "Kiểm tra gate", "Chấm identity, màu và vũ khí")
+    return _decorate(result)
 
 
 @router.get("/status")
@@ -78,36 +96,31 @@ async def create_character(
                 raise ValueError("Ảnh mẫu đang rỗng")
             if len(raw) > 20 * 1024 * 1024:
                 raise ValueError("Ảnh mẫu tối đa 20 MB")
-            result = svc.create_from_reference(
-                raw,
-                image.filename,
-                prompt,
-                size="1024x1024",
-                style="fantasy",
-                quality=quality,
-                min_score=70,
-                max_repairs=3,
-                strength=strength,
-                preset=preset,
-            )
+            result = _create_impl(svc,prompt,raw,image.filename,preset,strength,quality)
         else:
-            profile = CharacterProfile.from_prompt(prompt)
-            result = svc.create_anchor(
-                profile,
-                size="1024x1024",
-                style="fantasy",
-                quality=quality,
-                mode="final",
-                max_repairs=3,
-                min_score=70,
-                preset=preset,
-            )
-            result["operation"] = "generate-from-prompt"
-        return _decorate(result)
+            result = _create_impl(svc,prompt,None,None,preset,strength,quality)
+        return result
     except HTTPException:
         raise
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/jobs")
+async def start_character_job(request:Request,prompt:str=Form(""),image:UploadFile|None=File(None),preset:str=Form("compact_game"),strength:float=Form(.28),quality:str=Form("medium")):
+    raw=await image.read() if image and image.filename else None
+    prompt=(prompt or "").strip()
+    if not raw and len(prompt)<3: raise HTTPException(400,"Hãy thêm ảnh hoặc nhập mô tả")
+    if raw and len(prompt)<3: prompt="Improve this character while preserving its visible identity"
+    filename=image.filename if image else None
+    jid=_jobs(request).start(lambda progress:_create_impl(_service(request),prompt,raw,filename,preset,strength,quality,progress))
+    return {"job_id":jid,"status_url":f"/api/character-2d/jobs/{jid}"}
+
+
+@router.get("/jobs/{job_id}")
+def character_job(request:Request,job_id:str):
+    try:return _jobs(request).get(job_id)
+    except KeyError as exc:raise HTTPException(404,"Không tìm thấy job Character 2D") from exc
 
 
 @router.get("/output")

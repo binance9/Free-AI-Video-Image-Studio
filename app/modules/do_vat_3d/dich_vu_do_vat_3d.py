@@ -20,6 +20,7 @@ from .phan_loai_do_vat import validate_category, validate_quality, validate_text
 from .toi_uu_do_vat import can_chuan_hoa_pivot, chuan_hoa_pivot, toi_uu_so_mat
 from .xu_ly_anh_dau_vao import chuan_hoa_anh_do_vat
 from .cau_hinh_do_vat import DANH_MUC, TEXTURE_PRESETS, TEXTURE_TIMEOUT_SECONDS
+from .prompt_do_vat import tao_prompt_concept_do_vat
 
 _TEXTURE_TIMEOUT_MARKERS = ("quá thời gian tối đa", "không có heartbeat")
 
@@ -67,16 +68,34 @@ class DoVat3DService:
         t0 = time.time()
         image_for_texture: Path
         if prompt:
+            if self.engine_service.image_service is None:
+                raise ValueError("AI ảnh local chưa được nối với đồ vật 3D")
+            concept_prompt = tao_prompt_concept_do_vat(prompt, cat_key)
+            concept_path = work_dir / "concept.png"
             if progress:
-                progress(5, "Tạo concept 2D", "Đang gọi tao_anh_ai để tạo ảnh concept từ prompt…")
+                progress(5, "Tạo concept 2D", "Đang gọi tao_anh_ai để tạo ảnh concept đồ vật từ prompt…")
             with heavy_gpu_job_lock(owner="do_vat_3d", cancel_event=cancel_event,
                                      on_wait=lambda _w: progress and progress(5, "Đang chờ GPU", "Có job 3D khác đang chạy…")):
-                shape_result = self.engine_service.from_prompt(
-                    prompt, work_dir, texture=False, backend=lua_chon.engine,
+                concept_bytes = self.engine_service.image_service.generate(
+                    concept_prompt,
+                    style="product",
+                    size="1024x1024",
+                    quality="high",
+                    cancel_event=cancel_event,
+                )
+            concept_path.write_bytes(concept_bytes)
+            if progress:
+                progress(12, "Concept đã xong", "Đang dựng shape 3D từ concept đồ vật…")
+            with heavy_gpu_job_lock(owner="do_vat_3d", cancel_event=cancel_event,
+                                     on_wait=lambda _w: progress and progress(12, "Đang chờ GPU", "Có job 3D khác đang chạy…")):
+                shape_result = self.engine_service.from_image(
+                    concept_path, work_dir, texture=False, backend=lua_chon.engine,
                     resolution=lua_chon.resolution, mesh_profile=lua_chon.mesh_profile,
                     progress=progress, cancel_event=cancel_event,
                 )
-            image_for_texture = Path(shape_result["concept_path"])
+            shape_result["concept_path"] = concept_path
+            shape_result["concept_prompt_used"] = concept_prompt
+            image_for_texture = concept_path
             preprocess_seconds = 0.0  # concept da duoc AI ve san, khong can crop/normalize them
         else:
             t_pre = time.time()
@@ -191,6 +210,7 @@ class DoVat3DService:
             "vertex_count": kiem_tra.vertex_count,
             "dimensions": kiem_tra.dimensions,
             "device": shape_result.get("device"),
+            "concept_prompt_used": shape_result.get("concept_prompt_used"),
             "timings": timings,
             "poly": {
                 "original_triangle_count": toi_uu_ket_qua.original_triangle_count,

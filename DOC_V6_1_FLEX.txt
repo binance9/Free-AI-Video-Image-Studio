@@ -1,0 +1,11 @@
+GÀ BRAIN V6.1 FLEX
+
+- Hỏi = trả lời nhanh, không mở module, không sửa file.
+- Hỏi năng lực như "mày biết sửa lỗi không?" = trả lời tức thì, không gọi Qwen nếu không cần.
+- Câu hỏi thường = Qwen think=false, một lượt ngắn.
+- Chỉ khi ra lệnh sửa thật mới đọc log/traceback và self-heal.
+- Sau sửa phải báo trong chat: nguyên nhân, file đã sửa, backup, test PASS, cần mở lại bot hay không.
+- Chưa đủ bằng chứng = không sửa, nói rõ CHƯA SỬA SOURCE.
+- Không quét rác thay cho chữa lỗi runtime.
+
+Cài: giải nén đè vào thư mục gốc ai_video_factory -> Replace All -> mở lại bot.

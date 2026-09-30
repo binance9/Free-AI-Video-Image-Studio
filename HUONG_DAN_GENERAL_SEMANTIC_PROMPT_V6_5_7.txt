@@ -1,0 +1,38 @@
+﻿AI VIDEO FACTORY V6.5.7 - GENERAL SEMANTIC PROMPT FIX
+
+MỤC TIÊU
+- Bot không được hard-code kiểu "1 nữ kiếm hiệp cầm kiếm full body photorealistic".
+- User nói tạo gì thì bot phải bám đúng thứ đó: người, con vật, trẻ nhỏ, người già,
+  đồ vật, quần áo, mũ nón, xe cộ, robot, máy móc, linh kiện, khung cảnh, bản đồ,
+  mặt trăng, mặt trời, mưa nắng, ngày đêm, v.v.
+
+V6.5.7 SỬA GÌ
+1. Mở rộng semantic parser cho prompt ảnh:
+   - subject: người / con vật / xe cộ / robot / map / moon / sun ...
+   - object/action: sword, bow, gun, helmet, hat, shirt, dress, drive, fly, hold, wear...
+   - weather/time/scene/color: rain, sunny, night, sunset, forest, mountain, river, red, blue...
+2. General prompt path không còn bơm mặc định swordswoman/sword/full body.
+3. Character prompt path vẫn giữ chặt các ràng buộc khi user thật sự yêu cầu nhân vật.
+4. Prompt contract được mở rộng bộ từ khoá quan trọng để khi phải rút gọn,
+   các từ như cat/car/robot/helicopter/rain/night/map/volcano vẫn được giữ lại.
+5. Không tăng giả CLIP 77; vẫn giữ prompt gọn để model hiểu đúng.
+
+FILE SỬA
+- app/core/prompt_contract.py
+- app/modules/tao_anh_ai/service.py
+
+CÀI
+1. Giải nén TOÀN BỘ ZIP vào thư mục gốc ai_video_factory.
+2. Chạy: INSTALL_GENERAL_SEMANTIC_PROMPT_V6_5_7.bat
+3. Phải thấy:
+   GENERAL_SEMANTIC_PROMPT_V6_5_7_VERIFY: PASS
+   GENERAL SEMANTIC PROMPT V6.5.7: PASS
+4. Restart AI Video Factory.
+
+TEST GỢI Ý
+- tạo con mèo trắng nằm trên ghế đỏ
+- tạo 2 robot màu bạc đứng trong nhà máy ban đêm
+- tạo xe thể thao đỏ dưới mưa
+- tạo máy bay trực thăng bay trên núi lúc hoàng hôn
+- tạo bản đồ đảo có núi lửa và sông
+- tạo 1 nữ kiếm hiệp cầm 1 thanh kiếm, toàn thân, ảnh thật

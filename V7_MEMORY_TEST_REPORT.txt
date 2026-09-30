@@ -1,0 +1,26 @@
+AI VIDEO DIRECTOR V7 MEMORY - TEST REPORT
+
+SCOPE:
+- Persistent Video Playbook
+- Project Memory
+- Explicit Feedback Memory
+- Memory priority contract
+- Planner memory injection
+- Explicit project-field capture
+
+TEST RESULT:
+6 passed in 0.07s
+
+TESTS:
+1. default playbook persists across store re-open: PASS
+2. project memory roundtrip: PASS
+3. feedback scoped + persistent: PASS
+4. priority order fixed: USER > PROJECT > PLAYBOOK > FEEDBACK > DEFAULTS: PASS
+5. planner receives memory context; model weights remain untouched: PASS
+6. only explicit project fields auto-captured; idea/output is not blindly learned: PASS
+
+SAFETY / SCOPE:
+- DOES NOT fine-tune or modify Ollama weights
+- DOES NOT modify ga_brain / ga_owner
+- DOES NOT modify tao_anh_ai / tao_video_ai / 2D / 3D modules
+- DOES NOT overwrite auto_producer.py or quality.py, preserving V6.5.1 FPS fix

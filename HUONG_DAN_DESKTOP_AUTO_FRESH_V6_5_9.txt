@@ -1,0 +1,38 @@
+﻿AI VIDEO FACTORY V6.5.9 - DESKTOP APP + AUTO FRESH
+
+MỤC TIÊU
+- Mở bot bằng icon AI Video Factory trên Desktop.
+- Không cần tự mở trình duyệt rồi nhập 127.0.0.1.
+- Mỗi lần mở, launcher tự kiểm tra source/UI có bị sửa từ lần nạp trước hay không.
+- Nếu có sửa, backend cũ đang rảnh sẽ tự tắt và nạp code mới.
+- Nếu đang render/job đang chạy, launcher KHÔNG giết job; đánh dấu restart pending để lần mở sau nạp bản mới.
+
+AUTO FRESH
+1. SHA-256 fingerprint app/**/*.py và web/**/*.js/css/html/json.
+2. Nếu fingerprint đổi: xóa __pycache__, shutdown backend idle, start backend mới.
+3. Static UI dùng no-store/no-cache để không giữ JS/CSS/HTML cũ.
+4. URL desktop có fresh=<source hash>.
+5. Tôn trọng data/ga_maintenance/restart.request của Self-Heal.
+
+DESKTOP WINDOW
+- Nếu máy có pywebview: dùng embedded WebView.
+- Nếu chưa có: dùng Microsoft Edge App Mode, cửa sổ riêng không có thanh địa chỉ.
+- Không tự pip install dependency để tránh phá môi trường Python hiện tại.
+
+AN TOÀN
+- Không đụng models/data/project/output.
+- Không kill render đang chạy để refresh.
+- app/main.py chỉ chèn một hook no-cache nhỏ, không overwrite toàn file.
+- Có backup + rollback.
+
+CÀI
+1. Giải nén TOÀN BỘ ZIP vào thư mục gốc ai_video_factory.
+2. Chạy INSTALL_DESKTOP_AUTO_FRESH_V6_5_9.bat.
+3. Phải thấy:
+   DESKTOP_AUTO_FRESH_V6_5_9_VERIFY: PASS
+   DESKTOP AUTO FRESH V6.5.9: PASS
+4. Sau đó mở bằng shortcut "AI Video Factory" ngoài Desktop.
+
+LOG
+- data/ga_maintenance/desktop_launcher.log
+- data/ga_maintenance/desktop_backend.log

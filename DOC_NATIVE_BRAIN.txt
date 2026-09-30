@@ -1,0 +1,39 @@
+GÀ NATIVE BRAIN - ĐÚNG KIẾN TRÚC MODULE
+
+Mục tiêu:
+- Gà không đứng ngoài gọi backend rồi quăng link.
+- Gà chọn đúng khung, điền đúng form, bấm đúng nút NATIVE.
+- Thanh progress / viewer / Job Terminal của chính module chạy như bạn tự bấm.
+- Mỗi module có thanh "🧠 GÀ BRAIN" riêng và nút TỐI ƯU.
+- Brain nhớ các setting bạn đã dùng khi bấm chạy thủ công hoặc khi Gà chạy.
+
+Các module đã gắn native brain:
+Cắt video, Ghép video, Phụ đề AI, Dọn video AI, AI Ảnh,
+Thêm nhạc, Emoji/Sticker, Facebook, Tải Video Web, Văn bản,
+Ảnh/Overlay, Nhân vật 2D, Nhân vật 3D, Đồ vật 3D, Bản đồ HD.
+
+Cách dùng:
+1) Giải nén ZIP này vào thư mục gốc ai_video_factory.
+2) Replace All.
+3) Đóng bot đang chạy.
+4) Mở lại theo cách cũ.
+
+Ví dụ:
+"Gà ơi dậy đi"
+"Tạo cho tao cây cung 3D fantasy màu đồng đỏ, final"
+=> tự vào ĐỒ VẬT 3D
+=> điền prompt
+=> chọn Final / texture hợp lý
+=> bấm TẠO ĐỒ VẬT 3D
+=> bạn thấy progress ngay trong module.
+
+Nếu đang ở một module:
+- bấm "TỐI ƯU" trong thanh 🧠 GÀ BRAIN
+=> Brain đọc form hiện tại + trí nhớ module rồi tối ưu setting.
+=> Không chạy pipeline nếu bạn chưa bấm tạo.
+
+Tải máy:
+- Lệnh rõ ràng dùng native fast planner, KHÔNG gọi Qwen.
+- Chỉ yêu cầu mơ hồ / tối ưu phức tạp mới gọi Qwen 1 lần.
+- Không có vòng suy nghĩ nhiều phút.
+- Planner gọi xong keep_alive=0.

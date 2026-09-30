@@ -1,0 +1,30 @@
+GÀ MAINTENANCE v4 - SAFE SYSTEM CLEANER
+=======================================
+
+CHỈ CÓ 2 NHIỆM VỤ
+1. Kiểm tra tình trạng máy.
+2. Quét/dọn rác an toàn.
+
+NÚT
+- QUÉT MÁY: ổ C, CPU, RAM, NVIDIA GPU/VRAM, Torch/CUDA.
+- QUÉT RÁC: chỉ báo cáo, chưa xóa.
+- GPU/CUDA: kiểm tra riêng NVIDIA + Torch CUDA.
+- DỌN AN TOÀN: hiện preview và bắt buộc xác nhận trước khi xóa.
+
+NHỮNG THỨ SAFE CÓ THỂ DỌN
+- pip cache.
+- TEMP đủ cũ theo config (mặc định > 7 ngày); file đang khóa được bỏ qua.
+- ~orch / ~-rch chỉ khi xác minh Torch active đang import từ thư mục torch chuẩn.
+- Hugging Face .incomplete/.partial chỉ khi đủ cũ (mặc định 24h) VÀ không có tiến trình HF/Xet đang tải.
+
+KHÔNG BAO GIỜ TỰ XÓA
+- model Hugging Face hoàn chỉnh.
+- snapshot/blob model hoàn chỉnh.
+- package Python/Torch đang active.
+- dữ liệu người dùng.
+- file ngoài các nhóm rác được whitelist.
+
+LƯU Ý
+- App này cố ý KHÔNG có tool shell, xóa file tùy ý, web, sửa code, click chuột hay kill process.
+- auto_scan_on_start=true: chỉ kiểm tra, KHÔNG tự xóa.
+- auto_clean_on_start=false và bản v4 không tự dọn khi khởi động.

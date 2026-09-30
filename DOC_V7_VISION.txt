@@ -1,0 +1,8 @@
+GÀ BRAIN V7 - CÓ MẮT THẬT
+- Ctrl+V/kéo-thả/📎 ảnh.
+- File ảnh thật được gửi multipart vào Brain.
+- Lệnh lấy/dùng/đối chiếu ảnh + nhân vật 3D đi thẳng Nhân vật 3D.
+- Thiếu ảnh: nhớ lệnh 15 phút; gắn ảnh rồi nói “tạo luôn đi”.
+- Tự dùng Ollama vision model nếu đã cài; không có thì nói rõ, không giả vờ nhìn.
+- CAI_MAT_GA_VISION.bat là tùy chọn, không tự tải model nhiều GB.
+- run/bắn cung hiện Game Ready hỗ trợ; blink/lip-sync/smile/tóc bay chưa có pipeline thật nên Gà phải báo CHƯA FINAL.

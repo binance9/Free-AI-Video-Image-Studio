@@ -183,12 +183,14 @@ $('cutBtn').onclick=async()=>{
   catch(e){setStatus('Lỗi: '+e.message,true)}finally{setBusy(false)}
 };
 
-$('mergeFile').onchange=e=>{state.mergeFile=e.target.files[0]||null;$('mergeName').textContent=state.mergeFile?state.mergeFile.name:'＋ Chọn video để ghép';$('mergeBtn').disabled=!state.mergeFile||!hasVideo()};
+function clearMergeFile(){state.mergeFile=null;$('mergeFile').value='';$('mergeName').textContent='＋ Chọn video để ghép';$('mergeClear').hidden=true;$('mergeBtn').disabled=true}
+$('mergeFile').onchange=e=>{state.mergeFile=e.target.files[0]||null;$('mergeName').textContent=state.mergeFile?state.mergeFile.name:'＋ Chọn video để ghép';$('mergeClear').hidden=!state.mergeFile;$('mergeBtn').disabled=!state.mergeFile||!hasVideo()};
+$('mergeClear').onclick=clearMergeFile;
 $('mergeBefore').onclick=()=>setMergePos('before'); $('mergeAfter').onclick=()=>setMergePos('after');
 function setMergePos(pos){state.mergePosition=pos;$('mergeBefore').classList.toggle('active',pos==='before');$('mergeAfter').classList.toggle('active',pos==='after')}
 $('mergeBtn').onclick=async()=>{
   if(!state.mergeFile)return; const form=new FormData();form.append('file',state.mergeFile);form.append('position',state.mergePosition);setBusy(true,'Đang ghép video…');
-  try{const info=await jsonRequest(`/api/editor/${state.sessionId}/append`,{method:'POST',body:form});applyInfo(info);state.mergeFile=null;$('mergeFile').value='';$('mergeName').textContent='＋ Chọn video để ghép';$('mergeBtn').disabled=true;setStatus('Ghép xong. Xem lại video rồi sửa tiếp nếu cần.');}
+  try{const info=await jsonRequest(`/api/editor/${state.sessionId}/append`,{method:'POST',body:form});applyInfo(info);clearMergeFile();setStatus('Ghép xong. Xem lại video rồi sửa tiếp nếu cần.');}
   catch(e){setStatus('Lỗi: '+e.message,true)}finally{setBusy(false)}
 };
 

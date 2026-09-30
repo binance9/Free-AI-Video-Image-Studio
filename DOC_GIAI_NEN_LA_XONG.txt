@@ -1,0 +1,16 @@
+GÀ AI VIDEO FACTORY - OVERLAY DIRECT
+
+Cách dùng duy nhất:
+1) Giải nén toàn bộ ZIP này vào thư mục gốc ai_video_factory.
+2) Windows hỏi file trùng -> chọn Replace the files in the destination / Replace All.
+3) Mở AI Video Factory bằng cách cũ (START_VIDEO_FACTORY.bat / shortcut cũ).
+
+Không cần chạy file FIX hay installer riêng.
+
+START_VIDEO_FACTORY.py trong overlay đã được sửa:
+- Nếu backend cũ vẫn sống nhưng chưa có /api/ga-owner/status, launcher tự dừng backend cũ.
+- Sau đó nó tự mở app.main đã patch.
+- Nếu backend đã đúng Gà API thì nó chỉ mở web như bình thường.
+
+Overlay không chứa model, không xóa output/project, không đụng Ollama model.
+Voiceprint dùng NumPy sẵn có, không cần python_speech_features.

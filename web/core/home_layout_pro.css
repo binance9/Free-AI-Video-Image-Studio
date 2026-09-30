@@ -1,0 +1,59 @@
+#homeScreen{background:linear-gradient(180deg,#2b2521,#1c1815)}
+#homeScreen,#homeScreen .home-heading p,#homeScreen .home-side-title,#homeScreen .home-recent-empty,#homeScreen .asset-section-head span{color:#f5ece4}
+#homeScreen .home-sidebar{background:linear-gradient(180deg,#332c27,#1c1815);border-right:1px solid #46392f}
+#homeScreen .home-logo{background:linear-gradient(135deg,#d9b876,#a9884f);color:#3a2c12}
+#homeScreen .home-create-icon{background:#f3e9d4;color:#8a6a2f}
+#homeScreen .home-brand strong{color:#fff6ee}
+#homeScreen .home-brand small{color:#d3ac95}
+#homeScreen .home-nav-item,#homeScreen .home-settings{color:#e8cdba}
+#homeScreen .home-nav-item:hover,#homeScreen .home-nav-item.active,#homeScreen .home-settings:hover{background:rgba(255,255,255,.12);color:#ffd7ae}
+#homeScreen .home-nav-item.active{box-shadow:inset 0 0 0 1px rgba(255,215,174,.4)}
+#homeScreen .home-side-section{border-top:1px solid #46392f}
+#homeScreen .home-recent-empty{color:#c9a68f}
+#homeScreen .home-settings{background:rgba(255,255,255,.08);color:#f0ddcd;border:1px solid #46392f}
+#homeScreen .home-heading h1,#homeScreen .home-section-head h2{color:#fff6ee}
+#homeScreen .home-heading p{color:#d3ac95}
+#homeScreen .home-section-head{margin:20px 2px 12px}
+#homeScreen .home-section-head button{color:#d3ac95}
+#homeScreen .home-section-head button:hover{color:#ffd7ae}
+#homeScreen .home-create-grid{gap:14px}
+#homeScreen .home-create-card{min-height:132px;padding:20px;border-radius:18px}
+#homeScreen .home-create-card:hover{box-shadow:0 16px 34px rgba(20,8,4,.4)}
+#homeScreen .home-create-icon{width:46px;height:46px;font-size:30px}
+#homeScreen .home-create-card strong{font-size:18px}
+#homeScreen .home-create-card small{font-size:12px}
+#homeScreen .home-create-art{font-size:76px}
+#homeScreen .home-banner{box-shadow:0 14px 30px rgba(20,8,4,.4)}
+
+#homeScreen .home-tool-grid,#homeScreen .home-all-tools{grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}
+#homeScreen .home-tool-card{min-height:88px;padding:10px 8px 9px;border-radius:13px;background:rgba(255,255,255,.09);backdrop-filter:blur(8px);border:1px solid #46392f;color:#f5ece4;gap:5px}
+#homeScreen .home-tool-card:hover{background:rgba(255,255,255,.15);border-color:#8a7358;transform:translateY(-1px);box-shadow:0 10px 22px rgba(20,8,4,.35)}
+#homeScreen .home-tool-card b{font-size:14px;line-height:1;min-height:0;width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.16);color:#c9a86a}
+#homeScreen .home-tool-card strong{font-size:11.5px;color:#fff6ee}
+#homeScreen .home-tool-card small{font-size:9px;color:#d3ac95;line-height:1.3}
+
+#homeScreen .asset-section-head{margin-top:18px}
+#homeScreen .studio-feature-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}
+#homeScreen .studio-feature-card{min-height:88px;grid-template-columns:38px 1fr;align-items:center;gap:10px;padding:10px 9px;border-radius:13px;border:1px solid #46392f;background:rgba(255,255,255,.09);backdrop-filter:blur(8px);box-shadow:none}
+#homeScreen .studio-feature-card:before{display:none}
+#homeScreen .studio-feature-card:hover{transform:translateY(-1px);border-color:#8a7358;box-shadow:0 10px 22px rgba(20,8,4,.35)}
+#homeScreen .studio-feature-icon{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.14)!important;border:1px solid rgba(255,255,255,.16);box-shadow:none}
+#homeScreen .studio-feature-icon svg{width:18px;height:18px;stroke-width:3.6;stroke:#c9a86a}
+#homeScreen .studio-feature-copy{gap:1px}
+#homeScreen .studio-feature-copy strong{font-size:11.5px;color:#fff6ee}
+#homeScreen .studio-feature-copy small{font-size:9px;color:#d3ac95;line-height:1.3}
+#homeScreen .studio-feature-copy em{display:none}
+#homeScreen .studio-feature-arrow{display:none}
+
+#homeScreen .studio-feature-card[disabled]{opacity:.5}
+#homeScreen .studio-feature-card[disabled] .studio-feature-icon svg{stroke:#8a7a6c}
+
+@media(max-width:1250px){#homeScreen .home-tool-grid,#homeScreen .home-all-tools,#homeScreen .studio-feature-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:900px){#homeScreen .home-tool-grid,#homeScreen .home-all-tools,#homeScreen .studio-feature-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+.kill-bot-floating{padding:9px 16px 9px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(135deg,#e11d48,#9f1239);color:#fff;font-weight:800;font-size:11.5px;letter-spacing:.02em;box-shadow:0 8px 22px rgba(159,18,57,.4),0 2px 5px rgba(0,0,0,.3);transition:transform .15s ease,box-shadow .15s ease}
+.kill-bot-floating:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(159,18,57,.5),0 3px 7px rgba(0,0,0,.35)}
+.kill-bot-floating:active{transform:translateY(0)}
+
+.topbar .btn{padding:6px 10px;font-size:12px;border-radius:9px}
+.top-actions{gap:6px}

@@ -1,9 +1,12 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.core.api_core import router as core_router
 from app.modules.chinh_sua_video.api_chinh_sua_video import router as video_editor_router
+from app.modules.cat_video.api_cat_video import router as cat_video_router
 from app.core.api_settings import router as settings_router
 from app.modules.cong_cu_van_ban.api_cong_cu_van_ban import router as text_router
 from app.modules.tao_anh_ai.api_tao_anh_ai import router as ai_image_router
@@ -15,6 +18,9 @@ from app.modules.tai_video_web.api_tai_video_web import router as tai_video_web_
 from app.modules.lam_sach_video.api_lam_sach_video import router as video_cleanup_router
 from app.core.api_job_control import router as job_control_router
 from app.core.api_system import router as system_router
+from app.core.api_job_logs import router as job_logs_router
+from app.core.job_log_broker import job_log_broker
+from app.core.local_freshness import install_local_freshness
 from app.modules.nhan_vat_2d.api_nhan_vat_2d import router as character_2d_router
 from app.modules.nhan_vat_game_ready.api_nhan_vat_game_ready import router as game_ready_3d_router
 from app.modules.do_vat_3d.api_do_vat_3d import router as do_vat_3d_router
@@ -40,9 +46,22 @@ from app.storage.project_memory import ProjectMemory
 
 
 from app.modules.ban_do_3d.api_ban_do_3d import router as ban_do_3d_router
+from app.modules.ga_owner.api_ga_owner import router as ga_owner_router
+from app.modules.ga_brain.api_ga_brain import router as ga_brain_router
+from app.modules.ga_maintenance.api_ga_maintenance import router as ga_maintenance_router
 
-def create_app(db_path=None, editor_dir=None) -> FastAPI:
+from app.modules.ai_video_director.api_ai_video_director import router as ai_video_director_router
+
+from app.modules.tao_video_ai.api_tao_video_ai import router as tao_video_ai_router
+from app.modules.tao_video_ai import LocalVideoAIService, VideoAIWorkspace, VideoAIJobManager
+
+from app.modules.framepack.api_framepack import router as framepack_router
+
+def create_app(db_path=None, editor_dir=None, do_vat_3d_dir=None) -> FastAPI:
+    job_log_broker.install()
+    job_log_broker.publish("system", "startup", "Backend: đang khởi tạo services...")
     app = FastAPI(title=settings.app_name, version=settings.version)
+    install_local_freshness(app)
     db = Database(db_path or settings.db_path)
     memory = ProjectMemory(db)
 
@@ -53,9 +72,13 @@ def create_app(db_path=None, editor_dir=None) -> FastAPI:
     settings.facebook_download_dir.mkdir(parents=True, exist_ok=True)
     settings.tai_video_web_dir.mkdir(parents=True, exist_ok=True)
     settings.video_cleanup_jobs_dir.mkdir(parents=True, exist_ok=True)
-    settings.do_vat_3d_dir.mkdir(parents=True, exist_ok=True)
+    do_vat_root = Path(do_vat_3d_dir).resolve() if do_vat_3d_dir else settings.do_vat_3d_dir
+    do_vat_root.mkdir(parents=True, exist_ok=True)
 
     app.state.memory = memory
+    app.state.video_ai_workspace = VideoAIWorkspace(settings.base_dir / "data" / "tao_video_ai")
+    app.state.video_ai_service = LocalVideoAIService(settings.model_dir / "video", app.state.video_ai_workspace)
+    app.state.video_ai_jobs = VideoAIJobManager(app.state.video_ai_service, app.state.video_ai_workspace)
     app.state.director = DirectorAI(memory)
     app.state.video_editor = VideoEditor()
     app.state.video_workspace = VideoWorkspace(editor_dir or settings.editor_dir, settings.web_dir / "stickers")
@@ -71,12 +94,12 @@ def create_app(db_path=None, editor_dir=None) -> FastAPI:
     app.state.game_ready_3d_service = GameReady3DService(settings.model_3d_dir / "_game_ready")
     app.state.game_ready_3d_jobs = GameReadyJobManager(app.state.game_ready_3d_service, app.state.model_3d_workspace)
     app.state.model_3d_library = Model3DLibrary(settings.base_dir / "data" / "3d_library", app.state.model_3d_workspace)
-    app.state.do_vat_3d_workspace = Model3DWorkspace(settings.do_vat_3d_dir / "assets")
+    app.state.do_vat_3d_workspace = Model3DWorkspace(do_vat_root / "assets")
     app.state.do_vat_3d_service = DoVat3DService(
         settings.triposr_dir, settings.model_dir / "3d", app.state.ai_image_service, settings.base_dir
     )
     app.state.do_vat_3d_jobs = DoVat3DJobManager(
-        app.state.do_vat_3d_service, app.state.do_vat_3d_workspace, settings.do_vat_3d_dir / "_jobs"
+        app.state.do_vat_3d_service, app.state.do_vat_3d_workspace, do_vat_root / "_jobs"
     )
     app.state.music_library = LocalMusicLibrary(settings.music_library_dir)
     app.state.caption_service = LocalCaptionService(settings.whisper_model, settings.model_dir / "whisper")
@@ -96,17 +119,24 @@ def create_app(db_path=None, editor_dir=None) -> FastAPI:
         app.state.video_cleanup_runtime, app.state.video_workspace, settings.video_cleanup_jobs_dir
     )
 
-    for router in (core_router, video_editor_router, settings_router, text_router, ai_image_router, character_2d_router, music_router, caption_router, model_3d_router, game_ready_3d_router, do_vat_3d_router, facebook_video_router, tai_video_web_router, video_cleanup_router, job_control_router, system_router):
+    for router in (core_router, video_editor_router, cat_video_router, settings_router, text_router, ai_image_router, character_2d_router, music_router, caption_router, model_3d_router, game_ready_3d_router, do_vat_3d_router, facebook_video_router, tai_video_web_router, video_cleanup_router, job_control_router, system_router, job_logs_router):
         app.include_router(router)
 
     app.include_router(ban_do_3d_router)
+    app.include_router(ga_owner_router)
+    app.include_router(ga_brain_router)
+    app.include_router(ga_maintenance_router)
     app.include_router(model_3d_library_router)
+    app.include_router(ai_video_director_router)
+    app.include_router(tao_video_ai_router)
+    app.include_router(framepack_router)
     app.mount("/static", StaticFiles(directory=settings.web_dir), name="static")
 
     @app.get("/")
     def home():
         return FileResponse(settings.web_dir / "index.html", headers={"Cache-Control": "no-store, max-age=0"})
 
+    job_log_broker.publish("system", "startup", "Backend: services đã khởi tạo xong, server sẵn sàng nhận request.", level="success")
     return app
 
 

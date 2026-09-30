@@ -1,0 +1,48 @@
+GÀ AI OWNER - AI VIDEO FACTORY 0.8.9.3.3
+=========================================
+
+Patch này được viết trên đúng source bạn vừa gửi.
+
+CÀI:
+1. Chờ Ollama/qwen3:8b tải xong.
+2. Đóng AI Video Factory đang chạy.
+3. Giải nén toàn bộ ZIP patch này vào thư mục gốc AI Video Factory.
+4. Chạy CAI_GA_VAO_AI_VIDEO_FACTORY.bat.
+5. Mở lại START_VIDEO_FACTORY.bat.
+
+GÀ NẰM NGAY SIDEBAR TRÁI HOME:
+- Chat
+- MIC tiếng Việt vi-VN
+- Đính kèm ảnh
+- Đăng ký 5 mẫu giọng chủ
+- trạng thái Ollama/model
+
+GÀ GỌI TRỰC TIẾP PIPELINE SẴN CÓ:
+- AI ảnh
+- Nhân vật 2D
+- Nhân vật 3D
+- Đồ vật 3D
+- Game-ready 3D
+- Bản đồ HD
+- Thư viện 3D
+
+Ví dụ:
+"gà ơi dậy đi"
+"Tạo cho tao một cây cung 3D fantasy màu đồng đỏ, chất lượng final."
+=> gọi thẳng Đồ vật 3D.
+
+Đính kèm ảnh:
+"Biến ảnh này thành nhân vật 3D có texture."
+=> dùng chính ảnh đính kèm.
+
+RAM:
+- Không hỏi thì Ollama không được gọi.
+- Trong một task nhiều bước, giữ model tạm để không reload từng bước.
+- Task xong -> keep_alive=0 -> nhả model khỏi RAM/VRAM.
+
+VOICEPRINT:
+- Giúp bỏ qua giọng khác trong sử dụng bình thường.
+- Không phải bảo mật pháp y; replay/voice clone tinh vi vẫn có thể vượt qua.
+
+BACKUP:
+Installer tạo _backup_before_ga_owner_YYYYMMDD_HHMMSS trước khi sửa file chính.

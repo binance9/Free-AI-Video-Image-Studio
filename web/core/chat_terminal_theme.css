@@ -1,0 +1,20 @@
+.chat-col{background:linear-gradient(180deg,#2b2521,#1c1815);border-right:1px solid #46392f}
+.chat-col-resize{border-top:1px solid #46392f}
+.chat-col-resize:before{background:#46392f}
+.chat-col-resize:hover:before,.chat-col-resize.dragging:before{background:#c9a86a}
+
+.ga-owner{background:linear-gradient(180deg,#332c27,#2b2521);border:1px solid #46392f}
+.ga-owner-avatar{background:linear-gradient(135deg,#d9b876,#a9884f);color:#3a2c12}
+.ga-owner-state.awake{color:#7ee9bd}
+.ga-owner-chat{background:#1c1815}
+.ga-owner-attach-card{background:rgba(255,255,255,.06);border:1px solid #46392f}
+.ga-owner-chat-image{background:#14110f;border:1px solid #46392f}
+
+.job-terminal{background:linear-gradient(180deg,#2b2521,#1c1815);border:1px solid #46392f}
+.job-terminal header{background:rgba(255,255,255,.04);border-bottom:1px solid #46392f}
+.job-terminal header b{color:#c9a86a}
+.job-terminal-body{background:#1c1815}
+.job-terminal-line.meta span{color:#c9a86a}
+.job-terminal-resize{background:#1c1815;border-bottom:1px solid #46392f}
+.job-terminal-resize:before{background:#46392f}
+.job-terminal-resize:hover:before,.job-terminal-resize.dragging:before{background:#c9a86a}

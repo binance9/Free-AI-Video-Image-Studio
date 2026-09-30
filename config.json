@@ -1,0 +1,17 @@
+{
+  "wake_phrase": "gà ơi dậy đi",
+  "sleep_phrase": "gà ngủ đi",
+  "speech_language": "vi-VN",
+  "microphone_on_start": false,
+  "always_on_top": true,
+  "window_width": 470,
+  "window_height": 620,
+  "ollama_url": "http://127.0.0.1:11434",
+  "ollama_model": "qwen3:8b",
+  "max_agent_steps": 6,
+  "low_disk_threshold_gb": 25,
+  "temp_max_age_days": 7,
+  "hf_incomplete_min_age_hours": 24,
+  "auto_scan_on_start": true,
+  "auto_clean_on_start": false
+}

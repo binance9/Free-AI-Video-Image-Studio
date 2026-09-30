@@ -1,0 +1,40 @@
+GA BRAIN V3 - KIEM TRA TREN SOURCE AI VIDEO FACTORY DA GUI
+
+SOURCE GOC:
+- Python: 149 file, 0 loi cu phap
+- JavaScript: 26 file, 0 loi node --check
+- Link /static trong web/index.html: 30, 0 link thieu file
+
+SAU KHI AP OVERLAY V3 LEN COPY SOURCE:
+- Python source: 159 file, 0 loi cu phap
+- JavaScript: 28 file, 0 loi cu phap
+- Import app.main: PASS
+- /api/ga-owner/status: PASS
+- /api/ga-brain/status: PASS
+- /api/ga-brain/plan: PASS
+- /api/ga-maintenance/status: PASS
+- /api/ga-maintenance/audit: PASS
+- FAST ROUTER: 11/11 lenh thu PASS
+- SAFE CLEANUP TEST:
+  * __pycache__/pyc: xoa dung
+  * FIX_GA cu do Ga tao: xoa dung
+  * file .bak nghi ngo: GIU NGUYEN, chi bao cao
+- Static frontend refs sau overlay: PASS
+
+WATCHDOG:
+- Nhan vat 2D/3D: hard limit 15:00
+- Do vat 3D: hard limit 10:00
+- Map HD: hard limit 10:00
+- Hien elapsed + progress + stage trong khung module
+- Canh bao 70%, critical 90%
+- Stall detection
+- Do vat partial texture: retry texture toi da 1 lan
+- Character2D gate fail: CHUA PASS
+- Map validation fail: CHUA PASS
+- Hard timeout: chi cancel an toan; KHONG chay de job moi neu backend chua xac nhan dung
+
+SAFE FILE AUDIT:
+- Tu dong xoa CHI cache bytecode va 3 file FIX_GA cu chinh Ga tung tao
+- KHONG dong data/models/weights/output/projects/assets/.venv/node_modules
+- File nghi khong dung: KHONG XOA
+- Loi source khong co cach sua chac 100%: KHONG GHI DE, bao ro trong chat

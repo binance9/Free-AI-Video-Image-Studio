@@ -24,6 +24,12 @@ class Prompt3DRequest(BaseModel):
 
 
 def _save_result(request: Request, result: dict, meta: dict) -> dict:
+    meta = {
+        **meta, "normalization": result.get("normalization"), "visual_qa": result.get("visual_qa"),
+        "source_image": result.get("source_image"), "attempt_count": result.get("attempt_count", 1),
+        "retry_count": result.get("retry_count", 0), "selected_candidate": result.get("selected_candidate", 1),
+        "ready_for_rig": bool(result.get("ready_for_rig", False)), "quality_stage": result.get("quality_stage", "DRAFT"),
+    }
     payload = request.app.state.model_3d_workspace.create_asset(
         result["model_path"], result.get("preview_path"), meta
     )
@@ -82,7 +88,7 @@ def from_prompt(payload: Prompt3DRequest, request: Request):
 @router.post("/jobs/from-image")
 def start_image_job(request: Request, file: UploadFile = File(...), resolution: int = Form(256),
                     texture: bool = Form(False), preview: bool = Form(False), backend: str = Form("quick"),
-                    optimize_mesh: bool = Form(True), mesh_profile: str = Form("hd")):
+                    optimize_mesh: bool = Form(True), mesh_profile: str = Form("hd"), prompt:str=Form(""), style:str=Form("cartoon3d")):
     suffix = Path(file.filename or "image.png").suffix.lower() or ".png"
     if suffix not in {".png", ".jpg", ".jpeg", ".webp"}:
         raise HTTPException(status_code=400, detail="Ảnh phải là PNG/JPG/WebP")
@@ -93,7 +99,7 @@ def start_image_job(request: Request, file: UploadFile = File(...), resolution: 
         with tmp.open("wb") as out:
             shutil.copyfileobj(file.file, out, length=1024 * 1024)
         job_id = request.app.state.model_3d_jobs.start_image(
-            tmp, resolution=resolution, texture=texture, preview=preview, backend=backend, optimize_mesh=optimize_mesh, mesh_profile=mesh_profile
+            tmp, prompt=prompt, style=style, resolution=resolution, texture=texture, preview=preview, backend=backend, optimize_mesh=optimize_mesh, mesh_profile=mesh_profile
         )
         return {"job_id": job_id, "status_url": f"/api/3d/jobs/{job_id}"}
     finally:
@@ -156,6 +162,9 @@ def job_status(job_id: str, request: Request):
             result["viewer_url"] = f"/api/3d/view/{result['asset_id']}"
             result["preview_url"] = f"/api/3d/preview/{result['asset_id']}" if result.get("preview") else None
             payload["result"] = result
+            payload.update(preview_type="3d",preview_url=result["viewer_url"],message=payload.get("detail") or "GLB sẵn sàng")
+        else:
+            payload.update(preview_type="image",preview_url=payload.get("preview_url"),message=payload.get("detail") or payload.get("stage") or "")
         return payload
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

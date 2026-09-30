@@ -8,6 +8,8 @@ import random
 
 from PIL import Image, ImageStat
 
+from app.core.prompt_contract import fit_prompt_to_pipeline
+
 STYLE = {
     "photo": "photorealistic natural lighting",
     "cartoon3d": "polished stylized 3D cartoon",
@@ -280,6 +282,9 @@ class StandaloneLocalImageService:
         torch, device, _dtype = self._runtime()
         generator, _seed = self._generator(torch, device, seed)
         prompt_text = f"{prompt}, {STYLE.get(style, STYLE['fantasy'])}"
+        prompt_fit = fit_prompt_to_pipeline(prompt_text, pipe)
+        prompt_text = prompt_fit.text
+        negative_fit = fit_prompt_to_pipeline(negative_prompt, pipe) if negative_prompt else None
         kwargs = dict(
             prompt=prompt_text,
             width=width,
@@ -289,7 +294,11 @@ class StandaloneLocalImageService:
             generator=generator,
         )
         if negative_prompt:
-            kwargs["negative_prompt"] = negative_prompt
+            kwargs["negative_prompt"] = negative_fit.text
+        print(
+            f"AIVF_PROMPT_CONTRACT|module=nhan_vat_2d|tokens={prompt_fit.token_count}|limit={prompt_fit.token_limit}|truncated={str(prompt_fit.truncated).lower()}",
+            flush=True,
+        )
         with self._run_lock, torch.inference_mode():
             result = pipe(**kwargs)
         return _checked_result_bytes(result, size)
@@ -315,8 +324,11 @@ class StandaloneLocalImageService:
         torch, device, _dtype = self._runtime()
         generator, _seed = self._generator(torch, device, seed)
         strength = min(0.82, max(0.20, float(strength)))
+        prompt_text = f"{prompt}, {STYLE.get(style, STYLE['fantasy'])}"
+        prompt_fit = fit_prompt_to_pipeline(prompt_text, pipe)
+        negative_fit = fit_prompt_to_pipeline(negative_prompt, pipe) if negative_prompt else None
         kwargs = dict(
-            prompt=f"{prompt}, {STYLE.get(style, STYLE['fantasy'])}",
+            prompt=prompt_fit.text,
             image=init_image,
             strength=strength,
             num_inference_steps=steps,
@@ -324,7 +336,11 @@ class StandaloneLocalImageService:
             generator=generator,
         )
         if negative_prompt:
-            kwargs["negative_prompt"] = negative_prompt
+            kwargs["negative_prompt"] = negative_fit.text
+        print(
+            f"AIVF_PROMPT_CONTRACT|module=nhan_vat_2d_edit|tokens={prompt_fit.token_count}|limit={prompt_fit.token_limit}|truncated={str(prompt_fit.truncated).lower()}",
+            flush=True,
+        )
         with self._run_lock, torch.inference_mode():
             result = pipe(**kwargs)
         return _checked_result_bytes(result, size)

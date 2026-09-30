@@ -2,14 +2,25 @@ from __future__ import annotations
 
 def plan_repairs(issues: list[str], spec) -> list[str]:
     out=[]
+    wt = getattr(spec, "weapon_type", None)
+    # Object-specific repair directives for the most commonly confused objects
+    _object_repair = {
+        "umbrella": "SHOW A CLEARLY VISIBLE OPEN UMBRELLA OR PARASOL WITH CANOPY AND HANDLE, NO SWORD, NO GUN, NO SPEAR",
+        "sword": "SHOW A CLEAR LONG SWORD WITH BLADE, GUARD AND HANDLE, NO UMBRELLA, NO GUN",
+        "katana": "SHOW A CLEAR KATANA WITH CURVED BLADE, NO UMBRELLA, NO GUN",
+        "bow": "SHOW A CLEAR BOW WITH CURVED LIMBS AND BOWSTRING, NO SWORD, NO GUN, NO UMBRELLA",
+        "shield": "SHOW A CLEAR SHIELD ON ONE ARM, NO SWORD, NO GUN, NO UMBRELLA",
+        "staff": "SHOW A CLEAR LONG STAFF OR WAND, NO SWORD, NO GUN, NO UMBRELLA",
+        "spear": "SHOW A CLEAR SPEAR WITH LONG SHAFT AND SPEARHEAD, NO SWORD, NO GUN, NO UMBRELLA",
+    }
     mapping={
         "face":"CLEAR SHARP FACE, OPEN EYES, DEFINED NOSE, NATURAL MOUTH",
         "fullbody":"ZOOM OUT, ENTIRE BODY VISIBLE, HEAD AND BOTH BOOTS INSIDE FRAME",
         "background":"REMOVE ALL SCENERY AND UI, FLAT LIGHT GRAY BACKGROUND",
         "multiple_characters":"REMOVE ALL OTHER PEOPLE, ONE PERSON ONLY",
         "gender":f"STRICT {str(spec.gender).upper()} IDENTITY, DO NOT CHANGE GENDER" if getattr(spec,"gender",None) else "",
-        "weapon_type":f"SHOW A CLEAR {str(spec.weapon_type).upper()}" if getattr(spec,"weapon_type",None) else "",
-        "weapon_count":f"EXACTLY ONE {str(spec.weapon_type).upper()} ONLY, LEFT HAND EMPTY, NO SECOND WEAPON" if getattr(spec,"weapon_type",None) else "",
+        "weapon_type":_object_repair.get(wt, f"SHOW A CLEAR {str(wt).upper()}") if wt else "",
+        "weapon_count":f"EXACTLY ONE {str(wt).upper()} ONLY, NO SECOND WEAPON" if wt else "",
         "armor_color":f"ARMOR MUST BE CLEARLY {str(spec.armor_primary).upper()}, NOT WHITE OR SILVER" if getattr(spec,"armor_primary",None) else "",
         "accent_color":f"ADD A CLEARLY VISIBLE {str(spec.accent_color).upper()} SASH" if getattr(spec,"accent_color",None) else "",
         "cape_color":f"CAPE OR CLOAK MUST BE CLEARLY {str(spec.cape_color).upper()}" if getattr(spec,"cape_color",None) else "",

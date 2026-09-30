@@ -1,0 +1,20 @@
+FIX GÀ API OFF / NOT FOUND
+
+Ảnh lỗi cho thấy:
+- Panel frontend GÀ đã hiện.
+- Dòng GÀ API OFF = GET /api/ga-owner/status đang 404.
+- "Lỗi: Not Found" khi giao việc = POST /api/ga-owner/chat đang 404.
+
+Nguyên nhân:
+AI Video Factory cũ vẫn chạy trên 8123 trong lúc patch file.
+START_VIDEO_FACTORY.py có logic "nếu server đang chạy thì chỉ mở lại trình duyệt",
+nên backend Python không được import lại router Gà mới.
+
+Cách dùng:
+1. Giải nén ZIP này vào thư mục gốc AI Video Factory hiện tại.
+2. Chạy FIX_GA_API_OFF_NOT_FOUND.bat.
+3. Chờ tới cuối.
+4. Nếu hiện "GA API: PASS", F5 trang AI Video Factory.
+5. Header Gà phải đổi từ "GÀ API OFF" sang model, ví dụ "qwen3:8b · READY".
+
+Không cần cài lại model, không xóa project/output.

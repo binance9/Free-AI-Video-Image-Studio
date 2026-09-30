@@ -20,7 +20,7 @@
     }
     $('char2dRefName').textContent = referenceFile.name;
     referenceObjectUrl = URL.createObjectURL(referenceFile);
-    realtime?.showFile(referenceFile,'image');
+    realtime?.showFile(referenceFile,'image',() => { const el = $('char2dRefFile'); if (el) el.value = ''; setReference(null); });
   }
 
   $('char2dRefFile')?.addEventListener('change', e => setReference(e.target.files?.[0] || null));

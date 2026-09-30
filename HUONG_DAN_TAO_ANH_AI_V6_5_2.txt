@@ -1,0 +1,30 @@
+﻿AI VIDEO FACTORY V6.5.2 - TAO ANH AI CONSTRAINT FIX
+
+DAY LA BAN VA CHI SUA 1 MODULE:
+- app/modules/tao_anh_ai/service.py
+
+FIX CHINH
+- Giu uu tien prompt user ro hon cho Tao Anh AI.
+- Ep manh hon cac rang buoc: exactly one character, weapon visible, full body.
+- Them negative prompt chong truot: portrait close-up, cropped body, wings, wrong weapon.
+- Retry prompt sua manh hon neu QA bao subject mismatch / weapon missing.
+- Vision QA (neu co model vision) check them: full body, required weapon visible, wings present.
+
+CACH CAI
+1. Giai nen TOAN BO ZIP nay truc tiep vao thu muc goc:
+   C:/Users/BAOAN/OneDrive/Máy tính/ai_video_factory
+2. Chay file:
+   INSTALL_TAO_ANH_AI_V6_5_2.bat
+3. Cho den khi thay:
+   TAO_ANH_AI_V6_5_2_VERIFY: PASS
+   TAO ANH AI V6.5.2: PASS
+4. Khoi dong lai AI Video Factory.
+
+TEST GOI Y
+- tao 1 nữ kiếm hiệp cầm 1 thanh kiếm, toàn thân, ảnh thật
+
+KY VONG
+- 1 nhan vat
+- thay ro thanh kiem
+- bo cuc full body
+- giam tu them canh / angel / portrait drift

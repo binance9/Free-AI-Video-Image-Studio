@@ -1,0 +1,6 @@
+*{scrollbar-width:thin;scrollbar-color:rgba(120,120,120,.4) transparent}
+::-webkit-scrollbar{width:7px;height:7px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(120,120,120,.35);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:rgba(120,120,120,.6)}
+::-webkit-scrollbar-corner{background:transparent}

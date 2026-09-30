@@ -16,7 +16,10 @@ def inspect_face_region(image_path: str | Path) -> dict:
         edges = gray.filter(ImageFilter.FIND_EDGES)
         edge_score = ImageStat.Stat(edges).mean[0]
     score = round((contrast * 0.5) + (edge_score * 1.2), 2)
-    ok = score >= 28 and 40 <= mean <= 215
+    # Relaxed: score threshold 28->18 and brightness range 40-215 -> 30-225.
+    # 2D anime/chibi style faces have less edge detail than photorealistic
+    # faces and were wrongly rejected by the old threshold.
+    ok = score >= 18 and 30 <= mean <= 225
     return {
         "ok": ok,
         "score": score,

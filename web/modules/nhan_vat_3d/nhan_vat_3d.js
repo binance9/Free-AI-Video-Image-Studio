@@ -7,6 +7,14 @@
   let lastAssetId = '';
   let pollTimer = null;
   let sourcePreviewObjectUrl = '';
+  // Real bug found 2026-08-30: repeated ACTION triggers (e.g. from a confused
+  // multi-turn AI conversation re-clicking Run) could start several shape
+  // jobs back to back; whichever finished last silently won lastAssetId,
+  // so a later colorize step could paint an unrelated leftover mesh. This
+  // guard stops a second job from starting at all while one is in flight -
+  // the root fix, on top of startColorize() no longer trusting a stale
+  // shared variable for its own auto-chain call.
+  let jobInFlight = false;
 
   function showSourcePreview(fileOrBlob){
     const wrap = $('ai3dSourcePreview');
@@ -23,6 +31,15 @@
   }
 
   function hideSourcePreview(){ $('ai3dSourcePreview')?.classList.add('hidden'); }
+
+  function clearSourceImage(){
+    sourceImage = null; $('ai3dImageFile').value = '';
+    $('ai3dImageName').textContent = '＋ Chọn ảnh nhân vật / vật thể';
+    if(sourcePreviewObjectUrl){ try{ URL.revokeObjectURL(sourcePreviewObjectUrl); }catch(_e){} sourcePreviewObjectUrl=''; }
+    hideSourcePreview();
+    $('empty')?.classList.remove('hidden');
+  }
+  $('ai3dSourcePreviewClear').onclick = clearSourceImage;
 
   async function refreshStatus(){
     try{
@@ -80,6 +97,12 @@
   $('ai3dPaintMeshFile').onchange = e => {
     paintMeshFile = e.target.files[0] || null;
     $('ai3dPaintMeshName').textContent = paintMeshFile ? paintMeshFile.name : 'Dùng model vừa tạo · hoặc chọn GLB khác';
+    $('ai3dPaintMeshClear').hidden = !paintMeshFile;
+  };
+  $('ai3dPaintMeshClear').onclick = () => {
+    paintMeshFile = null; $('ai3dPaintMeshFile').value = '';
+    $('ai3dPaintMeshName').textContent = 'Dùng model vừa tạo · hoặc chọn GLB khác';
+    $('ai3dPaintMeshClear').hidden = true;
   };
 
   $('ai3dSetupHint').onclick = () => S.setStatus('Double-click SETUP_FREE_3D.bat nếu runtime TripoSR chưa sẵn sàng.');
@@ -87,6 +110,7 @@
   $('ai3dPaintSetupHint').onclick = () => S.setStatus('Double-click SETUP_CHARACTER_HD_TEXTURE.bat để build phần Paint native. File này không cài lại shape/model.');
 
   $('ai3dFromImage').onclick = async () => {
+    if (jobInFlight) return S.setStatus('Đang có job Nhân vật 3D chạy, đợi xong đã rồi tạo tiếp.', true);
     if (!sourceImage) return S.setStatus('Chọn một ảnh trước.', true);
     const form = new FormData();
     form.append('file', sourceImage);
@@ -102,6 +126,7 @@
   };
 
   $('ai3dFromPrompt').onclick = async () => {
+    if (jobInFlight) return S.setStatus('Đang có job Nhân vật 3D chạy, đợi xong đã rồi tạo tiếp.', true);
     const prompt = $('ai3dPrompt').value.trim();
     if (prompt.length < 3) return S.setStatus('Nhập mô tả nhân vật/vật thể trước.', true);
     const body = {
@@ -119,15 +144,27 @@
     }, 'AI đang tạo concept rồi dựng 3D…', false);
   };
 
-  $('ai3dColorizeCurrent').onclick = async () => {
+  async function startColorize(explicitAssetId){
+    // explicitAssetId (passed by the auto-chain right after ITS OWN shape job
+    // finishes) always wins over the shared lastAssetId - a second shape job
+    // completing in the few hundred ms before this fires would otherwise
+    // silently overwrite lastAssetId and paint the wrong mesh (real bug,
+    // found 2026-08-30: colorizing a stale/unrelated cached shape produced a
+    // result that looked nothing like the reference image).
+    const assetId = explicitAssetId || lastAssetId;
+    // Only guard the manual button path here - the auto-chain calls this
+    // right after its own job's pollJob already cleared the flag, so this
+    // is always false for that call and never blocks it.
+    if (!explicitAssetId && jobInFlight) return S.setStatus('Đang có job Nhân vật 3D chạy, đợi xong đã rồi tô màu tiếp.', true);
     if (!sourceImage) return S.setStatus('Chọn lại ảnh tham chiếu gốc trước khi tô màu.', true);
-    if (!paintMeshFile && !lastAssetId) return S.setStatus('Chọn GLB trắng hoặc dựng model trước.', true);
+    if (!paintMeshFile && !assetId) return S.setStatus('Chọn GLB trắng hoặc dựng model trước.', true);
     const form = new FormData();
     form.append('image', sourceImage);
     if (paintMeshFile) form.append('model', paintMeshFile);
-    else form.append('asset_id', lastAssetId);
+    else form.append('asset_id', assetId);
     await startJob('/api/3d/jobs/colorize', {method:'POST', body:form}, 'Khởi động tô màu GLB hiện có…', true);
-  };
+  }
+  $('ai3dColorizeCurrent').onclick = () => startColorize(null);
 
   function setProgress(data){
     const box = $('ai3dProgress');
@@ -142,6 +179,7 @@
   }
 
   async function startJob(url, options, busyText, isPaint){
+    jobInFlight = true;
     if (pollTimer){ clearTimeout(pollTimer); pollTimer = null; }
     $('ai3dResult').classList.add('hidden');
     let modeText = 'Shape-only ổn định: Paint cùng job đang TẮT; mesh sẽ được lưu trước.';
@@ -169,6 +207,7 @@
       setProgress(data);
 
       if (data.status === 'done'){
+        jobInFlight = false; // re-set true by startJob() if the auto-paint chain below fires next
         const result = data.result || {};
         if (result.asset_id) lastAssetId = result.asset_id;
         $('ai3dResult').classList.remove('hidden');
@@ -182,21 +221,27 @@
         const viewerUrl = result.viewer_url || result.model_url;
         hideSourcePreview();
         if (window.AIVF3DViewer && viewerUrl) window.AIVF3DViewer.show(viewerUrl, result.texture ? 'Model 3D màu vừa tạo' : 'Model 3D vừa tạo');
-        S.updateBusyProgress?.(100, 'Hoàn tất', result.texture ? 'GLB màu đã tạo xong' : 'GLB đã tạo xong', 'real');
-        S.setBusy(false);
-        S.setStatus(result.texture ? '100% · GLB màu đã tạo · mesh trắng gốc vẫn còn.' : '100% · GLB đã tạo xong · viewer 3D đã mở.');
-        if(!isPaint && autoPaintAfterShape && sourceImage && result.asset_id){
+        const willPaint = !isPaint && autoPaintAfterShape && sourceImage && result.asset_id;
+        if(willPaint){
+          S.updateBusyProgress?.(55, 'Shape PASS · chuyển sang Paint', 'Mesh đã giữ an toàn · CHƯA FINAL vì còn tô màu', 'real');
+          S.setStatus('Shape PASS · đang chuyển sang tô màu tự động · CHƯA FINAL.');
           autoPaintAfterShape=false;
-          S.setStatus('Shape xong · đang chuyển sang tô màu tự động…');
-          setTimeout(()=>$('ai3dColorizeCurrent')?.click(),250);
+          const shapeAssetId = result.asset_id;
+          setTimeout(()=>startColorize(shapeAssetId),250);
+        }else{
+          S.updateBusyProgress?.(100, 'Hoàn tất', result.texture ? 'GLB màu đã tạo xong' : 'GLB đã tạo xong', 'real');
+          S.setBusy(false);
+          S.setStatus(result.texture ? '100% · GLB màu FINAL · mesh trắng gốc vẫn còn.' : '100% · GLB đã tạo xong · viewer 3D đã mở.');
         }
         return;
       }
 
       if (data.status === 'error'){
+        jobInFlight = false;
         const msg = data.error || data.detail || 'không rõ lỗi';
-        S.failBusyProgress?.(isPaint ? 'Paint HD lỗi' : 'AI 3D lỗi', msg);
-        S.setStatus((isPaint ? 'Paint HD lỗi: ' : 'AI 3D lỗi: ') + msg, true);
+        S.failBusyProgress?.(isPaint ? 'Paint HD lỗi · Shape vẫn an toàn' : 'AI 3D lỗi', msg);
+        S.setBusy(false);
+        S.setStatus((isPaint ? 'Paint HD lỗi · Shape trắng vẫn giữ nguyên: ' : 'AI 3D lỗi: ') + msg, true);
         return;
       }
 

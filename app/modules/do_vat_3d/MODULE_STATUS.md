@@ -45,3 +45,8 @@ RESOLVED trong Phase 1.6.1 (trước đây là KNOWN_LIMITATIONS):
 - poly_target giờ được enforce thật cho CẢ TripoSR lẫn character_hd (toi_uu_so_mat + mesh_decimate.py).
 - Shared GPU lock (heavy_gpu_job_lock) đã nối vào nhan_vat_3d.job_manager (adapter mỏng).
 - Texture stage đã test thật (texture=lite) - xem README_MODULE.md.
+
+
+HOTFIX 2026-09-01:
+- Fixed object module prompt isolation: `do_vat_3d` no longer delegates prompt generation through the generic `Local3DService.from_prompt()` path that could bias concept images toward characters.
+- Added `prompt_do_vat.py` object-only prompt builder + human-term guard for strict object categories.

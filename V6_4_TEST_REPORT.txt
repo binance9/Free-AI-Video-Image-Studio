@@ -1,0 +1,11 @@
+AI VIDEO DIRECTOR V6.4 TEST REPORT
+
+Python compile: PASS
+JavaScript syntax: PASS
+Existing Director tests: 8 PASS
+Installer dry-run: PASS
+Character reference API present: PASS
+Character reference source-of-truth orchestration: PASS (static contract + compile)
+Real system log bridge hooks: PASS (DOM + custom events + known app logger function probes)
+Normalized CFR video QA gate: PASS (raw FPS is diagnostic; normalized output is gate)
+Installer scope: AI Director only; AI core/model/tao_anh_ai/tao_video_ai not overwritten

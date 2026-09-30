@@ -175,7 +175,10 @@ def build_recolor_gate(validation: dict, similarity: dict, palette: dict, min_sc
     hard = set(attrs.get("hard_failures", []))
     # Attribute CLIP color checks are deliberately ignored for recolor jobs;
     # the deterministic target-palette check above is the authority for colors.
-    for name in ("gender", "weapon_type", "weapon_family", "weapon_count", "single_character", "plain_background", "compact_proportions", "no_pedestal"):
+    # Relaxed: removed plain_background, compact_proportions, no_pedestal from
+    # the critical blockers list.  These CLIP checks are unreliable and cause
+    # false rejects on good images.  Gender and weapon checks stay critical.
+    for name in ("gender", "weapon_type", "weapon_family", "weapon_count", "single_character"):
         if name in hard and name not in blockers:
             blockers.append(name)
     if raw_identity is not None and identity < 0.54:

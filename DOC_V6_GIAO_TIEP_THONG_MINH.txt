@@ -1,0 +1,34 @@
+GÀ BRAIN V6 - CONVERSATION FIRST
+
+Sai lầm cũ:
+Mọi câu chat đều bị ép qua module router.
+
+V6:
+1. CHAT / HỎI:
+   "mày biết sửa lỗi không?"
+   "sao job này lâu vậy?"
+   "cái này dùng để làm gì?"
+   -> Gà trả lời bằng Qwen local, KHÔNG mở module.
+
+2. LỆNH:
+   "sửa lỗi vừa rồi đi"
+   "tạo cây cung 3D"
+   "kiểm tra source bot"
+   -> mới hành động.
+
+3. KHÔNG CHẮC:
+   -> hỏi lại, tuyệt đối không tự bấm.
+
+4. Qwen chat:
+   - think=false cho hội thoại thường
+   - 1 lượt ngắn, keep_alive=0
+   - có lịch sử chat ngắn + module hiện tại + lỗi job gần nhất
+   - không chạy tool chỉ vì trong câu có từ "sửa/tạo/xóa"
+
+5. Self-heal:
+   - job ERROR vẫn tự đọc đúng lỗi.
+   - câu "sửa lỗi vừa rồi đi" quay lại đúng job lỗi.
+   - source repair PASS thì KHÔNG tự shutdown/restart Windows; báo mở lại bot một lần.
+
+Cài:
+Giải nén đè vào thư mục gốc ai_video_factory -> Replace All -> mở lại bot.

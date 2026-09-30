@@ -1,99 +1,77 @@
-# AI Video Factory 0.8 · FREE LOCAL EDITION
+# AI Video Factory — Free All-In-One Local AI Studio
 
-Bản này giữ nguyên khung editor đã chốt nhưng **loại bỏ toàn bộ phụ thuộc bắt buộc vào API trả phí**. Editor cơ bản chạy local ngay; các tính năng AI dùng model open-source/local tải miễn phí lần đầu rồi lưu trên máy.
+```
+================================================================
+   AI VIDEO FACTORY v0.8.9
+   FREE · LOCAL · NO API COSTS · RUNS 100% ON YOUR PC
+   Video - Image - 3D - Subtitles - Music - Download - Edit
+================================================================
+```
 
-## Chạy trên Windows
+**AI Video Factory** is a free, open-source, all-in-one AI studio that runs **entirely on your own computer**. No subscriptions, no per-video payments, no cloud uploads — your GPU does all the work. Create videos from a text idea, generate and edit images, build 3D characters, clean up footage, add subtitles and music, download videos, and export the final MP4 — all in one Windows app with a CapCut-style editor.
 
-1. Giải nén ZIP vào thư mục mới.
-2. Double-click `START_VIDEO_FACTORY.bat`.
-3. App tự mở trình duyệt ở một cổng trống.
-4. Khi cần **Phụ đề AI / Dịch / AI Ảnh**, bấm `⚙ AI LOCAL > CÀI BỘ AI LOCAL MIỄN PHÍ`, hoặc chạy `SETUP_FREE_AI.bat` một lần.
+Everything is in a Vietnamese-first UI, with open English AI models under the hood.
 
-## Nguyên tắc miễn phí
+## What's inside
 
-- Không cần OpenAI API key.
-- Không cần Jamendo Client ID.
-- Không có phí theo token, ảnh, video hay số lượt.
-- Model AI không đóng gói trong ZIP vì dung lượng lớn; lần đầu dùng sẽ tải miễn phí từ nguồn model về `data/models/`.
-- Sau khi model đã tải, các lần dùng sau chạy từ máy. Dịch một cặp ngôn ngữ mới có thể cần tải thêm gói Argos miễn phí.
+### VIDEO
+- **AI Video Director** — type an idea ("30s video about an archer entering an ancient castle, wuxia style") and it auto-builds: script → storyboard → scene images → motion → voice → subtitles → music → final MP4. One button.
+- **FramePack engine** — long AI video (up to 60s) from a single image, or from a Vietnamese script with no image at all (auto-translates + auto-draws the first frame). 100% local, free forever.
+- **Wan 2.2 video engine** — local text-to-video and image-to-video at 720p.
+- **Video editor** — cut, merge, text/image overlays, timeline editing (CapCut-style).
+- **AI video cleanup** — remove background, erase text/logos/objects from videos with inpainting.
+- **Video download** — pull public Facebook videos (and other sites via yt-dlp) straight into the editor.
 
-## Tính năng
+### IMAGE
+- **AI image generation** — text-to-image, image-to-image, inpainting and upscaling with local Stable Diffusion (SDXL / SD 1.5 / DreamShaper). 7 styles: photo, cinematic, anime, cartoon3d, illustration, product, fantasy.
+- **AI image editing** inside the editor (masks, reference-based edits).
 
-### Video Editor
-- Tải video + preview.
-- Cắt / ghép đầu-cuối / hoàn tác.
-- Chèn chữ, ảnh, GIF, sticker.
-- Kéo, resize, xoay, opacity, timing, layer order.
-- Render MP4 bằng FFmpeg.
+### 3D
+- **2D character creation** — character sheets with consistency gates (face lock, body lock, weapon check).
+- **3D characters from a photo** — three interchangeable backends (TripoSR / Hunyuan3D-2 / Character-HD), textured GLB export.
+- **Game-ready pipeline** — Blender scripting: optimize → rig → skin → idle/run/attack animations → export.
+- **3D props** — 13 categories with poly/texture budget control.
+- **HD map generator** — AI tile-map generator: layout lock, per-tile generation, overlap stitching, sharpness QA.
 
-### Văn bản / Karaoke
-- Nhiều mẫu caption, meme, gaming, cinematic, karaoke.
-- Font, màu chữ, viền, nền, bóng.
-- Lời bài hát: dùng lời tự viết hoặc nội dung bạn có quyền sử dụng; app không tự lấy nguyên lời bài hát có bản quyền từ Internet.
+### AUDIO / TEXT
+- **Subtitles** — local Whisper transcription + Argos Translate translation.
+- **Music** — local music library, smart clip selector, mixer.
+- **Text presets** — ready-made caption styles.
+- **Voice assistant** — optional wake-word assistant ("gà ơi dậy đi") with Vietnamese speech.
 
-### Phụ đề AI local
-- `faster-whisper` chạy trên máy.
-- Tự nhận ngôn ngữ và tạo timing.
-- Model mặc định: Whisper `small` để cân bằng độ chính xác / tài nguyên.
+## Requirements
 
-### Dịch phụ đề local
-- Argos Translate chạy local.
-- Việt / Anh / Nhật / Hàn / Trung / Thái / Tây Ban Nha / Pháp.
-- Nếu chưa có model của cặp ngôn ngữ, app tự tải gói miễn phí lần đầu.
+- Windows 10/11, NVIDIA GPU (8 GB VRAM minimum, 16 GB recommended)
+- ~50 GB free disk for AI models (downloaded once, cached locally)
+- Python 3.14, FFmpeg, Blender (only for the game-ready 3D pipeline)
 
-### AI Ảnh local
-- Stable Diffusion v1.5 qua Diffusers.
-- Tạo ảnh từ mô tả và sửa từ ảnh tham chiếu (img2img).
-- Preset ảnh thật / hoạt hình 3D / anime / cinematic / minh họa / sản phẩm / fantasy.
-- Sinh ở kích thước nhẹ rồi upscale local lên 1K/2K/4K để phù hợp video.
-- Không cần API key. Model khá lớn nên lần đầu tải có thể mất thời gian.
+## Quick start
 
-### Nhạc local
-- Có 5 loop khởi đầu do project tạo, không lấy từ bài hát thương mại.
-- Tải MP3/WAV/M4A/AAC/OGG/FLAC của bạn lên; file được thêm vào kho local.
-- Tìm/gợi ý theo mô tả và tag trong kho local.
-- Tự chọn đoạn nổi bật bằng phân tích năng lượng, chỉnh volume và giữ/bỏ tiếng gốc.
-- App không tự tải trái phép các bài hát thương mại phổ biến trên nền tảng khác.
+```bat
+git clone https://github.com/binance9/Free-AI-Video-Image-Studio.git
+cd Free-AI-Video-Image-Studio
+pip install -r requirements.txt
+START_VIDEO_FACTORY.bat
+```
 
-### Sticker / GIF
-- 30 sticker local có sẵn + tải sticker/GIF riêng.
-- GIPHY vẫn là tiện ích **tùy chọn**; editor không phụ thuộc vào nó. Nếu dùng GIPHY, key developer của GIPHY được lưu trong trình duyệt và không liên quan API trả phí của Studio.
+Then open the app, pick a tool card on the home screen, and go. First use of each AI tool downloads its model once.
 
-## Dung lượng / hiệu năng
+## Project layout
 
-`SETUP_FREE_AI.bat` cài PyTorch, Diffusers, Faster-Whisper và Argos. Các package/model có thể chiếm vài GB. AI Ảnh chạy nhanh hơn nhiều khi máy có GPU; CPU vẫn có thể chạy nhưng chậm.
+```
+app/modules/*   feature modules (video, image, 3d, subtitles, music...)
+web/            frontend (home + editor + per-module panels)
+tools/          installers and helpers
+tests/smoke/    fast smoke tests: pytest -q tests/smoke/
+data/           runtime data & model cache (created locally, not in git)
+```
 
-## Cấu trúc module
+See `DANH_SACH_MODULE.md` (Vietnamese) for the full module index with per-module APIs, tests and troubleshooting.
 
-- `app/modules/video_editor/` — cắt/ghép/render/overlay.
-- `app/modules/subtitle_local/` — Whisper local.
-- `app/modules/translate_local/` — Argos Translate.
-- `app/modules/image_ai_local/` — Stable Diffusion local + upscale.
-- `app/modules/music_local/` — kho nhạc local + chọn đoạn + mix.
-- `app/modules/text_templates/` — mẫu chữ.
-- `web/js/` — frontend chia theo chức năng.
+## License
 
-## Internet dùng khi nào?
+MIT — free for personal and commercial use. Bundled AI models keep their own licenses (Apache-2.0 for Wan/FramePack/Hunyuan, OpenRAIL for Stable Diffusion).
 
-- Lần đầu cài package AI local.
-- Lần đầu tải Whisper / Stable Diffusion / gói dịch Argos.
-- GIPHY nếu bạn tự bật tiện ích đó.
+## Credits
 
-Không có dịch vụ AI trả phí bắt buộc.
-
-
-## AI 3D LOCAL
-
-Module `model_3d_local/` được tách hoàn toàn khỏi AI ảnh và video editor. Backend mặc định là TripoSR: ảnh → GLB, có thể render preview quay 360°. Prompt → 3D dùng AI ảnh local tạo concept trước rồi chuyển sang backend 3D. Cài riêng bằng `SETUP_FREE_3D.bat` để người không dùng 3D không phải cài dependency nặng. Hunyuan3D được chừa adapter riêng cho nâng cấp máy mạnh sau này.
-
-### Video Cleanup 0.8.7.8
-- Xóa nền video AI local: người/nhân vật hoặc vật thể tổng quát; WebM trong suốt hoặc MP4 nền màu.
-- Xóa chữ/icon/logo cố định: vẽ vùng trực tiếp trên preview; FFmpeg nhanh hoặc OpenCV inpaint.
-- Lần đầu dùng AI cleanup: chạy `SETUP_VIDEO_CLEANUP_AI.bat`.
-
-
-### Emoji kiểu khung chat 0.8.7.8
-- Tab Emoji là mặc định trong mục Emoji & Nhãn dán.
-- Có tìm kiếm, danh mục và lịch sử gần đây.
-- Bấm emoji sẽ chuyển emoji thành PNG trong suốt bằng Canvas của trình duyệt rồi dùng pipeline sticker hiện có để preview/render.
-- Sticker local và GIPHY vẫn là module/tab riêng.
+Built as a personal local-AI factory. Video engine: [FramePack](https://github.com/lllyasviel/FramePack) by lllyasviel, Wan 2.2 by Alibaba, HunyuanVideo by Tencent, Whisper by OpenAI. This project just wires them into one friendly studio.

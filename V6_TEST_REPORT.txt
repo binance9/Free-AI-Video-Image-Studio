@@ -1,0 +1,23 @@
+AI VIDEO DIRECTOR V6 - SEEDANCE STYLE PROMPT CONTRACT
+
+BASE: V5 QUALITY-FIRST
+NEW DIRECTOR CONTRACT:
+1. CHU DE - CAM XUC CAU CHUYEN
+2. HINH ANH: character/environment/color/light + character consistency
+3. CAMERA: framing/angle/movement
+4. PHONG CACH: tone + lighting
+5. SHOTS: Shot N + present action + sound design + Cut
+
+ENFORCED:
+- character identity consistency across scenes
+- present-tense action
+- no invented important details in strict/script lock
+- explicit sound_design / ambience / Foley/SFX
+- every shot transition = Cut
+- normalized scene schema even when Ollama output is incomplete
+- preserves V5 Character Lock / QA / Repair / Final quality workflow
+
+TESTS:
+- Python compile: PASS
+- Director + Quality tests: 8 PASS
+- ZIP integrity: checked after build

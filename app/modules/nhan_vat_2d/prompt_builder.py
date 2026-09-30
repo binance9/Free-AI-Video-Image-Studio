@@ -4,16 +4,17 @@ import re
 
 from .character_profile import CharacterProfile
 from .direction_builder import build_pose_hint
+from app.core.prompt_contract import compact_core_requirements
 
 # Keep exclusions compact so the positive prompt keeps most of CLIP's short context.
 NEGATIVE_PROMPT = (
-    "text, letters, words, numbers, typography, logo, watermark, signature, user interface, UI, menu, panel, window, browser, screenshot, border, frame, "
-    "multiple characters, two people, group, crowd, duplicate person, extra head, extra body, duplicate limbs, "
-    "detailed background, scenery, landscape, room, city, poster, character sheet layout, "
-    "portrait, close-up, bust shot, upper body only, cropped head, cropped legs, cropped feet, off frame, "
-    "faceless, blurry face, deformed face, bad anatomy, malformed hands, extra fingers, "
-    "oversized weapon, weapon covering face, extra weapon, second sword, two swords, dual wielding, dagger, knife, scabbard, sheath, invented equipment, generic sportswear, plain bodysuit, basic casual clothes, "
-    "figurine, statue, toy figure, action figure, PVC figure, display stand, pedestal, round base, product photography, diorama"
+    "text, letters, words, logo, watermark, signature, UI, menu, panel, border, frame, "
+    "multiple characters, duplicate person, extra head, extra body, extra limbs, "
+    "detailed background, scenery, landscape, room, city, poster, "
+    "portrait, close-up, bust shot, upper body only, cropped head, cropped feet, off frame, "
+    "deformed face, bad anatomy, extra fingers, "
+    "oversized weapon, extra weapon, second sword, dual wielding, dagger, scabbard, sheath, "
+    "figurine, statue, toy figure, display stand, pedestal, round base"
 )
 
 _ANCHOR_CORE = (
@@ -26,7 +27,8 @@ _ANCHOR_CORE = (
 _ATTRIBUTE_NOUNS = (
     "armor", "armour", "sash", "belt", "robe", "coat", "jacket", "shirt", "pants", "trousers",
     "boots", "shoes", "gloves", "cape", "cloak", "helmet", "hat", "hair", "sword", "blade", "katana",
-    "bow", "axe", "spear", "staff", "dagger", "shield", "gun", "rifle", "hammer", "weapon"
+    "bow", "axe", "spear", "staff", "dagger", "shield", "gun", "rifle", "hammer", "weapon",
+    "umbrella", "parasol"
 )
 
 
@@ -40,7 +42,10 @@ def _literal_user_text(text: str, max_words: int) -> str:
 
 def compact_user_prompt(profile: CharacterProfile, max_words: int = 20) -> str:
     source = " ".join(profile.notes or [])
-    return _literal_user_text(source, max_words)
+    # Shared contract: if a required weapon/action appears late in a long
+    # instruction, move that literal requirement into the compact core rather
+    # than blindly taking only the first N words.
+    return _literal_user_text(compact_core_requirements(source, max_words=max_words), max_words)
 
 
 def _required_attributes(profile: CharacterProfile, max_items: int = 6) -> list[str]:
@@ -104,12 +109,19 @@ def _weapon_count_lock(profile: CharacterProfile) -> str:
     one_sword = bool(re.search(r"\b(one|single|1)\b[^,;]{0,24}\b(sword|blade|katana)\b", source))
     if one_sword:
         return "EXACTLY ONE VISIBLE SWORD TOTAL, no second weapon"
+    # Also handle umbrella/parasol count lock
+    if re.search(r"\b(one|single|1|m[oộ]t)\b[^,;]{0,24}\b(umbrella|parasol|ô|d[où])\b", source):
+        return "EXACTLY ONE VISIBLE UMBRELLA, no second object"
     return ""
 
 def build_anchor_prompt(profile: CharacterProfile) -> str:
     mandatory = _mandatory_prefix(profile)
     identity = _identity_lock(profile)
     weapon_lock = _weapon_count_lock(profile)
+    # The fixed full-body/single-character anchor remains first for the 2D
+    # renderer, then the shared compacted user design/hard locks immediately
+    # follow. Runtime token fitting guarantees this whole critical block stays
+    # inside the real CLIP window before optional polish is considered.
     pieces = [_ANCHOR_CORE]
     if mandatory:
         pieces.append(mandatory)
@@ -160,6 +172,6 @@ def build_frame_prompt(profile: CharacterProfile, direction: str, action: str, f
     identity = _identity_lock(profile)
     weapon_lock = _weapon_count_lock(profile)
     return (
-        f"{identity}. {weapon_lock}. {mandatory}. same fantasy swordsman, ONE character, same exact clothing colors and exact same weapon count, {pose}. "
+        f"{identity}. {weapon_lock}. {mandatory}. SAME CHARACTER, ONE character, same exact clothing colors and exact same weapon count, {pose}. "
         "Full body head to boots, centered game sprite, plain uniform background, no redesign, no text, no UI"
     )

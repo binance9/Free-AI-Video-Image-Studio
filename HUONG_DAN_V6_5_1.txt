@@ -1,0 +1,27 @@
+﻿AI VIDEO FACTORY V6.5.1 - SHARED PROMPT CONTRACT
+
+HOTFIX V6.5.1
+- Sửa lỗi PowerShell:
+  RP : Cannot use interface...
+  Remove-ItemPropertyCommand
+- Nguyên nhân: "rp" là alias có sẵn của PowerShell cho Remove-ItemProperty.
+- Installer mới dùng hàm riêng Join-AivfRelativePath, không còn xung đột alias.
+
+CÁCH CÀI
+1. Giải nén TOÀN BỘ ZIP trực tiếp vào thư mục gốc:
+   C:\Users\BAOAN\OneDrive\Máy tính\ai_video_factory
+
+2. Chạy đúng:
+   INSTALL_PROMPT_CONTRACT_V6_5_1.bat
+
+3. Chờ cuối cửa sổ có:
+   PROMPT_CONTRACT_V6_5_VERIFY: PASS
+   PROMPT CONTRACT V6.5.1: PASS
+
+4. Khởi động lại AI Video Factory.
+
+LƯU Ý
+- Lần chạy V6.5 cũ bị lỗi ngay ở bước 1/4 trước khi copy patch, nên chưa ghi đè source production.
+- V6.5.1 vẫn tự backup từng file trước khi patch.
+- Nếu compile/verify thất bại, tự rollback.
+- Không đụng models/checkpoints/data/output/venv/UI.

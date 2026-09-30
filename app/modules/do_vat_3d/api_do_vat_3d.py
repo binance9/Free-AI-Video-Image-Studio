@@ -53,6 +53,7 @@ def create_from_image(
     texture: str = Form(TEXTURE_MAC_DINH),
     display_name: str = Form(""),
     low_vram: bool = Form(False),
+    prompt: str = Form(""),
 ):
     suffix = Path(file.filename or "image.png").suffix.lower() or ".png"
     if suffix not in {".png", ".jpg", ".jpeg", ".webp"}:
@@ -72,7 +73,7 @@ def create_from_image(
             shutil.copyfileobj(file.file, out, length=1024 * 1024)
         job_id = request.app.state.do_vat_3d_jobs.start(
             category=category, quality=quality, texture_preset=texture,
-            image_path=tmp, display_name=display_name or None, low_vram=low_vram,
+            image_path=tmp, prompt=prompt.strip() or None, display_name=display_name or None, low_vram=low_vram,
         )
         return {"job_id": job_id, "status_url": f"/api/do-vat-3d/job/{job_id}"}
     finally:
@@ -104,6 +105,9 @@ def job_status(job_id: str, request: Request):
             result["model_url"] = f"/api/do-vat-3d/output/{result['asset_id']}"
             result["viewer_url"] = f"/api/do-vat-3d/view/{result['asset_id']}"
             payload["result"] = result
+            payload.update(preview_type="3d",preview_url=result["viewer_url"],message=payload.get("detail") or "GLB sẵn sàng")
+        else:
+            payload.update(preview_type="image",preview_url=payload.get("preview_url"),message=payload.get("detail") or payload.get("stage") or "")
         return payload
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

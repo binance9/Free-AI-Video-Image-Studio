@@ -9,6 +9,7 @@ router = APIRouter(prefix="/api/3d/game-ready", tags=["3d-game-ready"])
 class GameReadyRequest(BaseModel):
     asset_id: str = Field(min_length=8, max_length=80)
     target_faces: int = Field(default=45000, ge=18000, le=80000)
+    weapon_type: str = Field(default="bow", max_length=32)
 
 
 @router.get("/status")
@@ -19,7 +20,7 @@ def game_ready_status(request: Request):
 @router.post("/jobs")
 def start_game_ready(payload: GameReadyRequest, request: Request):
     try:
-        job_id = request.app.state.game_ready_3d_jobs.start(payload.asset_id, payload.target_faces)
+        job_id = request.app.state.game_ready_3d_jobs.start(payload.asset_id, payload.target_faces, payload.weapon_type)
         return {"job_id": job_id, "status_url": f"/api/3d/game-ready/jobs/{job_id}"}
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
