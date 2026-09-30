@@ -131,9 +131,11 @@ web/            frontend (home screen + editor + per-module panels)
 tools/          installers and helpers
 tests/smoke/    fast smoke tests
 data/           runtime data & model cache — created on your machine, not in git
+archive/        development history (old build notes, installers, test reports)
+docs/           project docs (module index, architecture, maintenance)
 ```
 
-Full module index (APIs, tests, troubleshooting per module): see [`DANH_SACH_MODULE.md`](DANH_SACH_MODULE.md) (Vietnamese).
+Full module index (APIs, tests, troubleshooting per module): see [`docs/DANH_SACH_MODULE.md`](docs/DANH_SACH_MODULE.md) (Vietnamese).
 
 ---
 
